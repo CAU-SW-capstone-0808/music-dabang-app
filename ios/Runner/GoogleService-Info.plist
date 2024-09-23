@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyCg4Qm80lMv4oLqKsCqLsIFks00l6q0q80</string>
+	<key>GCM_SENDER_ID</key>
+	<string>801280844051</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.anarchyadventure.musicDabang</string>
+	<key>PROJECT_ID</key>
+	<string>music-dabang</string>
+	<key>STORAGE_BUCKET</key>
+	<string>music-dabang.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:801280844051:ios:bbc5da3ad5e5203a69fae6</string>
+</dict>
+</plist>

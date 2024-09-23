@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "801280844051",
+    "project_id": "music-dabang",
+    "storage_bucket": "music-dabang.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:801280844051:android:b3ec9abcb45d302569fae6",
+        "android_client_info": {
+          "package_name": "com.anarchyadventure.music_dabang"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0SItfL4xp9Zn3o_a_qTDjebU_renpeB0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
