@@ -10,6 +10,9 @@ MusicModel _$MusicModelFromJson(Map<String, dynamic> json) => MusicModel(
       id: (json['id'] as num).toInt(),
       artist: ArtistModel.fromJson(json['artist'] as Map<String, dynamic>),
       title: json['title'] as String,
+      thumbnailUrl: json['thumbnailUrl'] as String,
+      musicContentUrl: json['musicContentUrl'] as String,
+      videoContentUrl: json['videoContentUrl'] as String,
     );
 
 Map<String, dynamic> _$MusicModelToJson(MusicModel instance) =>
@@ -17,4 +20,7 @@ Map<String, dynamic> _$MusicModelToJson(MusicModel instance) =>
       'id': instance.id,
       'artist': instance.artist,
       'title': instance.title,
+      'thumbnailUrl': instance.thumbnailUrl,
+      'musicContentUrl': instance.musicContentUrl,
+      'videoContentUrl': instance.videoContentUrl,
     };

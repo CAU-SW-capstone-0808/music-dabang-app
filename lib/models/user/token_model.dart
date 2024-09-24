@@ -14,4 +14,6 @@ class TokenModel {
 
   factory TokenModel.fromJson(Map<String, dynamic> json) =>
       _$TokenModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$TokenModelToJson(this);
 }

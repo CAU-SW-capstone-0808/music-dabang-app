@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,9 +13,12 @@ import 'package:music_dabang/components/music_list_card.dart';
 import 'package:music_dabang/components/playlist_item.dart';
 import 'package:music_dabang/models/user/user_model.dart';
 import 'package:music_dabang/providers/bottom_nav_provider.dart';
+import 'package:music_dabang/providers/music/music_live_items_provider.dart';
 import 'package:music_dabang/providers/music/playlist_main_provider.dart';
 import 'package:music_dabang/providers/music_player_size_provider.dart';
 import 'package:music_dabang/providers/user_provider.dart';
+import 'package:music_dabang/screens/components/play_list_nav_item.dart';
+import 'package:music_dabang/screens/components/playlist_item_preview_list.dart';
 import 'package:music_dabang/screens/music_player_screen.dart';
 import 'package:music_dabang/screens/search_screen.dart';
 
@@ -167,6 +172,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     }
     final mainPlaylists = ref.watch(playlistMainProvider);
+    final livePlaylists = ref.watch(musicLiveItemsProvider);
 
     /// --- Music Player ---
     final mpSize = ref.watch(musicPlayerSizeProvider);
@@ -258,20 +264,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                     horizList(
-                      children: [
-                        ImageCard(
-                          title:
-                              "[제36회 골든디스크] 임영웅 - '사랑은 늘 도망가 + 별빛 같은 나의 사랑아'♪｜JTBC 220108 방송",
-                        ),
-                        ImageCard(
-                          title:
-                              "[제36회 골든디스크] 임영웅 - '사랑은 늘 도망가 + 별빛 같은 나의 사랑아'♪｜JTBC 220108 방송",
-                        ),
-                        ImageCard(
-                          title:
-                              "[제36회 골든디스크] 임영웅 - '사랑은 늘 도망가 + 별빛 같은 나의 사랑아'♪｜JTBC 220108 방송",
-                        ),
-                      ],
+                      children: livePlaylists
+                          .sublist(0, min(5, livePlaylists.length))
+                          .map((p) => ImageCard(
+                                title: p.title,
+                                imageUrl: p.thumbnailUrl,
+                              ))
+                          .toList(),
                     ),
                     const SizedBox(height: 28.0),
                     // SingleChildScrollView(
@@ -286,37 +285,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(height: 8.0),
                     ph16(
                       child: titleLink(
-                        title: "임영웅의 재생목록",
+                        title: "임영웅 재생목록",
                         onPressed: null,
                       ),
                     ),
                     const SizedBox(height: 12.0),
-                    ...mainPlaylists
-                        .where((pl) => pl.userVisible)
-                        .map((pl) => ph16v6(
-                              child: PlaylistRecommendItem(
-                                title: pl.name,
-                                onPressed: () {},
-                              ),
-                            )),
+                    horizList(
+                      children: mainPlaylists
+                          .where((p) => p.userVisible)
+                          .map((p) => PlayListNavItem(
+                                playlistId: p.id,
+                                name: '${p.name} 모음',
+                              ))
+                          .toList(),
+                    ),
                     const SizedBox(height: 24),
-                    ph16(
-                      child: titleLink(
-                        title: "임영웅의 인기곡",
-                        onPressed: null,
+                    ...mainPlaylists.map(
+                      (p) => PlaylistItemPreviewList(
+                        playlistId: p.id,
+                        title: '임영웅의 ${p.name}',
                       ),
-                    ),
-                    MusicListCard(
-                      title: '사랑은 늘 도망가',
-                      artist: '임영웅',
-                    ),
-                    MusicListCard(
-                      title: '사랑은 늘 도망가',
-                      artist: '임영웅',
-                    ),
-                    MusicListCard(
-                      title: '사랑은 늘 도망가',
-                      artist: '임영웅',
                     ),
                     const SizedBox(height: 24),
                   ],

@@ -5,11 +5,13 @@ import 'package:music_dabang/components/glass_interactor.dart';
 class MusicListCard extends StatelessWidget {
   final String title;
   final String artist;
+  final String? imageUrl;
 
   const MusicListCard({
     super.key,
     required this.title,
     required this.artist,
+    this.imageUrl,
   });
 
   Widget albumImage({
@@ -20,12 +22,18 @@ class MusicListCard extends StatelessWidget {
       ClipRRect(
         clipBehavior: Clip.hardEdge,
         borderRadius: BorderRadius.circular(borderRadius),
-        child: Image.asset(
-          'assets/images/example_album_image.jpg',
-          width: width,
-          height: height,
-          fit: BoxFit.cover,
-        ),
+        child: imageUrl != null
+            ? Image.network(
+                imageUrl!,
+                width: width,
+                height: height,
+                fit: BoxFit.cover,
+              )
+            : Container(
+                width: width,
+                height: height,
+                color: ColorTable.backGrey,
+              ),
       );
 
   @override

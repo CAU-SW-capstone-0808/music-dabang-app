@@ -8,11 +8,17 @@ class MusicModel {
   final int id;
   final ArtistModel artist;
   final String title;
+  final String thumbnailUrl;
+  final String musicContentUrl;
+  final String videoContentUrl;
 
   MusicModel({
     required this.id,
     required this.artist,
     required this.title,
+    required this.thumbnailUrl,
+    required this.musicContentUrl,
+    required this.videoContentUrl,
   });
 
   factory MusicModel.fromJson(Map<String, dynamic> json) =>

@@ -4,8 +4,17 @@ import 'package:music_dabang/models/common/page_request_model.dart';
 import 'package:music_dabang/models/common/page_response_model.dart';
 
 abstract class AbstractPageNotifier<T> extends StateNotifier<List<T>> {
-  PageRequestModel requestModel;
+  PageRequestModel __pageRequestModel;
   PageResponseModel? lastResponse;
+
+  PageRequestModel get pageRequestModel => __pageRequestModel;
+  Map<String, dynamic> get queries => pageRequestModel.toJson();
+  set pageRequestModel(PageRequestModel x) {
+    if (x != __pageRequestModel) {
+      __pageRequestModel = x;
+      refresh();
+    }
+  }
 
   bool get loading => lastResponse == null;
   bool get pagingDone => lastResponse != null && lastResponse!.cursor == null;
@@ -21,14 +30,15 @@ abstract class AbstractPageNotifier<T> extends StateNotifier<List<T>> {
 
   /// StateNotifier를 통한 페이징 공통화
   AbstractPageNotifier({
-    this.requestModel = const PageRequestModel(),
-  }) : super([]) {
+    PageRequestModel pageRequestModel = const PageRequestModel(),
+  })  : __pageRequestModel = pageRequestModel,
+        super([]) {
     fetch();
   }
 
   /// 자식 클래스에서 구현해야 하는 페이징 호출
   /// 자신의 필드를 사용한다.
-  Future<PageResponseModel> getList();
+  Future<PageResponseModel> getList({required PageRequestModel pageRequest});
 
   /// json으로부터 T를 반환하는 함수 구현을 자식 클래스에게 맡김.
   T fromJson(Map<String, dynamic> json);
@@ -41,9 +51,10 @@ abstract class AbstractPageNotifier<T> extends StateNotifier<List<T>> {
     }
 
     // request cursor 조정
-    requestModel = requestModel.copyWith(cursor: lastResponse?.cursor);
+    __pageRequestModel =
+        __pageRequestModel.copyWith(cursor: lastResponse?.cursor);
     // 응답 처리
-    lastResponse = await getList();
+    lastResponse = await getList(pageRequest: __pageRequestModel);
 
     try {
       final data = lastResponse!.getData<T>(this.fromJson);
@@ -51,6 +62,7 @@ abstract class AbstractPageNotifier<T> extends StateNotifier<List<T>> {
       return data;
     } catch (e) {
       print("paging type cast error - type:$T $e");
+      print(e);
       Fluttertoast.showToast(msg: "데이터를 받아오는 중 오류가 발생했습니다");
     }
     return [];
@@ -61,13 +73,13 @@ abstract class AbstractPageNotifier<T> extends StateNotifier<List<T>> {
       state = [];
     }
     lastResponse = null;
-    requestModel = requestModel.cursorCleared;
+    __pageRequestModel = __pageRequestModel.cursorCleared;
     return state = await fetch();
   }
 
   void clear() {
     state = [];
     lastResponse = null;
-    requestModel = const PageRequestModel();
+    __pageRequestModel = const PageRequestModel();
   }
 }

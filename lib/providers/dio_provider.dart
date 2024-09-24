@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:music_dabang/common/utils.dart';
+import 'package:music_dabang/providers/secret_value_provider.dart';
 import 'package:music_dabang/providers/secure_storage_provider.dart';
 import 'package:music_dabang/providers/user_provider.dart';
 import 'package:dio/dio.dart';
@@ -28,12 +29,24 @@ class CustomInterceptor extends Interceptor {
   @override
   void onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
+    final String reqPath = options.uri.path;
     AidolUtils.d('[REQ] [${options.method}] ${options.uri}');
     AidolUtils.d(
         '[REQ] data(type=${options.data.runtimeType}) = ${options.data}');
-    String? accessToken = await storage.read(key: "accessToken");
-    if (accessToken != null && !options.uri.path.contains('/user/oauth')) {
-      options.headers.addAll({"Authorization": "Bearer $accessToken"});
+    if (reqPath.contains('refresh')) {
+      String? refreshToken = await ref
+          .read(secretValueProvider("refreshToken").notifier)
+          .fetchIf();
+      if (refreshToken != null) {
+        AidolUtils.d('reqPath:$reqPath -> Bearer {refreshToken}');
+        options.headers.addAll({"Authorization": "Bearer $refreshToken"});
+      }
+    } else {
+      String? accessToken =
+          await ref.read(secretValueProvider("accessToken").notifier).fetchIf();
+      if (accessToken != null && !reqPath.contains('/user/oauth')) {
+        options.headers.addAll({"Authorization": "Bearer $accessToken"});
+      }
     }
     return super.onRequest(options, handler);
   }
@@ -67,10 +80,10 @@ class CustomInterceptor extends Interceptor {
         ),
       );
     }
-    // data 추출 - {status:..., message:..., data:...}
-    if (response.data is Map && response.data.containsKey('data')) {
-      response.data = response.data['data'];
-    }
+    // // data 추출 - {status:..., message:..., data:...}
+    // if (response.data is Map && response.data.containsKey('data')) {
+    //   response.data = response.data['data'];
+    // }
     return super.onResponse(response, handler);
   }
 
@@ -87,9 +100,10 @@ class CustomInterceptor extends Interceptor {
     if (refreshResult) {
       final newAccessToken = await storage.read(key: "accessToken");
       // 요청 재전송
-      err.requestOptions.headers.addAll(
-        {"Authorization": "Bearer $newAccessToken"},
-      );
+      // err.requestOptions.headers.addAll(
+      //   {"Authorization": "Bearer $newAccessToken"},
+      // );
+      err.requestOptions.headers["Authorization"] = 'Bearer $newAccessToken';
       try {
         final dio = Dio();
         final response = await dio.fetch(err.requestOptions);
@@ -98,7 +112,7 @@ class CustomInterceptor extends Interceptor {
         AidolUtils.d('did refresh token, error -> $e');
         return handler.reject(e);
       }
-    }
+    } else {}
     return super.onError(err, handler);
   }
 }

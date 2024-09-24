@@ -58,4 +58,21 @@ class PageRequestModel {
       return false;
     }
   }
+
+  Map<String, dynamic> toJson() {
+    final ret = <String, dynamic>{};
+    if (sortBy != null) {
+      ret['sortBy'] = sortBy;
+    }
+    if (sortOrder != null) {
+      ret['sortOrder'] = sortOrder;
+    }
+    if (size != null) {
+      ret['size'] = size;
+    }
+    if (cursor != null) {
+      ret['cursor'] = cursor;
+    }
+    return ret;
+  }
 }
