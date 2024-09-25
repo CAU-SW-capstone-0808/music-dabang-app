@@ -11,6 +11,7 @@ import 'package:music_dabang/components/image_card.dart';
 import 'package:music_dabang/components/logo_title.dart';
 import 'package:music_dabang/models/user/user_model.dart';
 import 'package:music_dabang/providers/music/music_live_items_provider.dart';
+import 'package:music_dabang/providers/music/music_player_provider.dart';
 import 'package:music_dabang/providers/music/playlist_main_provider.dart';
 import 'package:music_dabang/providers/music_player_size_provider.dart';
 import 'package:music_dabang/providers/user_provider.dart';
@@ -207,6 +208,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       .map((p) => ImageCard(
                             title: p.title,
                             imageUrl: p.thumbnailUrl,
+                            onTap: () {
+                              ref
+                                  .read(currentPlayingMusicProvider.notifier)
+                                  .playingMusic = p;
+                              widget.expandPlayerFunc?.call();
+                            },
                           ))
                       .toList(),
                 ),

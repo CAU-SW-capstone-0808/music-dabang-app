@@ -6,6 +6,7 @@ class ImageCard extends StatelessWidget {
   final String title;
   final String imageUrl;
   final String? artist;
+  final void Function()? onTap;
 
   const ImageCard({
     super.key,
@@ -13,13 +14,14 @@ class ImageCard extends StatelessWidget {
     required this.title,
     required this.imageUrl,
     this.artist,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     var borderRadius = BorderRadius.circular(24);
     return BouncingWidget(
-      onPressed: () {},
+      onPressed: onTap,
       child: Container(
         width: width,
         decoration: BoxDecoration(

@@ -3,6 +3,11 @@ import 'package:music_dabang/models/music/artist_model.dart';
 
 part 'music_model.g.dart';
 
+enum MusicContentType {
+  live,
+  music;
+}
+
 @JsonSerializable()
 class MusicModel {
   final int id;
@@ -11,6 +16,7 @@ class MusicModel {
   final String thumbnailUrl;
   final String musicContentUrl;
   final String videoContentUrl;
+  final MusicContentType musicContentType;
 
   MusicModel({
     required this.id,
@@ -19,6 +25,7 @@ class MusicModel {
     required this.thumbnailUrl,
     required this.musicContentUrl,
     required this.videoContentUrl,
+    required this.musicContentType,
   });
 
   factory MusicModel.fromJson(Map<String, dynamic> json) =>

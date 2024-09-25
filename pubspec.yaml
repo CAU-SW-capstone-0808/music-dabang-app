@@ -50,6 +50,7 @@ dependencies:
   firebase_auth: ^5.2.1
   kakao_flutter_sdk: ^1.9.6
   kakao_flutter_sdk_auth: ^1.9.6
+  audio_session: ^0.1.21
 
   # ui
   flutter_svg: ^2.0.10+1
@@ -69,6 +70,7 @@ dependencies:
   qr_flutter: ^4.1.0
   flutter_sliding_up_panel: ^2.1.1
   material_symbols_icons: ^4.2785.1
+  chewie: ^1.8.5
 
   # data
   json_annotation: ^4.8.1

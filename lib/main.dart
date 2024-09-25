@@ -47,9 +47,9 @@ class MusicDabang extends ConsumerWidget {
           iconTheme: IconThemeData(color: Colors.black),
         ),
         sliderTheme: const SliderThemeData(
-          activeTrackColor: ColorTable.red,
+          activeTrackColor: ColorTable.sliderColor,
           inactiveTrackColor: ColorTable.backGrey,
-          thumbColor: ColorTable.red,
+          thumbColor: ColorTable.sliderColor,
           trackHeight: 8.0,
           thumbShape: RoundSliderThumbShape(
             enabledThumbRadius: 5.0,

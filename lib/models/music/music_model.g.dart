@@ -13,6 +13,8 @@ MusicModel _$MusicModelFromJson(Map<String, dynamic> json) => MusicModel(
       thumbnailUrl: json['thumbnailUrl'] as String,
       musicContentUrl: json['musicContentUrl'] as String,
       videoContentUrl: json['videoContentUrl'] as String,
+      musicContentType:
+          $enumDecode(_$MusicContentTypeEnumMap, json['musicContentType']),
     );
 
 Map<String, dynamic> _$MusicModelToJson(MusicModel instance) =>
@@ -23,4 +25,10 @@ Map<String, dynamic> _$MusicModelToJson(MusicModel instance) =>
       'thumbnailUrl': instance.thumbnailUrl,
       'musicContentUrl': instance.musicContentUrl,
       'videoContentUrl': instance.videoContentUrl,
+      'musicContentType': _$MusicContentTypeEnumMap[instance.musicContentType]!,
     };
+
+const _$MusicContentTypeEnumMap = {
+  MusicContentType.live: 'live',
+  MusicContentType.music: 'music',
+};

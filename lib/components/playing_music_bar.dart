@@ -45,7 +45,7 @@ class PlayingMusicBar extends StatelessWidget {
 
   double get textOpacity {
     if (size < 0.15) return 1.0;
-    if (size < 0.4) return 1 - size / 0.4;
+    if (size < 0.25) return 1 - size / 0.25;
     return 0.0;
   }
 
@@ -82,22 +82,25 @@ class PlayingMusicBar extends StatelessWidget {
     }) {
       return Material(
         color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Ink(
-            padding: const EdgeInsets.all(4.0),
-            child: Column(
-              children: [
-                child,
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 18.0,
-                    color: Colors.black.withOpacity(textOpacity),
+        child: Opacity(
+          opacity: textOpacity,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: Ink(
+              padding: const EdgeInsets.all(4.0),
+              child: Column(
+                children: [
+                  child,
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 18.0,
+                      color: Colors.black.withOpacity(textOpacity),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
