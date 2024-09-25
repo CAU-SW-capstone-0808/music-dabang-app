@@ -47,6 +47,7 @@ class SecretValueStateNotifier extends StateNotifier<String?> {
   Future<void> setValue(String value) async {
     try {
       await secureStorage.write(key: key, value: value);
+      state = value;
     } catch (e) {
       debugPrint('Failed to set secret key: $key value: $e');
       await clearAll();

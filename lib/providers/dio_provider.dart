@@ -108,6 +108,7 @@ class CustomInterceptor extends Interceptor {
         final dio = Dio();
         final response = await dio.fetch(err.requestOptions);
         AidolUtils.d('did refresh token, re-fetch -> $response');
+        return handler.resolve(response);
       } on DioException catch (e) {
         AidolUtils.d('did refresh token, error -> $e');
         return handler.reject(e);

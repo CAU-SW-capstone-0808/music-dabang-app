@@ -17,7 +17,9 @@ class MusicAutoCompleteStateNotifier extends StateNotifier<List<String>> {
   set keyword(String x) {
     if (x != _keyword) {
       _keyword = x;
-      fetch(x);
+      if (x.isNotEmpty) {
+        fetch(x);
+      }
     }
   }
 
@@ -41,7 +43,7 @@ class MusicAutoCompleteStateNotifier extends StateNotifier<List<String>> {
       result: result,
       timestamp: now,
     );
-    return result;
+    return state = result;
   }
 }
 

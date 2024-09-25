@@ -17,7 +17,6 @@ class PlayingMusicBar extends StatelessWidget {
   /// 0.25 ~ 1.0: 배치 변화
   final double size;
 
-  final void Function()? onPlayerToggle;
   final void Function()? onPrevious;
   final void Function()? onPlay;
   final void Function()? onNext;
@@ -29,7 +28,6 @@ class PlayingMusicBar extends StatelessWidget {
     this.height,
     this.isPlaying = false,
     this.size = 0.0,
-    this.onPlayerToggle,
     this.onPrevious,
     this.onPlay,
     this.onNext,
@@ -66,7 +64,7 @@ class PlayingMusicBar extends StatelessWidget {
   }) =>
       ClipRRect(
         clipBehavior: Clip.hardEdge,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24),
         child: Image.asset(
           'assets/images/example_album_image.jpg',
           width: width,
@@ -118,10 +116,10 @@ class PlayingMusicBar extends StatelessWidget {
           ),
         ),
         withLabel(
-          label: '재생',
+          label: '  재생  ', // 사이즈를 맞추기 위한 공백
           onTap: onPlay,
-          child: const Icon(
-            Icons.play_arrow_rounded,
+          child: Icon(
+            isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
             size: 36.0,
             color: ColorTable.kPrimaryColor,
           ),
@@ -142,22 +140,23 @@ class PlayingMusicBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final deviceWidth = MediaQuery.of(context).size.width;
-    if (sizeOver0_25) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-        decoration: BoxDecoration(color: backgroundColor),
-        child: Row(
-          children: [
-            albumImage(
-              width: albumSize(deviceWidth: deviceWidth),
-              height: albumSize(deviceWidth: deviceWidth),
-            ),
-          ],
-        ),
-      );
-    }
+    if (sizeOver0_25) return Container();
+    // if (sizeOver0_25) {
+    //   return Container(
+    //     padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+    //     decoration: BoxDecoration(color: backgroundColor),
+    //     child: Row(
+    //       children: [
+    //         albumImage(
+    //           width: albumSize(deviceWidth: deviceWidth),
+    //           height: albumSize(deviceWidth: deviceWidth),
+    //         ),
+    //       ],
+    //     ),
+    //   );
+    // }
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+      padding: const EdgeInsets.fromLTRB(16, 4, 4, 0),
       decoration: BoxDecoration(color: backgroundColor),
       child: Row(
         children: [
@@ -168,16 +167,16 @@ class PlayingMusicBar extends StatelessWidget {
           // const SizedBox(width: 20.0),
           Expanded(
             child: GestureDetector(
-              onTap: onPlayerToggle,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
                     title,
-                    maxLines: 2,
+                    maxLines: 1,
                     style: TextStyle(
                       fontSize: 22.0,
+                      height: 1.25,
                       fontWeight: FontWeight.w600,
                       overflow: TextOverflow.ellipsis,
                       color: Colors.black.withOpacity(textOpacity),
@@ -188,6 +187,7 @@ class PlayingMusicBar extends StatelessWidget {
                     artist,
                     style: TextStyle(
                       fontSize: 18.0,
+                      height: 1.25,
                       color: Colors.black.withOpacity(textOpacity),
                     ),
                   ),

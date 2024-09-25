@@ -6,12 +6,14 @@ class MusicListCard extends StatelessWidget {
   final String title;
   final String artist;
   final String? imageUrl;
+  final void Function()? onTap;
 
   const MusicListCard({
     super.key,
     required this.title,
     required this.artist,
     this.imageUrl,
+    this.onTap,
   });
 
   Widget albumImage({
@@ -44,6 +46,7 @@ class MusicListCard extends StatelessWidget {
         height: MediaQuery.of(context).size.width,
         borderRadius: 0,
       ),
+      onPressed: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: 16.0,

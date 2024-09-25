@@ -9,6 +9,7 @@ import 'package:music_dabang/screens/home_screen.dart';
 import 'package:music_dabang/screens/login/login_home_screen.dart';
 import 'package:music_dabang/screens/login/phone_join_screen.dart';
 import 'package:music_dabang/screens/login/phone_login_screen.dart';
+import 'package:music_dabang/screens/main_screen.dart';
 import 'package:music_dabang/screens/search_screen.dart';
 import 'package:music_dabang/screens/splash_screen.dart';
 
@@ -44,8 +45,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/',
-        name: HomeScreen.routeName,
-        builder: (context, state) => const HomeScreen(),
+        name: MainScreen.routeName,
+        builder: (context, state) => const MainScreen(),
         routes: [
           GoRoute(
             path: 'search',

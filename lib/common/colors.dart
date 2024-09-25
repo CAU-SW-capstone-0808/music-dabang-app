@@ -16,6 +16,7 @@ abstract class ColorTable {
   static const enabledColor = Color(0xFF0F1319);
   static const textInfoColor = Color(0xFF86898C);
   static const border2 = Color(0xFFE3E5E6);
+  static const red = Color(0xFFFE537B);
   static const red2 = Color(0xFFE03C3A);
   static const stroke = Color(0xFFD0D0D0);
   static const backGrey = Color(0xFFF5F5F5);
