@@ -16,11 +16,7 @@ void main() async {
     javaScriptAppKey: '7c9a44473ebe4bec739fe0dea137871f',
   );
 
-  runApp(
-    const ProviderScope(
-      child: MusicDabang(),
-    ),
-  );
+  runApp(const ProviderScope(child: MusicDabang()));
 }
 
 class MusicDabang extends ConsumerWidget {
@@ -33,11 +29,12 @@ class MusicDabang extends ConsumerWidget {
     return MaterialApp.router(
       title: '뮤직다방',
       debugShowCheckedModeBanner: false,
+      routerConfig: router,
 
       /// 라우팅 설정
-      routerDelegate: router.routerDelegate,
-      routeInformationParser: router.routeInformationParser,
-      routeInformationProvider: router.routeInformationProvider,
+      // routerDelegate: router.routerDelegate,
+      // routeInformationParser: router.routeInformationParser,
+      // routeInformationProvider: router.routeInformationProvider,
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
         appBarTheme: const AppBarTheme(

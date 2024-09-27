@@ -40,4 +40,35 @@ class PlaylistItemsStateNotifier
       queries: queries,
     );
   }
+
+  PlaylistItemModel? findById(int id) {
+    for (final item in state) {
+      if (item.id == id) {
+        return item;
+      }
+    }
+    return null;
+  }
+
+  PlaylistItemModel? getPrevious(int id) {
+    for (int i = 0; i < state.length; i++) {
+      if (state[i].id == id) {
+        if (i - 1 >= 0) {
+          return state[i - 1];
+        }
+      }
+    }
+    return null;
+  }
+
+  PlaylistItemModel? getNext(int id) {
+    for (int i = 0; i < state.length; i++) {
+      if (state[i].id == id) {
+        if (i + 1 < state.length) {
+          return state[i + 1];
+        }
+      }
+    }
+    return null;
+  }
 }

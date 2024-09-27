@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:flutter/rendering.dart';
 
@@ -19,6 +18,7 @@ abstract class ColorTable {
   static const red = Color(0xFFFE537B);
   static const red2 = Color(0xFFE03C3A);
   static const sliderColor = Color(0xFFD82A75);
+  static const mRed = Color(0xFFD82A75); // 뮤직다방 레드
   static const palePink = Color(0xFFFCE7F3);
   static const stroke = Color(0xFFD0D0D0);
   static const backGrey = Color(0xFFF5F5F5);

@@ -2,19 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_dabang/components/music_list_card.dart';
 import 'package:music_dabang/models/music/playlist_item_model.dart';
+import 'package:music_dabang/models/music/playlist_model.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
 import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 
 class PlaylistItemPreviewList extends ConsumerWidget {
-  final int playlistId;
-  final String title;
+  final PlaylistModel playlist;
   final int maxCount;
   final void Function()? onTap;
 
   const PlaylistItemPreviewList({
     super.key,
-    required this.playlistId,
-    required this.title,
+    required this.playlist,
     this.maxCount = 5,
     this.onTap,
   });
@@ -22,7 +21,7 @@ class PlaylistItemPreviewList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     List<PlaylistItemModel> items =
-        ref.watch(playlistItemsProvider(playlistId));
+        ref.watch(playlistItemsProvider(playlist.id));
     if (items.length > maxCount) {
       items = items.sublist(0, maxCount);
     }
@@ -33,7 +32,7 @@ class PlaylistItemPreviewList extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 16.0),
           child: Text(
-            title,
+            playlist.name,
             style: const TextStyle(
               fontSize: 32.0,
               fontFamily: 'Roboto',
@@ -47,9 +46,11 @@ class PlaylistItemPreviewList extends ConsumerWidget {
             title: e.musicContent.title,
             artist: e.musicContent.artist.name,
             imageUrl: e.musicContent.thumbnailUrl,
-            onTap: () {
-              ref.read(currentPlayingMusicProvider.notifier).playingMusic =
-                  e.musicContent;
+            onTap: () async {
+              await ref.read(currentPlaylistProvider.notifier).setPlaylist(
+                    playlist,
+                    itemToPlay: e,
+                  );
               onTap?.call();
             },
           ),

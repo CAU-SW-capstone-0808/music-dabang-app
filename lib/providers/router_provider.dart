@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:music_dabang/models/user/user_model.dart';
 import 'package:music_dabang/providers/user_provider.dart';
-import 'package:music_dabang/screens/home_screen.dart';
 import 'package:music_dabang/screens/login/login_home_screen.dart';
 import 'package:music_dabang/screens/login/phone_join_screen.dart';
 import 'package:music_dabang/screens/login/phone_login_screen.dart';
@@ -41,8 +40,15 @@ final routerProvider = Provider<GoRouter>((ref) {
   }
 
   return GoRouter(
+    initialLocation: '/splash',
+    routerNeglect: true,
     redirect: redirect,
     routes: [
+      GoRoute(
+        path: '/splash',
+        name: SplashScreen.routeName,
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(
         path: '/',
         name: MainScreen.routeName,
@@ -54,11 +60,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const SearchScreen(),
           ),
         ],
-      ),
-      GoRoute(
-        path: '/splash',
-        name: SplashScreen.routeName,
-        builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
         path: '/login',

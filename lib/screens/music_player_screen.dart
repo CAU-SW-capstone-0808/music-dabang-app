@@ -1,14 +1,16 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sliding_up_panel/flutter_sliding_up_panel.dart';
 import 'package:flutter_sliding_up_panel/sliding_up_panel_widget.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:music_dabang/common/colors.dart';
 import 'package:music_dabang/components/bouncing_widget.dart';
 import 'package:music_dabang/components/playing_music_bar.dart';
+import 'package:music_dabang/models/music/music_model.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:music_dabang/providers/music/my_music_list_provider.dart';
 import 'package:video_player/video_player.dart';
 
 class MusicPlayerScreen extends ConsumerStatefulWidget {
@@ -26,18 +28,23 @@ class MusicPlayerScreen extends ConsumerStatefulWidget {
 class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     with TickerProviderStateMixin {
   late AnimationController musicPlayerAnimationController;
+
   CurrentPlayingMusicStateNotifier get musicNotifier =>
       ref.read(currentPlayingMusicProvider.notifier);
+
+  CurrentPlayingPlaylistStateNotifier get playlistNotifier =>
+      ref.read(currentPlaylistProvider.notifier);
 
   /// target : 30px horizontal padding
   Widget albumImage({
     required double size,
     String? imageUrl,
+    bool showingVideo = false,
     bool hasMusicVideo = true,
   }) {
     final albumWidth = MediaQuery.of(context).size.width * size - 60;
     late Widget innerWidget;
-    if (musicNotifier.isPlayingVideo) {
+    if (showingVideo) {
       final videoController = musicNotifier.videoPlayerController;
       innerWidget = (videoController?.value.isInitialized ?? false)
           ? SizedBox(
@@ -68,63 +75,63 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
       );
     }
     if (hasMusicVideo && size > 0.8) {
-      return Stack(
-        children: [
-          Center(child: innerWidget),
-          Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: BouncingWidget(
-                onPressed: () async {
-                  await musicNotifier
-                      .toggleAudioVideo(!musicNotifier.isPlayingVideo);
-                  setState(() {});
-                },
-                child: Opacity(
-                  opacity: (size - 0.8) / 0.2,
+      var mvButton = BouncingWidget(
+        onPressed: () async {
+          await musicNotifier.toggleAudioVideo(!showingVideo);
+          setState(() {});
+        },
+        child: Opacity(
+          opacity: (size - 0.8) / 0.2,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(3.0),
                   child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(100),
+                    padding: const EdgeInsets.all(7.0),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: ColorTable.palePink,
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(3.0),
-                          child: Container(
-                            padding: const EdgeInsets.all(7.0),
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: ColorTable.palePink,
-                            ),
-                            child: SizedBox(
-                              width: 32,
-                              height: 32,
-                              child: SvgPicture.asset(
-                                'assets/icons/music_video_icon.svg',
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 9.0),
-                        const Text(
-                          '뮤직비디오 보기',
-                          style: TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(width: 12.0),
-                      ],
+                    child: SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: SvgPicture.asset(
+                        'assets/icons/music_video_icon.svg',
+                      ),
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(width: 9.0),
+                const Text(
+                  '뮤직비디오 보기',
+                  style: TextStyle(
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 12.0),
+              ],
             ),
           ),
+        ),
+      );
+      return Stack(
+        children: [
+          Center(child: innerWidget),
+          // Align(
+          //   alignment: Alignment.topCenter,
+          //   child: Padding(
+          //     padding: const EdgeInsets.all(8.0),
+          //     child: mvButton,
+          //   ),
+          // ),
         ],
       );
     } else {
@@ -173,7 +180,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
         ],
       );
 
-  Widget get middleButtons => Padding(
+  Widget middleButtons(MusicModel? currentMusic) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Row(
           children: [
@@ -184,9 +191,16 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                   width: 48,
                   height: 48,
                 ),
-                text: '내 음악에 추가',
+                text: '내음악에 추가',
                 backgroundColor: ColorTable.palePink,
-                onPressed: () {},
+                onPressed: () async {
+                  if (currentMusic != null) {
+                    await ref
+                        .read(myMusicListProvider.notifier)
+                        .addItem(musicId: currentMusic.id);
+                    Fluttertoast.showToast(msg: '내음악에 추가되었습니다.');
+                  }
+                },
               ),
             ),
             const SizedBox(width: 8.0),
@@ -242,23 +256,33 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
           const Spacer(),
           withLabel(
             text: '이전곡',
-            child: Expanded(
-              child: InkWell(
-                borderRadius: BorderRadius.circular(24),
-                onTap: () {},
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 18.0,
-                  ),
-                  child: SvgPicture.asset(
-                    'assets/icons/play_prev_icon.svg',
-                    width: 60,
-                    height: 40,
-                    colorFilter: const ColorFilter.mode(
-                      ColorTable.iconBlack,
-                      BlendMode.srcIn,
-                    ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(24),
+              onTap: () async {
+                // 3초 이상이면 처음으로, 아니면 이전곡
+                if (musicNotifier.currentPosition.inMilliseconds > 3000) {
+                  musicNotifier.seekAudio(Duration.zero);
+                } else {
+                  final item = await playlistNotifier.skipPrevious();
+                  // 이전곡이 없으면 처음으로
+                  if (item == null) {
+                    musicNotifier.seekAudio(Duration.zero);
+                    Fluttertoast.showToast(msg: '첫 번째 곡입니다.');
+                  }
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 18.0,
+                ),
+                child: SvgPicture.asset(
+                  'assets/icons/play_prev_icon.svg',
+                  width: 60,
+                  height: 40,
+                  colorFilter: const ColorFilter.mode(
+                    ColorTable.iconBlack,
+                    BlendMode.srcIn,
                   ),
                 ),
               ),
@@ -267,22 +291,20 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
           const SizedBox(width: 16.0),
           withLabel(
             text: '재생',
-            child: Expanded(
-              child: BouncingWidget(
-                onPressed: () {
-                  musicNotifier.togglePlay();
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: ColorTable.iconBlack,
-                  ),
-                  child: Icon(
-                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                    size: 48.0,
-                    color: Colors.white,
-                  ),
+            child: BouncingWidget(
+              onPressed: () {
+                musicNotifier.togglePlay();
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16.0),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: ColorTable.iconBlack,
+                ),
+                child: Icon(
+                  isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  size: 48.0,
+                  color: Colors.white,
                 ),
               ),
             ),
@@ -290,23 +312,26 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
           const SizedBox(width: 16.0),
           withLabel(
             text: '다음곡',
-            child: Expanded(
-              child: InkWell(
-                borderRadius: BorderRadius.circular(24),
-                onTap: () {},
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 18.0,
-                  ),
-                  child: SvgPicture.asset(
-                    'assets/icons/play_next_icon.svg',
-                    width: 60,
-                    height: 40,
-                    colorFilter: const ColorFilter.mode(
-                      ColorTable.iconBlack,
-                      BlendMode.srcIn,
-                    ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(24),
+              onTap: () async {
+                final item = await playlistNotifier.skipNext();
+                if (item == null) {
+                  Fluttertoast.showToast(msg: '다음 곡이 없습니다.');
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 18.0,
+                ),
+                child: SvgPicture.asset(
+                  'assets/icons/play_next_icon.svg',
+                  width: 60,
+                  height: 40,
+                  colorFilter: const ColorFilter.mode(
+                    ColorTable.iconBlack,
+                    BlendMode.srcIn,
                   ),
                 ),
               ),
@@ -395,18 +420,21 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
           borderRadius: BorderRadius.circular(24.0),
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (icon != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4.0),
-                child: icon,
-              ),
-            Text(
-              text,
-              style: const TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.w600,
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (icon != null) icon,
+                  Text(
+                    text,
+                    style: const TextStyle(
+                      fontSize: 18.0,
+                      height: 1.0,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -465,7 +493,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        child,
+        Expanded(child: child),
         const SizedBox(height: 4),
         Text(
           text,
@@ -492,11 +520,12 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
   @override
   Widget build(BuildContext context) {
     final currentPlaying = ref.watch(currentPlayingMusicProvider);
-    bool isPlayingVideo = musicNotifier.isPlayingVideo;
+    bool isPlayingVideo = ref.watch(musicPlayerShowingVideoProvider);
+
     return SlidingUpPanelWidget(
       panelController: widget.panelController,
       animationController: musicPlayerAnimationController,
-      controlHeight: 90,
+      controlHeight: currentPlaying != null ? 90 : 0,
       enableOnTap: true,
       onTap: () {
         if (widget.panelController.status == SlidingUpPanelStatus.collapsed) {
@@ -513,137 +542,150 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
         }
       },
       anchor: 1.0,
-      child: AnimatedBuilder(
-        animation: musicPlayerAnimationController,
-        builder: (context, child) {
-          final musicPlayerSize = musicPlayerAnimationController.value;
-          final musicPlayerHeight =
-              musicPlayerSize * MediaQuery.of(context).size.height;
-          bool musicPlayerSizeOver0_25 = musicPlayerSize > 0.25;
-          return Container(
-            color: Colors.white,
-            height: MediaQuery.of(context).size.height,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (musicPlayerSizeOver0_25)
-                  SafeArea(
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: topTitle(currentPlaying?.title ?? '-'),
-                        ),
-                        const SizedBox(height: 4.0),
-                        artistName(currentPlaying?.artist.name ?? ''),
-                        const SizedBox(height: 8.0),
-                        if (musicPlayerSizeOver0_25)
-                          albumImage(
-                            size: musicPlayerSize,
-                            imageUrl: currentPlaying?.thumbnailUrl,
-                          ),
-                      ],
-                    ),
-                  ),
-                StreamBuilder(
-                  stream: musicNotifier.playerStateStream,
-                  builder: (context, playerStateAsync) {
-                    return PlayingMusicBar(
-                      isPlaying: playerStateAsync.data?.playing ?? false,
-                      title: currentPlaying?.title ?? '음악 재생 대기 중',
-                      artist: currentPlaying?.artist.name ?? '',
-                      height: musicPlayerHeight,
-                      size: musicPlayerSize,
-                      onPrevious: () {},
-                      onPlay: () {
-                        musicNotifier.togglePlay();
-                      },
-                      onNext: () {},
-                    );
-                  },
-                ),
-                if (musicPlayerSizeOver0_25)
-                  Expanded(
-                    child: Material(
-                      color: Colors.transparent,
-                      child: Column(
-                        children: <Widget>[
-                          const SizedBox(height: 20),
-                          Expanded(child: middleButtons),
-                          // seeLyricButton,
-                          const SizedBox(height: 12.0),
-                          StreamBuilder(
-                            stream: musicNotifier.durationStream,
-                            builder: (context, maxDuration) {
-                              return StreamBuilder(
-                                stream: musicNotifier.positionStream,
-                                builder: (context, curDuration) {
-                                  return progressBar(
-                                    curMilliSec:
-                                        curDuration.data?.inMilliseconds ?? 0,
-                                    maxMilliSec:
-                                        maxDuration.data?.inMilliseconds ?? 0,
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
+      child: currentPlaying == null
+          ? Container()
+          : AnimatedBuilder(
+              animation: musicPlayerAnimationController,
+              builder: (context, child) {
+                final musicPlayerSize = musicPlayerAnimationController.value;
+                final musicPlayerHeight =
+                    musicPlayerSize * MediaQuery.of(context).size.height;
+                bool musicPlayerSizeOver0_25 = musicPlayerSize > 0.25;
+                return Container(
+                  color: Colors.white,
+                  height: MediaQuery.of(context).size.height,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (musicPlayerSizeOver0_25)
+                        SafeArea(
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8.0),
+                                child: topTitle(currentPlaying?.title ?? '-'),
                               ),
-                              child: StreamBuilder(
-                                stream: musicNotifier.playerStateStream,
-                                builder: (context, playerStateAsync) {
-                                  return bottomButtonGroup(
-                                    isPlaying:
-                                        playerStateAsync.data?.playing ?? false,
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                          // const SizedBox(height: 42.0),
-                          Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12.5),
-                            decoration: const BoxDecoration(
-                              color: ColorTable.palePink,
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(24),
-                                topRight: Radius.circular(24),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SvgPicture.asset(
-                                  'assets/icons/playlist_icon.svg',
-                                  width: 32,
-                                  height: 32,
+                              const SizedBox(height: 4.0),
+                              artistName(currentPlaying?.artist.name ?? ''),
+                              const SizedBox(height: 8.0),
+                              if (musicPlayerSizeOver0_25)
+                                albumImage(
+                                  size: musicPlayerSize,
+                                  imageUrl: currentPlaying?.thumbnailUrl,
+                                  showingVideo: isPlayingVideo,
                                 ),
-                                const SizedBox(width: 8.0),
-                                const Text(
-                                  '재생목록',
-                                  style: TextStyle(
-                                    fontSize: 18.0,
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.25,
+                            ],
+                          ),
+                        ),
+                      StreamBuilder(
+                        stream: musicNotifier.playerStateStream,
+                        builder: (context, playerStateAsync) {
+                          return PlayingMusicBar(
+                            isPlaying: playerStateAsync.data?.playing ?? false,
+                            title: currentPlaying?.title ?? '음악 재생 대기 중',
+                            artist: currentPlaying?.artist.name ?? '',
+                            height: musicPlayerHeight,
+                            size: musicPlayerSize,
+                            onPrevious: () {
+                              playlistNotifier.skipPrevious();
+                            },
+                            onPlay: () {
+                              musicNotifier.togglePlay();
+                            },
+                            onNext: () {
+                              playlistNotifier.skipNext();
+                            },
+                          );
+                        },
+                      ),
+                      if (musicPlayerSizeOver0_25)
+                        Expanded(
+                          child: Material(
+                            color: Colors.transparent,
+                            child: Column(
+                              children: <Widget>[
+                                const SizedBox(height: 20),
+                                Expanded(child: middleButtons(currentPlaying)),
+                                // seeLyricButton,
+                                const SizedBox(height: 12.0),
+                                StreamBuilder(
+                                  stream: musicNotifier.durationStream,
+                                  builder: (context, maxDuration) {
+                                    return StreamBuilder(
+                                      stream: musicNotifier.positionStream,
+                                      builder: (context, curDuration) {
+                                        return progressBar(
+                                          curMilliSec: curDuration
+                                                  .data?.inMilliseconds ??
+                                              0,
+                                          maxMilliSec: maxDuration
+                                                  .data?.inMilliseconds ??
+                                              0,
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 12,
+                                    ),
+                                    child: StreamBuilder(
+                                      stream: musicNotifier.playerStateStream,
+                                      builder: (context, playerStateAsync) {
+                                        return bottomButtonGroup(
+                                          isPlaying:
+                                              playerStateAsync.data?.playing ??
+                                                  false,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+
+                                // const SizedBox(height: 42.0),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12.5),
+                                  decoration: const BoxDecoration(
+                                    color: ColorTable.palePink,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(24),
+                                      topRight: Radius.circular(24),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SvgPicture.asset(
+                                        'assets/icons/playlist_icon.svg',
+                                        width: 32,
+                                        height: 32,
+                                      ),
+                                      const SizedBox(width: 8.0),
+                                      const Text(
+                                        '재생목록',
+                                        style: TextStyle(
+                                          fontSize: 18.0,
+                                          fontWeight: FontWeight.w600,
+                                          height: 1.25,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
+                    ],
                   ),
-              ],
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }

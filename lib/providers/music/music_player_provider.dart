@@ -1,7 +1,11 @@
 import 'package:just_audio/just_audio.dart';
-import 'package:video_player/video_player.dart';
+import 'package:music_dabang/common/utils.dart';
 import 'package:music_dabang/models/music/music_model.dart';
+import 'package:music_dabang/models/music/playlist_item_model.dart';
+import 'package:music_dabang/models/music/playlist_model.dart';
+import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 import 'package:riverpod/riverpod.dart';
+import 'package:video_player/video_player.dart';
 
 /// providers about music player
 
@@ -11,10 +15,22 @@ final musicPlayerExpandedProvider =
   (ref) => MusicPlayerExpandedStateNotifier(),
 );
 
+/// 플레이어에서 비디오를 보여주는지 여부
+final musicPlayerShowingVideoProvider =
+    StateNotifierProvider<MusicPlayerShowingVideoStateNotifier, bool>(
+  (ref) => MusicPlayerShowingVideoStateNotifier(),
+);
+
+/// 플레이어에서 재생 중인 플레이리스트. 없으면 알고리즘에 따라 재생
+final currentPlaylistProvider =
+    StateNotifierProvider<CurrentPlayingPlaylistStateNotifier, PlaylistModel?>(
+  (ref) => CurrentPlayingPlaylistStateNotifier(ref: ref),
+);
+
 /// 플레이어에서 재생 중인 음악
 final currentPlayingMusicProvider =
     StateNotifierProvider<CurrentPlayingMusicStateNotifier, MusicModel?>(
-  (ref) => CurrentPlayingMusicStateNotifier(),
+  (ref) => CurrentPlayingMusicStateNotifier(ref: ref),
 );
 
 class MusicPlayerExpandedStateNotifier extends StateNotifier<bool> {
@@ -23,27 +39,160 @@ class MusicPlayerExpandedStateNotifier extends StateNotifier<bool> {
   set expanded(bool value) => state = value;
 }
 
+class MusicPlayerShowingVideoStateNotifier extends StateNotifier<bool> {
+  MusicPlayerShowingVideoStateNotifier() : super(false);
+
+  set showingVideo(bool value) => state = value;
+}
+
+class CurrentPlayingPlaylistStateNotifier
+    extends StateNotifier<PlaylistModel?> {
+  final Ref ref;
+
+  CurrentPlayingPlaylistStateNotifier({required this.ref}) : super(null);
+
+  Future<void> setPlaylist(
+    PlaylistModel? playlist, {
+    PlaylistItemModel? itemToPlay,
+  }) async {
+    // if (playlist?.id == state?.id) {
+    //   return;
+    // }
+    state = playlist;
+    // 플레이리스트가 변경되면 플레이리스트 아이템 목록을 다시 불러옴 -> 현재 재생 중인 음악이 변경됨
+    if (playlist != null) {
+      // 지정된 아이템이 있으면 해당 아이템을 재생
+      if (itemToPlay != null) {
+        await ref
+            .read(currentPlayingMusicProvider.notifier)
+            .setCurrentPlayingPlaylistItem(itemToPlay);
+      }
+      // 없으면 첫 번째 아이템을 재생
+      else {
+        await ref
+            .read(playlistItemsProvider(playlist.id).notifier)
+            .refresh()
+            .then((items) async {
+          if (items.isNotEmpty) {
+            await ref
+                .read(currentPlayingMusicProvider.notifier)
+                .setCurrentPlayingPlaylistItem(items[0]);
+          }
+        });
+      }
+    }
+  }
+
+  Future<PlaylistItemModel?> skipPrevious() async {
+    int? currentPlayingItemId = ref
+        .read(currentPlayingMusicProvider.notifier)
+        .currentPlayingPlaylistItemId;
+    if (state != null && currentPlayingItemId != null) {
+      PlaylistItemModel? currentPlayingItem = ref
+          .read(playlistItemsProvider(state!.id).notifier)
+          .findById(currentPlayingItemId);
+      if (currentPlayingItem != null) {
+        PlaylistItemModel? prevItem = ref
+            .read(playlistItemsProvider(state!.id).notifier)
+            .getPrevious(currentPlayingItemId);
+        if (prevItem != null) {
+          await ref
+              .read(currentPlayingMusicProvider.notifier)
+              .setCurrentPlayingPlaylistItem(prevItem);
+          return prevItem;
+        }
+      }
+    }
+    return null;
+  }
+
+  Future<PlaylistItemModel?> skipNext() async {
+    int? currentPlayingItemId = ref
+        .read(currentPlayingMusicProvider.notifier)
+        .currentPlayingPlaylistItemId;
+    print("skipNext $currentPlayingItemId");
+    if (state != null && currentPlayingItemId != null) {
+      PlaylistItemModel? currentPlayingItem = ref
+          .read(playlistItemsProvider(state!.id).notifier)
+          .findById(currentPlayingItemId);
+      if (currentPlayingItem != null) {
+        PlaylistItemModel? nextItem = ref
+            .read(playlistItemsProvider(state!.id).notifier)
+            .getNext(currentPlayingItemId);
+        if (nextItem != null) {
+          await ref
+              .read(currentPlayingMusicProvider.notifier)
+              .setCurrentPlayingPlaylistItem(nextItem);
+          return nextItem;
+        }
+      }
+    }
+    return null;
+  }
+}
+
 class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
+  final Ref ref;
   final AudioPlayer _audioPlayer = AudioPlayer();
   VideoPlayerController? _videoPlayerController;
-  bool _isPlayingVideo = false; // 비디오 재생 여부
+  bool _showVideo = false;
   double _volume = 1.0; // 기본 볼륨 설정
+  int? _currentPlayingPlaylistItemId;
 
-  bool get isPlayingVideo => _isPlayingVideo;
   VideoPlayerController? get videoPlayerController => _videoPlayerController;
 
-  CurrentPlayingMusicStateNotifier() : super(null);
+  /// 현재 실행 중인 플레이리스트 아이템 ID
+  int? get currentPlayingPlaylistItemId => _currentPlayingPlaylistItemId;
+
+  /// 현재 실행 중인 플레이리스트 아이템 설정
+  Future<void> setCurrentPlayingPlaylistItem(PlaylistItemModel? item) async {
+    _currentPlayingPlaylistItemId = item?.id;
+    await setPlayingMusic(item?.musicContent);
+  }
+
+  /// 사용자 요청에 따라 비디오를 보여주는 여부.
+  bool get showVideo => _showVideo;
+
+  /// 현재 재생 위치
+  Duration get currentPosition => _audioPlayer.position;
+
+  set showVideo(bool value) {
+    _showVideo = value;
+    if (value) {
+      _playVideo(state!.videoContentUrl);
+    } else {
+      _videoPlayerController?.dispose();
+      ref.read(musicPlayerShowingVideoProvider.notifier).showingVideo = false;
+    }
+  }
+
+  CurrentPlayingMusicStateNotifier({required this.ref}) : super(null) {
+    _audioPlayer.playerStateStream.listen((PlayerState playerState) {
+      if (playerState.processingState == ProcessingState.completed) {
+        _handleMusicCompletion();
+      }
+    });
+  }
+
+  // 음악 재생 완료 시 처리
+  void _handleMusicCompletion() {
+    ref.read(currentPlaylistProvider.notifier).skipNext();
+  }
 
   // 현재 재생 중인 음악 설정
-  set playingMusic(MusicModel? music) {
-    if (music?.id == state?.id) {
-      return;
-    }
+  Future<void> setPlayingMusic(MusicModel? music) async {
+    // if (music?.id == state?.id) {
+    //   return;
+    // }
     state = music;
+    AidolUtils.d("set music ${music?.title}");
     if (music != null) {
       _playMusic(music.musicContentUrl);
-      if (_isPlayingVideo || music.musicContentType == MusicContentType.live) {
+      if (showVideo || music.musicContentType == MusicContentType.live) {
         _playVideo(music.videoContentUrl);
+      } else {
+        _videoPlayerController?.dispose();
+        ref.read(musicPlayerShowingVideoProvider.notifier).showingVideo = false;
       }
     } else {
       _audioPlayer.stop();
@@ -77,14 +226,27 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
     try {
       _videoPlayerController = VideoPlayerController.networkUrl(
         Uri.parse(url),
-        videoPlayerOptions: VideoPlayerOptions(),
+        // 오디오 재생 중에 다른 오디오 재생 허용
+        videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
       );
       await _videoPlayerController!.initialize();
       await _videoPlayerController!.setVolume(0); // 오디오를 비활성화
       if (startPosition != Duration.zero) {
         await _videoPlayerController!.seekTo(startPosition); // 현재 위치에서 시작
+      } else {
+        // 오디오와 비디오 간 동기화
+        await _videoPlayerController!.seekTo(_audioPlayer.position);
       }
       await _videoPlayerController!.play();
+      // 5초까지 대기
+      int waitForVideoToInit = 0;
+      while (waitForVideoToInit < 500 &&
+          !_videoPlayerController!.value.isInitialized) {
+        await Future.delayed(const Duration(milliseconds: 10));
+        waitForVideoToInit++;
+      }
+      ref.read(musicPlayerShowingVideoProvider.notifier).showingVideo = false;
+      ref.read(musicPlayerShowingVideoProvider.notifier).showingVideo = true;
     } catch (e) {
       print('Error playing video: $e');
     }
@@ -92,17 +254,16 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
 
   // 오디오와 비디오 간 전환 함수
   Future<void> toggleAudioVideo(bool playVideo) async {
-    if (playVideo == _isPlayingVideo) return;
+    if (playVideo == ref.read(musicPlayerShowingVideoProvider)) return;
 
-    _isPlayingVideo = playVideo;
-    final currentPosition = _audioPlayer.position;
-
-    if (_isPlayingVideo) {
+    if (playVideo) {
+      final currentPosition = _audioPlayer.position;
       await _playVideo(state!.videoContentUrl, currentPosition);
     } else {
       await _videoPlayerController?.pause();
       await _videoPlayerController?.dispose();
       _videoPlayerController = null;
+      ref.read(musicPlayerShowingVideoProvider.notifier).showingVideo = false;
     }
   }
 
@@ -113,11 +274,9 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   }
 
   // 특정 위치로 커서 이동 (seek)
-  void seekAudio(Duration position) {
+  void seekAudio(Duration position) async {
+    await _videoPlayerController?.seekTo(position);
     _audioPlayer.seek(position);
-    if (_isPlayingVideo) {
-      _videoPlayerController?.seekTo(position);
-    }
   }
 
   void pauseAudio() {
@@ -126,9 +285,9 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   }
 
   void playAudio() async {
-    _audioPlayer.play();
     await _videoPlayerController?.seekTo(_audioPlayer.position);
     await _videoPlayerController?.play();
+    _audioPlayer.play();
   }
 
   void togglePlay() {

@@ -1,9 +1,7 @@
 import 'dart:math';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_sliding_up_panel/flutter_sliding_up_panel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:music_dabang/components/arrow_button.dart';
 import 'package:music_dabang/components/custom_search_bar.dart';
@@ -82,6 +80,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             .map(
               (e) => Padding(
                 padding: const EdgeInsets.only(right: 8.0),
+                child: e,
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+
+  /// 상하 8px, 좌우 16px padding
+  /// 자식들 간의 간격 8px
+  Widget vertList({required List<Widget> children}) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: Column(
+        children: children
+            .map(
+              (e) => Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
                 child: e,
               ),
             )
@@ -179,82 +198,75 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final mainPlaylists = ref.watch(playlistMainProvider);
     final livePlaylists = ref.watch(musicLiveItemsProvider);
 
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (_) {
-        print('asd!!!');
-        if (mpFullSize) {
-          togglePlayer();
-        }
-      },
-      child: GestureDetector(
-        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-        child: Scaffold(
-          body: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                appBar,
-                const SizedBox(height: 8.0),
-                ph16(
-                  child: titleLink(
-                    title: "임영웅의 공연영상",
-                    onPressed: () {},
+    return GestureDetector(
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: Scaffold(
+        body: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              appBar,
+              const SizedBox(height: 8.0),
+              ph16(
+                child: titleLink(
+                  title: "임영웅의 공연영상",
+                  onPressed: () {},
+                ),
+              ),
+              horizList(
+                children: livePlaylists
+                    .sublist(0, min(5, livePlaylists.length))
+                    .map((p) => ImageCard(
+                          title: p.title,
+                          imageUrl: p.thumbnailUrl,
+                          onTap: () async {
+                            await ref
+                                .read(currentPlayingMusicProvider.notifier)
+                                .setPlayingMusic(p);
+                            widget.expandPlayerFunc?.call();
+                          },
+                        ))
+                    .toList(),
+              ),
+              const SizedBox(height: 28.0),
+              // SingleChildScrollView(
+              //   scrollDirection: Axis.horizontal,
+              //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              //   child: ChipSelector(
+              //     items: ["임영웅", "송가인", "송호현", "김호중", "김호중", "김호중"],
+              //     selectedIndexes: [0],
+              //     onSelected: (index) {},
+              //   ),
+              // ),
+              const SizedBox(height: 8.0),
+              ph16(
+                child: titleLink(
+                  title: "임영웅 재생목록",
+                  onPressed: null,
+                ),
+              ),
+              const SizedBox(height: 12.0),
+              ...mainPlaylists.where((p) => p.userVisible).map(
+                    (p) => Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 6.0,
+                      ),
+                      child: PlayListNavItem(
+                        playlistModel: p,
+                        expandPlayerFunc: widget.expandPlayerFunc,
+                      ),
+                    ),
                   ),
+              const SizedBox(height: 24),
+              ...mainPlaylists.map(
+                (p) => PlaylistItemPreviewList(
+                  playlist: p,
+                  onTap: widget.expandPlayerFunc,
                 ),
-                horizList(
-                  children: livePlaylists
-                      .sublist(0, min(5, livePlaylists.length))
-                      .map((p) => ImageCard(
-                            title: p.title,
-                            imageUrl: p.thumbnailUrl,
-                            onTap: () {
-                              ref
-                                  .read(currentPlayingMusicProvider.notifier)
-                                  .playingMusic = p;
-                              widget.expandPlayerFunc?.call();
-                            },
-                          ))
-                      .toList(),
-                ),
-                const SizedBox(height: 28.0),
-                // SingleChildScrollView(
-                //   scrollDirection: Axis.horizontal,
-                //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                //   child: ChipSelector(
-                //     items: ["임영웅", "송가인", "송호현", "김호중", "김호중", "김호중"],
-                //     selectedIndexes: [0],
-                //     onSelected: (index) {},
-                //   ),
-                // ),
-                const SizedBox(height: 8.0),
-                ph16(
-                  child: titleLink(
-                    title: "임영웅 재생목록",
-                    onPressed: null,
-                  ),
-                ),
-                const SizedBox(height: 12.0),
-                horizList(
-                  children: mainPlaylists
-                      .where((p) => p.userVisible)
-                      .map((p) => PlayListNavItem(
-                            playlistId: p.id,
-                            name: '${p.name} 모음',
-                          ))
-                      .toList(),
-                ),
-                const SizedBox(height: 24),
-                ...mainPlaylists.map(
-                  (p) => PlaylistItemPreviewList(
-                    playlistId: p.id,
-                    title: '임영웅의 ${p.name}',
-                    onTap: widget.expandPlayerFunc,
-                  ),
-                ),
-                const SizedBox(height: 24),
-              ],
-            ),
+              ),
+              const SizedBox(height: 24),
+            ],
           ),
         ),
       ),
