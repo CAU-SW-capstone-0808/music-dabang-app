@@ -54,6 +54,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       onPopInvokedWithResult: (_, __) {
         if (musicPlayerExpanded) {
           _panelController.collapse();
+          return;
         }
         if (_lastAskedToExit == null ||
             DateTime.now().difference(_lastAskedToExit!).inSeconds > 2) {
