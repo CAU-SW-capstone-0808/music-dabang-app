@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_dabang/common/consts.dart';
 import 'package:music_dabang/models/user/token_model.dart';
+import 'package:music_dabang/models/user/user_join_model.dart';
+import 'package:music_dabang/models/user/user_login_model.dart';
 import 'package:music_dabang/models/user/user_model.dart';
 import 'package:music_dabang/providers/dio_provider.dart';
 import 'package:retrofit/http.dart';
@@ -31,4 +33,12 @@ abstract class UserRepository {
 
   @POST('/token/logout')
   Future<void> logoutToken({@Body() required TokenModel token});
+
+  @POST('/join')
+  Future<TokenModel> joinWithPhone({@Body() required UserJoinModel joinModel});
+
+  @POST('/login')
+  Future<TokenModel> loginWithPhone({
+    @Body() required UserLoginModel loginModel,
+  });
 }

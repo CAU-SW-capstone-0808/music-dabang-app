@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sliding_up_panel/sliding_up_panel_widget.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:music_dabang/components/bottom_nav_bar.dart';
+import 'package:music_dabang/dialogs/showConfirmDialog.dart';
 import 'package:music_dabang/models/user/user_model.dart';
 import 'package:music_dabang/providers/bottom_nav_provider.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
@@ -79,6 +80,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       onTap: (x) {
                         if (x < 2) {
                           ref.read(bottomNavProvider.notifier).select(x);
+                        } else if (x == 2) {
+                          showConfirmDialog(
+                            context,
+                            title: '로그아웃하시겠습니까?',
+                            onConfirm: () =>
+                                ref.read(userProvider.notifier).logout(),
+                          );
                         }
                       },
                     ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -50,12 +51,13 @@ class LoginHomeScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            TextButton(
-              onPressed: () {
-                context.goNamed(PhoneLoginScreen.routeName);
-              },
-              child: const Text("또는 휴대폰 번호로 로그인"),
-            ),
+            if (kIsWeb)
+              TextButton(
+                onPressed: () {
+                  context.goNamed(PhoneLoginScreen.routeName);
+                },
+                child: const Text("또는 휴대폰 번호로 로그인"),
+              ),
           ],
         ),
       ),

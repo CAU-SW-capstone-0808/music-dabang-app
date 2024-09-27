@@ -28,6 +28,7 @@ class MusicPlayerScreen extends ConsumerStatefulWidget {
 class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     with TickerProviderStateMixin {
   late AnimationController musicPlayerAnimationController;
+  final _playlistPanelController = SlidingUpPanelController();
 
   CurrentPlayingMusicStateNotifier get musicNotifier =>
       ref.read(currentPlayingMusicProvider.notifier);
@@ -700,7 +701,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                   controlHeight: 60,
                   anchor: 0.9,
                   upperBound: 0.9,
-                  panelController: SlidingUpPanelController(),
+                  panelController: _playlistPanelController,
                   child: Container(
                     color: Colors.white,
                     child: Column(

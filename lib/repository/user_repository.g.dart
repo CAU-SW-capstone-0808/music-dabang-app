@@ -110,6 +110,54 @@ class _UserRepository implements UserRepository {
         .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
   }
 
+  @override
+  Future<TokenModel> joinWithPhone({required joinModel}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(joinModel.toJson());
+    final _result = await _dio
+        .fetch<Map<String, dynamic>>(_setStreamType<TokenModel>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              '/join',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = TokenModel.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<TokenModel> loginWithPhone({required loginModel}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(loginModel.toJson());
+    final _result = await _dio
+        .fetch<Map<String, dynamic>>(_setStreamType<TokenModel>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              '/login',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = TokenModel.fromJson(_result.data!);
+    return value;
+  }
+
   RequestOptions _setStreamType<T>(RequestOptions requestOptions) {
     if (T != dynamic &&
         !(requestOptions.responseType == ResponseType.bytes ||

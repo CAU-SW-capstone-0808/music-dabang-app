@@ -1,21 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:go_router/go_router.dart';
 import 'package:music_dabang/components/birth_gender_input.dart';
 import 'package:music_dabang/components/common_layout.dart';
 import 'package:music_dabang/components/input_field.dart';
 import 'package:music_dabang/components/title_description_text.dart';
 import 'package:music_dabang/components/wide_button.dart';
 import 'package:music_dabang/models/user/gender.dart';
+import 'package:music_dabang/models/user/user_join_model.dart';
+import 'package:music_dabang/providers/router_provider.dart';
+import 'package:music_dabang/providers/user_provider.dart';
+import 'package:music_dabang/screens/components/privacy_agreement_text.dart';
+import 'package:music_dabang/screens/login/phone_login_screen.dart';
+import 'package:music_dabang/screens/main_screen.dart';
 
-class PhoneJoinScreen extends StatefulWidget {
+class PhoneJoinScreen extends ConsumerStatefulWidget {
   static const routeName = 'phone-join';
 
   const PhoneJoinScreen({super.key});
 
   @override
-  State<PhoneJoinScreen> createState() => _PhoneJoinScreenState();
+  ConsumerState<PhoneJoinScreen> createState() => _PhoneJoinScreenState();
 }
 
-class _PhoneJoinScreenState extends State<PhoneJoinScreen> {
+class _PhoneJoinScreenState extends ConsumerState<PhoneJoinScreen> {
   final phoneController = TextEditingController();
   final nicknameController = TextEditingController();
   final birthController = TextEditingController();
@@ -44,8 +53,61 @@ class _PhoneJoinScreenState extends State<PhoneJoinScreen> {
       );
 
   Future<void> _onSubmit() async {
-    Gender? parsedGender = parseGender(gender);
-    if (parsedGender != null) {}
+    String phone = phoneController.value.text;
+    String nickname = nicknameController.value.text;
+    String birth = birthController.value.text;
+    Gender? gender = parseGender(genderController.value.text);
+    String password = passwordController.value.text;
+    if (gender == null) {
+      Fluttertoast.showToast(msg: '성별을 선택해주세요.');
+      return;
+    }
+    try {
+      await ref.read(userProvider.notifier).joinWithPhone(
+            userJoinModel: UserJoinModel(
+              phone: phone,
+              nickname: nickname,
+              password: password,
+              gender: gender,
+              birth: birth,
+            ),
+          );
+      Fluttertoast.showToast(msg: '회원가입이 완료되었습니다.');
+      context.goNamed(MainScreen.routeName);
+    } catch (e) {
+      print(e);
+      Fluttertoast.showToast(msg: '오류가 발생했습니다.');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text("개인정보 처리방침 동의"),
+          content: const SingleChildScrollView(child: PrivacyAgreementText()),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Fluttertoast.showToast(msg: '동의해야 가입이 가능합니다.');
+                context.goNamed(PhoneLoginScreen.routeName);
+              },
+              child: const Text("동의 안함"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("동의"),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   @override
@@ -59,13 +121,20 @@ class _PhoneJoinScreenState extends State<PhoneJoinScreen> {
           child: Column(
             children: [
               h32,
-              const InputField(label: "전화번호"),
+              InputField(
+                controller: phoneController,
+                label: "전화번호",
+              ),
               h32,
-              const InputField(label: "닉네임"),
+              InputField(
+                controller: nicknameController,
+                label: "닉네임",
+              ),
               h32,
               birthGenderPageItem,
               h32,
-              const InputField(
+              InputField(
+                controller: passwordController,
                 label: "비밀번호",
                 obscureText: true,
               ),

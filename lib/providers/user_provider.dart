@@ -3,6 +3,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:music_dabang/common/utils.dart';
 import 'package:music_dabang/models/user/token_model.dart';
+import 'package:music_dabang/models/user/user_join_model.dart';
+import 'package:music_dabang/models/user/user_login_model.dart';
 import 'package:music_dabang/models/user/user_model.dart';
 import 'package:music_dabang/providers/secret_value_provider.dart';
 import 'package:music_dabang/providers/secure_storage_provider.dart';
@@ -48,6 +50,46 @@ class UserStateNotifier extends StateNotifier<UserModelBase> {
     }
   }
 
+  Future<void> _saveTokenAndFetch(TokenModel tokenModel) async {
+    await Future.wait([
+      ref
+          .read(secretValueProvider('accessToken').notifier)
+          .setValue(tokenModel.accessToken),
+      ref
+          .read(secretValueProvider('refreshToken').notifier)
+          .setValue(tokenModel.refreshToken),
+    ]);
+    await fetch();
+  }
+
+  Future<TokenModel?> _fetchTokens() async {
+    String? refreshToken =
+        await ref.read(secretValueProvider('refreshToken').notifier).fetchIf();
+    String? accessToken =
+        await ref.read(secretValueProvider('accessToken').notifier).fetchIf();
+    if (accessToken == null || refreshToken == null) {
+      return null;
+    }
+    return TokenModel(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    );
+  }
+
+  Future<void> joinWithPhone({
+    required UserJoinModel userJoinModel,
+  }) async {
+    final serviceToken =
+        await userRepository.joinWithPhone(joinModel: userJoinModel);
+    await _saveTokenAndFetch(serviceToken);
+  }
+
+  Future<void> loginWithPhone({required UserLoginModel userLogin}) async {
+    final serviceToken =
+        await userRepository.loginWithPhone(loginModel: userLogin);
+    await _saveTokenAndFetch(serviceToken);
+  }
+
   Future<void> loginWithKakao() async {
     try {
       late OAuthToken token;
@@ -64,13 +106,7 @@ class UserStateNotifier extends StateNotifier<UserModelBase> {
       final serviceToken =
           await userRepository.loginWithKakao(accessToken: token.accessToken);
       // save jwt service token to secure storage
-      await Future.wait([
-        secureStorage.write(
-            key: 'accessToken', value: serviceToken.accessToken),
-        secureStorage.write(
-            key: 'refreshToken', value: serviceToken.refreshToken),
-      ]);
-      await fetch();
+      _saveTokenAndFetch(serviceToken);
     } catch (error) {
       debugPrint('카카오계정으로 로그인 실패 $error');
       state = UserModelError('카카오계정으로 로그인 실패');
@@ -167,8 +203,18 @@ class UserStateNotifier extends StateNotifier<UserModelBase> {
     return state = await userRepository.getMe();
   }
 
-  void logout() {
+  Future<void> logout() async {
     state = UserModelLoading();
+    final token = await _fetchTokens();
+    try {
+      if (token != null) {
+        await userRepository.logoutToken(token: token);
+      }
+      state = UserModelNone();
+    } catch (e) {
+      print(e);
+      state = UserModelError('로그아웃에 실패했습니다.');
+    }
   }
 
   void error(String message) {

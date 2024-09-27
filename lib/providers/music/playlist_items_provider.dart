@@ -16,6 +16,16 @@ final playlistItemsProvider = StateNotifierProviderFamily<
   );
 });
 
+final playlistItemsCountProvider =
+    StateNotifierProviderFamily<PlaylistItemsCountStateNotifier, int?, int>(
+        (ref, playlistId) {
+  final musicRepository = ref.watch(musicRepositoryProvider);
+  return PlaylistItemsCountStateNotifier(
+    playlistId: playlistId,
+    musicRepository: musicRepository,
+  );
+});
+
 class PlaylistItemsStateNotifier
     extends AbstractPageNotifier<PlaylistItemModel> {
   final int playlistId;
@@ -70,5 +80,21 @@ class PlaylistItemsStateNotifier
       }
     }
     return null;
+  }
+}
+
+class PlaylistItemsCountStateNotifier extends StateNotifier<int?> {
+  final int playlistId;
+  final MusicRepository musicRepository;
+
+  PlaylistItemsCountStateNotifier({
+    required this.playlistId,
+    required this.musicRepository,
+  }) : super(null) {
+    fetch();
+  }
+
+  Future<void> fetch() async {
+    state = await musicRepository.getPlaylistItemCount(playlistId: playlistId);
   }
 }

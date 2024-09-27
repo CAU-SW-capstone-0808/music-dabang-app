@@ -11,7 +11,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 final dioProvider = Provider<Dio>((ref) {
   final secureStorage = ref.watch(secureStorageProvider);
   final dio = Dio(
-    BaseOptions(connectTimeout: const Duration(minutes: 10)),
+    BaseOptions(connectTimeout: const Duration(seconds: 10)),
   );
   dio.interceptors.add(CustomInterceptor(ref: ref, storage: secureStorage));
   return dio;
@@ -33,7 +33,10 @@ class CustomInterceptor extends Interceptor {
     AidolUtils.d('[REQ] [${options.method}] ${options.uri}');
     AidolUtils.d(
         '[REQ] data(type=${options.data.runtimeType}) = ${options.data}');
-    if (reqPath.contains('refresh')) {
+    if (reqPath.contains('/login') || reqPath.contains('/join')) {
+      // pass
+      AidolUtils.d('need no access token : login/join');
+    } else if (reqPath.contains('refresh')) {
       String? refreshToken = await ref
           .read(secretValueProvider("refreshToken").notifier)
           .fetchIf();

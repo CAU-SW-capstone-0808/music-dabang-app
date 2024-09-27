@@ -29,6 +29,9 @@ abstract class MusicRepository {
     @Queries() required Map<String, dynamic> queries,
   });
 
+  @GET("/playlists/my/items/count")
+  Future<int> getMyMusicItemsCount();
+
   @POST("/playlists/my/items")
   Future<PlaylistItemModel> addMyMusicItem({
     @Query("music_id") required int musicId,
@@ -43,6 +46,11 @@ abstract class MusicRepository {
   Future<PageResponseModel> getPlaylistItems({
     @Path("playlistId") required int playlistId,
     @Queries() required Map<String, dynamic> queries,
+  });
+
+  @GET("/playlists/{playlistId}/items/count")
+  Future<int> getPlaylistItemCount({
+    @Path("playlistId") required int playlistId,
   });
 
   @GET("/search")

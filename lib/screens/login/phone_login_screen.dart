@@ -1,14 +1,16 @@
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:music_dabang/common/colors.dart';
 import 'package:music_dabang/common/regex_table.dart';
 import 'package:music_dabang/components/input_field.dart';
 import 'package:music_dabang/components/common_layout.dart';
 import 'package:music_dabang/components/title_description_text.dart';
 import 'package:music_dabang/components/wide_button.dart';
-import 'package:music_dabang/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:music_dabang/models/user/user_login_model.dart';
+import 'package:music_dabang/providers/user_provider.dart';
 import 'package:music_dabang/screens/login/phone_join_screen.dart';
 
 class PhoneLoginScreen extends ConsumerStatefulWidget {
@@ -161,9 +163,19 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
   Future<bool> login() async {
     final phone = phoneController.value.text;
     final password = passwordController.value.text;
-    return false;
-    // await ref.read(userProvider.notifier).login(phone, password);
-    // return ref.read(userMeProvider) is UserDetailModel;
+    try {
+      await ref.read(userProvider.notifier).loginWithPhone(
+            userLogin: UserLoginModel(
+              phone: phone,
+              password: password,
+            ),
+          );
+      return true;
+    } catch (e) {
+      print(e);
+      Fluttertoast.showToast(msg: '로그인에 실패했습니다.');
+      return false;
+    }
   }
 
   /// 로그인 이후 상태 처리
@@ -171,6 +183,9 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
     FocusManager.instance.primaryFocus?.unfocus();
     bool result = await login();
     setState(() => _passwordWrong = !result);
+    if (result) {
+      context.go('/');
+    }
   }
 
   @override

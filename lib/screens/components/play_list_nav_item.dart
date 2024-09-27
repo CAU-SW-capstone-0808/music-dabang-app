@@ -23,6 +23,7 @@ class PlayListNavItem extends ConsumerWidget {
     var borderRadius = BorderRadius.circular(24);
     List<PlaylistItemModel> items =
         ref.watch(playlistItemsProvider(playlistModel.id));
+    int? itemsCount = ref.watch(playlistItemsCountProvider(playlistModel.id));
     PlaylistItemModel? firstItem = items.isNotEmpty ? items[0] : null;
     if (items.length > 10) {
       items = items.sublist(0, 10);
@@ -87,25 +88,31 @@ class PlayListNavItem extends ConsumerWidget {
                           style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w600,
+                            height: 1.25,
                           ),
                         ),
                         Expanded(
-                          child: SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: items
-                                  .map(
-                                    (e) => Text(
-                                      e.musicContent.title,
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        height: 1.25,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SizedBox(height: 12.0),
+                              if (firstItem != null)
+                                Text(
+                                  firstItem.musicContent.title,
+                                  style: const TextStyle(
+                                    fontSize: 18.0,
+                                    height: 1.25,
+                                  ),
+                                ),
+                              if (itemsCount != null && itemsCount > 1)
+                                Text(
+                                  "외 ${itemsCount - 1}곡",
+                                  style: const TextStyle(
+                                    fontSize: 18.0,
+                                    height: 1.25,
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       ],
