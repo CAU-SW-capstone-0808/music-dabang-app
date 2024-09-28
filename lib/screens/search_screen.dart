@@ -4,9 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:music_dabang/common/colors.dart';
 import 'package:music_dabang/components/custom_search_bar.dart';
+import 'package:music_dabang/components/music_list_card.dart';
+import 'package:music_dabang/components/to_top_button.dart';
+import 'package:music_dabang/models/music/music_model.dart';
+import 'package:music_dabang/providers/common/page_scroll_controller.dart';
 import 'package:music_dabang/providers/music/music_autocomplete_provider.dart';
+import 'package:music_dabang/providers/music/music_player_provider.dart';
+import 'package:music_dabang/providers/music/music_search_provider.dart';
 import 'package:music_dabang/providers/music/recent_search_provider.dart';
 
+/// pop with boolean(is music selected)
 class SearchScreen extends ConsumerStatefulWidget {
   static const routeName = 'search';
 
@@ -17,10 +24,18 @@ class SearchScreen extends ConsumerStatefulWidget {
 }
 
 class _SearchScreenState extends ConsumerState<SearchScreen> {
-  String searchKeyword = '';
+  /// 검색 결과를 불러오는 데 쓰이는 키워드.
+  /// null: 입력 전
+  /// 공백: 입력 중
+  String? searchKeyword;
   final searchController = TextEditingController();
+  // 결과에 대한 스크롤 컨트롤러
+  final resultPageController = PageScrollController();
 
-  bool get showRecent => searchKeyword.isEmpty;
+  bool get showRecent => searchKeyword == null;
+  bool get showAutoComplete => searchKeyword == '';
+  bool get showResult => searchKeyword != null && searchKeyword!.isNotEmpty;
+  bool showToTop = false; // 위로 가기 버튼
 
   Widget searchItem({
     required String content,
@@ -29,8 +44,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }) {
     return InkWell(
       onTap: () {
-        setState(() => searchKeyword = content);
-        searchController.text = content;
         onTap?.call(content);
       },
       child: Ink(
@@ -92,96 +105,188 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
+  Widget recentScrollView(List<String> recentItems) {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          const SizedBox(height: 8),
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                '최근 검색',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          ...recentItems.map(
+            (q) => searchItem(
+              content: q,
+              onTap: search,
+              onRemove: (q) {
+                ref.read(recentSearchProvider.notifier).remove(q);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget autoCompleteScrollView(List<String> autoCompletes) {
+    return SingleChildScrollView(
+      child: Column(
+        children: autoCompletes
+            .map((q) => searchItem(
+                  content: q,
+                  onTap: search,
+                ))
+            .toList(),
+      ),
+    );
+  }
+
+  Widget resultScrollView(List<MusicModel> results, {bool loading = false}) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.read(musicSearchProvider(searchKeyword!).notifier).refresh();
+      },
+      child: ListView.builder(
+        controller: resultPageController,
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        itemCount: results.length,
+        itemBuilder: (build, index) {
+          final m = results[index];
+          return MusicListCard(
+            title: m.title,
+            artist: m.artist.name,
+            imageUrl: m.thumbnailUrl,
+            onTap: () async {
+              await ref
+                  .read(currentPlayingMusicProvider.notifier)
+                  .setPlayingMusic(m)
+                  .then((_) => context.pop(true));
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  void search(String q) {
+    if (q.isEmpty) return;
+    setState(() => searchKeyword = q);
+    searchController.text = q;
+    ref.read(recentSearchProvider.notifier).add(q);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    resultPageController.onEnd = () {
+      ref.read(musicSearchProvider(searchKeyword!).notifier).fetch();
+    };
+    resultPageController.onOffset = (ofs) {
+      bool showToTopByOffset = ofs > 800;
+      if (showToTopByOffset != showToTop) {
+        setState(() => showToTop = showToTopByOffset);
+      }
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     List<String> recentKeywords = ref.watch(recentSearchProvider);
     List<String> autoCompletes = ref.watch(musicAutoCompleteProvider);
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        body: SafeArea(
-          child: Column(
-            children: [
-              const SizedBox(height: 8.0),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12.0,
-                ),
-                child: Row(
-                  children: [
-                    if (!showRecent)
+    List<MusicModel> searchResult =
+        ref.watch(musicSearchProvider(searchKeyword ?? ''));
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (_, __) {
+        if (showResult) {
+          setState(() => searchKeyword = null);
+          searchController.clear();
+        } else {
+          context.pop(false);
+        }
+      },
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Scaffold(
+          floatingActionButton: showToTop && showResult
+              ? ToTopButton(scrollController: resultPageController)
+              : null,
+          body: SafeArea(
+            child: Column(
+              children: [
+                const SizedBox(height: 8.0),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12.0,
+                  ),
+                  child: Row(
+                    children: [
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4.0),
                         child: IconButton(
                           onPressed: () {
-                            context.pop();
+                            context.pop(false);
                           },
                           icon: const Icon(Icons.arrow_back),
                           iconSize: 32,
                         ),
                       ),
-                    if (showRecent) const SizedBox(width: 16.0),
-                    Expanded(
-                      child: Hero(
-                        tag: 'search-bar',
-                        child: CustomSearchBar(
-                          controller: searchController,
-                          autofocus: true,
-                          onChanged: (value) {
-                            ref
-                                .read(musicAutoCompleteProvider.notifier)
-                                .keyword = value;
-                            setState(() => searchKeyword = value);
-                          },
+                      Expanded(
+                        child: Hero(
+                          tag: 'search-bar',
+                          child: CustomSearchBar(
+                            controller: searchController,
+                            autofocus: true,
+                            showClearButton: showResult,
+                            onClear: () {
+                              setState(() => searchKeyword = null);
+                              searchController.clear();
+                            },
+                            onChanged: (value) {
+                              ref
+                                  .read(musicAutoCompleteProvider.notifier)
+                                  .keyword = value;
+                              if (value.isEmpty) {
+                                setState(() => searchKeyword = null);
+                              } else {
+                                setState(() => searchKeyword = '');
+                              }
+                            },
+                            onSubmitted: search,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 16.0),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      if (showRecent) ...[
-                        const SizedBox(height: 8),
-                        const Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Text(
-                              '최근 검색',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                        ...recentKeywords.map(
-                          (q) => searchItem(
-                            content: q,
-                            onRemove: (q) {
-                              ref.read(recentSearchProvider.notifier).remove(q);
-                            },
-                          ),
-                        ),
-                      ],
-                      if (!showRecent)
-                        ...autoCompletes.map((q) => searchItem(
-                            content: q,
-                            onTap: (x) {
-                              ref.read(recentSearchProvider.notifier).add(x);
-                            })),
+                      const SizedBox(width: 16.0),
                     ],
                   ),
                 ),
-              ),
-            ],
+                Expanded(
+                  child: showRecent
+                      ? recentScrollView(recentKeywords)
+                      : (showAutoComplete
+                          ? autoCompleteScrollView(autoCompletes)
+                          : resultScrollView(searchResult)),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    resultPageController.dispose();
   }
 }

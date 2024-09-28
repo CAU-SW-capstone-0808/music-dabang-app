@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_dabang/common/colors.dart';
 import 'package:music_dabang/components/bouncing_widget.dart';
+import 'package:music_dabang/components/cached_image.dart';
 import 'package:music_dabang/models/music/playlist_item_model.dart';
 import 'package:music_dabang/models/music/playlist_model.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
@@ -67,9 +68,8 @@ class PlayListNavItem extends ConsumerWidget {
                           ? Colors.white
                           : ColorTable.backGrey,
                       child: firstItem != null
-                          ? Image.network(
+                          ? CachedImage(
                               firstItem.musicContent.thumbnailUrl,
-                              fit: BoxFit.cover,
                             )
                           : null,
                     ),

@@ -58,6 +58,9 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'search',
             name: SearchScreen.routeName,
             builder: (context, state) => const SearchScreen(),
+            pageBuilder: (context, state) => createSlideGoRoute(
+              const SearchScreen(),
+            ),
           ),
         ],
       ),
@@ -83,3 +86,27 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+CustomTransitionPage createSlideGoRoute(
+  Widget child, {
+  bool opaque = true,
+}) {
+  return CustomTransitionPage(
+    child: child,
+    opaque: opaque,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(1.0, 0.0);
+      const end = Offset.zero;
+      const curve = Curves.ease;
+
+      var tween = Tween(begin: begin, end: end).chain(
+        CurveTween(curve: curve),
+      );
+
+      return SlideTransition(
+        position: animation.drive(tween),
+        child: child,
+      );
+    },
+  );
+}

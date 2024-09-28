@@ -28,6 +28,7 @@ abstract class AidolUtils {
   static Future<void> showToast(String message) async {
     await Fluttertoast.showToast(
       msg: message,
+      fontSize: 22,
       timeInSecForIosWeb: 3,
     );
   }

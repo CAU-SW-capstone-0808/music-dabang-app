@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:music_dabang/common/colors.dart';
+import 'package:music_dabang/components/cached_image.dart';
 import 'package:music_dabang/components/glass_interactor.dart';
 
 class MusicListCard extends StatelessWidget {
@@ -25,11 +26,10 @@ class MusicListCard extends StatelessWidget {
         clipBehavior: Clip.hardEdge,
         borderRadius: BorderRadius.circular(borderRadius),
         child: imageUrl != null
-            ? Image.network(
+            ? CachedImage(
                 imageUrl!,
                 width: width,
                 height: height,
-                fit: BoxFit.cover,
               )
             : Container(
                 width: width,

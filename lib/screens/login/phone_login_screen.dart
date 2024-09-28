@@ -1,6 +1,7 @@
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:music_dabang/common/colors.dart';
 import 'package:music_dabang/common/regex_table.dart';
+import 'package:music_dabang/common/utils.dart';
 import 'package:music_dabang/components/input_field.dart';
 import 'package:music_dabang/components/common_layout.dart';
 import 'package:music_dabang/components/title_description_text.dart';
@@ -173,7 +174,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
       return true;
     } catch (e) {
       print(e);
-      Fluttertoast.showToast(msg: '로그인에 실패했습니다.');
+      AidolUtils.showToast('로그인에 실패했습니다.');
       return false;
     }
   }

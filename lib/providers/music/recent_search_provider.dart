@@ -15,13 +15,22 @@ class RecentSearchStateNotifier extends StateNotifier<List<String>> {
     init();
   }
 
-  void init() {
-    state = localStorage.getItem(storageKey) ?? [];
+  void init() async {
+    await localStorage.ready; // localStorage 준비가 완료될 때까지 기다림
+    final storedData = localStorage.getItem(storageKey) as List<dynamic>?;
+
+    if (storedData != null) {
+      // 저장된 데이터를 상태로 설정
+      state = List<String>.from(storedData);
+    }
   }
 
   void add(String keyword) {
     if (state.contains(keyword)) {
       state.remove(keyword);
+    }
+    if (keyword.isEmpty) {
+      return;
     }
     state = [keyword, ...state];
     if (state.length > maxCount) {
@@ -31,7 +40,8 @@ class RecentSearchStateNotifier extends StateNotifier<List<String>> {
   }
 
   void remove(String keyword) {
-    state.remove(keyword);
+    state = state.where((element) => element != keyword).toList();
+    _save();
   }
 
   void _save() {

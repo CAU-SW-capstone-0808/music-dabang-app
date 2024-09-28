@@ -16,6 +16,7 @@ import 'package:music_dabang/providers/user_provider.dart';
 import 'package:music_dabang/screens/components/play_list_nav_item.dart';
 import 'package:music_dabang/screens/components/playlist_item_preview_list.dart';
 import 'package:music_dabang/screens/search_screen.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   static const routeName = 'home';
@@ -85,6 +86,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             )
             .toList(),
       ),
+    );
+  }
+
+  Widget carouselList({required List<Widget> children}) {
+    return CarouselSlider(
+      options: CarouselOptions(
+        aspectRatio: 1,
+        viewportFraction: 0.9,
+        initialPage: 0,
+        enableInfiniteScroll: true,
+        reverse: false,
+        autoPlay: true,
+        autoPlayInterval: const Duration(seconds: 6),
+        autoPlayAnimationDuration: const Duration(milliseconds: 800),
+        autoPlayCurve: Curves.fastOutSlowIn,
+        enlargeCenterPage: true,
+        scrollDirection: Axis.horizontal,
+        enlargeFactor: 0.2,
+      ),
+      items: children,
     );
   }
 
@@ -199,78 +220,143 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final livePlaylists = ref.watch(musicLiveItemsProvider);
     final currentPlayingMusic = ref.watch(currentPlayingMusicProvider);
 
-    return GestureDetector(
-      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-      child: Scaffold(
-        body: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              appBar,
-              const SizedBox(height: 8.0),
-              ph16(
-                child: titleLink(
-                  title: "임영웅의 공연영상",
-                  onPressed: () {},
+    var livePlayItems = carouselList(
+      children: livePlaylists
+          .sublist(0, min(10, livePlaylists.length))
+          .map((p) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: ImageCard(
+                  width: double.infinity,
+                  title: p.title,
+                  imageUrl: p.thumbnailUrl,
+                  onTap: () async {
+                    await ref
+                        .read(currentPlayingMusicProvider.notifier)
+                        .setPlayingMusic(p);
+                    widget.expandPlayerFunc?.call();
+                  },
+                ),
+              ))
+          .toList(),
+    );
+    var playlists = mainPlaylists.where((p) => p.userVisible).map(
+          (p) => Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 6.0,
+            ),
+            child: PlayListNavItem(
+              playlistModel: p,
+              expandPlayerFunc: widget.expandPlayerFunc,
+            ),
+          ),
+        );
+    var playlistItems = mainPlaylists.map(
+      (p) => PlaylistItemPreviewList(
+        playlist: p,
+        onTap: widget.expandPlayerFunc,
+      ),
+    );
+    var title1 = ph16(
+      child: titleLink(
+        title: "임영웅의 공연영상",
+        onPressed: null,
+      ),
+    );
+    var title2 = ph16(
+      child: titleLink(
+        title: "임영웅 재생목록",
+        onPressed: null,
+      ),
+    );
+
+    // Widget scrollView = SingleChildScrollView(
+    //   child: Column(
+    //     crossAxisAlignment: CrossAxisAlignment.start,
+    //     children: [
+    //       appBar,
+    //       const SizedBox(height: 8.0),
+    //       title1,
+    //       livePlayItems,
+    //       const SizedBox(height: 20.0),
+    //       title2,
+    //       const SizedBox(height: 12.0),
+    //       ...playlists,
+    //       const SizedBox(height: 24),
+    //       ...playlistItems,
+    //       const SizedBox(height: 24),
+    //       if (currentPlayingMusic != null) const SizedBox(height: 60),
+    //     ],
+    //   ),
+    // );
+
+    Widget scrollView = CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          title: const LogoTitle(),
+          floating: true,
+          snap: true,
+          expandedHeight: 0,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(60),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.black.withOpacity(0.12),
+                    width: 1,
+                  ),
                 ),
               ),
-              horizList(
-                children: livePlaylists
-                    .sublist(0, min(5, livePlaylists.length))
-                    .map((p) => ImageCard(
-                          title: p.title,
-                          imageUrl: p.thumbnailUrl,
-                          onTap: () async {
-                            await ref
-                                .read(currentPlayingMusicProvider.notifier)
-                                .setPlayingMusic(p);
-                            widget.expandPlayerFunc?.call();
-                          },
-                        ))
-                    .toList(),
-              ),
-              const SizedBox(height: 28.0),
-              // SingleChildScrollView(
-              //   scrollDirection: Axis.horizontal,
-              //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              //   child: ChipSelector(
-              //     items: ["임영웅", "송가인", "송호현", "김호중", "김호중", "김호중"],
-              //     selectedIndexes: [0],
-              //     onSelected: (index) {},
-              //   ),
-              // ),
-              const SizedBox(height: 8.0),
-              ph16(
-                child: titleLink(
-                  title: "임영웅 재생목록",
-                  onPressed: null,
-                ),
-              ),
-              const SizedBox(height: 12.0),
-              ...mainPlaylists.where((p) => p.userVisible).map(
-                    (p) => Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 6.0,
-                      ),
-                      child: PlayListNavItem(
-                        playlistModel: p,
-                        expandPlayerFunc: widget.expandPlayerFunc,
-                      ),
+              child: Stack(
+                children: [
+                  const CustomSearchBar(
+                    autofocus: false,
+                    readOnly: true,
+                  ),
+                  Positioned.fill(
+                    child: GestureDetector(
+                      onTap: () async {
+                        final musicSelected = await context
+                            .pushNamed<bool>(SearchScreen.routeName);
+                        if (musicSelected == true) {
+                          widget.expandPlayerFunc?.call();
+                        }
+                      },
                     ),
                   ),
-              const SizedBox(height: 24),
-              ...mainPlaylists.map(
-                (p) => PlaylistItemPreviewList(
-                  playlist: p,
-                  onTap: widget.expandPlayerFunc,
-                ),
+                ],
               ),
+            ),
+          ),
+        ),
+        SliverList(
+          delegate: SliverChildListDelegate(
+            [
+              const SizedBox(height: 12.0),
+              title1,
+              livePlayItems,
+              const SizedBox(height: 20.0),
+              title2,
+              const SizedBox(height: 12.0),
+              ...playlists,
+              const SizedBox(height: 24),
+              ...playlistItems,
               const SizedBox(height: 24),
               if (currentPlayingMusic != null) const SizedBox(height: 60),
             ],
           ),
         ),
+      ],
+    );
+
+    return GestureDetector(
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: Scaffold(
+        body: scrollView,
       ),
     );
   }

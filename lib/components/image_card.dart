@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:music_dabang/components/bouncing_widget.dart';
+import 'package:music_dabang/components/cached_image.dart';
 
 class ImageCard extends StatelessWidget {
   final double width;
@@ -41,14 +42,18 @@ class ImageCard extends StatelessWidget {
           ],
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: borderRadius,
-              child: Image.network(
-                imageUrl,
-                width: width,
-                height: 163,
-                fit: BoxFit.cover,
+            Expanded(
+              child: ClipRRect(
+                borderRadius: borderRadius.copyWith(
+                  bottomLeft: const Radius.circular(0),
+                  bottomRight: const Radius.circular(0),
+                ),
+                child: CachedImage(
+                  imageUrl,
+                  width: width,
+                ),
               ),
             ),
             const SizedBox(height: 13),
@@ -58,7 +63,7 @@ class ImageCard extends StatelessWidget {
                 '$title\n\n',
                 maxLines: 3,
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 22,
                   fontWeight: FontWeight.w600,
                   overflow: TextOverflow.ellipsis,
                 ),

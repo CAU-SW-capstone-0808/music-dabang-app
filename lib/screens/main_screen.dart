@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sliding_up_panel/sliding_up_panel_widget.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:music_dabang/common/utils.dart';
 import 'package:music_dabang/components/bottom_nav_bar.dart';
 import 'package:music_dabang/dialogs/showConfirmDialog.dart';
 import 'package:music_dabang/models/user/user_model.dart';
@@ -23,6 +23,7 @@ class MainScreen extends ConsumerStatefulWidget {
 
 class _MainScreenState extends ConsumerState<MainScreen> {
   final _panelController = SlidingUpPanelController();
+  final _panelPlaylistPanelController = SlidingUpPanelController();
   DateTime? _lastAskedToExit;
 
   bool get canExitByAsk {
@@ -47,20 +48,25 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     //     ),
     //   );
     // }
-    final musicPlayerExpanded = ref.watch(musicPlayerExpandedProvider);
+    final musicPlayerState = ref.watch(musicPlayerStatusProvider);
     final navIndex = ref.watch(bottomNavProvider);
+    final currentPlaying = ref.watch(currentPlayingMusicProvider);
 
     return PopScope(
-      canPop: !musicPlayerExpanded && canExitByAsk,
+      canPop: !musicPlayerState.full && canExitByAsk,
       onPopInvokedWithResult: (_, __) {
-        if (musicPlayerExpanded) {
+        if (musicPlayerState == MusicDabangPlayerState.expanded) {
           _panelController.collapse();
           return;
+        } else if (musicPlayerState ==
+            MusicDabangPlayerState.expandedWithPlaylist) {
+          _panelPlaylistPanelController.collapse();
+          return;
         }
-        if (_lastAskedToExit == null ||
+        if (!musicPlayerState.full && _lastAskedToExit == null ||
             DateTime.now().difference(_lastAskedToExit!).inSeconds > 2) {
           setState(() => _lastAskedToExit = DateTime.now());
-          Fluttertoast.showToast(msg: '앱을 종료하려면 한번 더 눌러주세요.');
+          AidolUtils.showToast('앱을 종료하려면 한번 더 눌러주세요.');
         }
       },
       child: Scaffold(
@@ -70,9 +76,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               ClipRect(
                 child: Align(
                   alignment: Alignment.bottomCenter,
-                  heightFactor: musicPlayerExpanded ? 0 : 1,
+                  heightFactor: musicPlayerState.full ? 0 : 1,
                   child: Opacity(
-                    opacity: musicPlayerExpanded ? 0 : 1,
+                    opacity: musicPlayerState.full ? 0 : 1,
                     child: BottomNavBar(
                       userName: user.nickname,
                       userProfileImageUrl: user.profileImageUrl,
@@ -105,7 +111,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               MyMusicListScreen(
                 expandPlayerFunc: () => _panelController.expand(),
               ),
-            MusicPlayerScreen(panelController: _panelController),
+            Align(
+              heightFactor: currentPlaying != null ? 1 : 0,
+              child: Opacity(
+                opacity: currentPlaying != null ? 1 : 0,
+                child: MusicPlayerScreen(
+                  panelController: _panelController,
+                  playlistPanelController: _panelPlaylistPanelController,
+                ),
+              ),
+            ),
           ],
         ),
       ),

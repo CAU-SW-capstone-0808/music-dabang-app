@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
+import 'package:music_dabang/common/utils.dart';
 import 'package:music_dabang/components/birth_gender_input.dart';
 import 'package:music_dabang/components/common_layout.dart';
 import 'package:music_dabang/components/input_field.dart';
@@ -59,7 +60,7 @@ class _PhoneJoinScreenState extends ConsumerState<PhoneJoinScreen> {
     Gender? gender = parseGender(genderController.value.text);
     String password = passwordController.value.text;
     if (gender == null) {
-      Fluttertoast.showToast(msg: '성별을 선택해주세요.');
+      AidolUtils.showToast('성별을 선택해주세요.');
       return;
     }
     try {
@@ -72,11 +73,11 @@ class _PhoneJoinScreenState extends ConsumerState<PhoneJoinScreen> {
               birth: birth,
             ),
           );
-      Fluttertoast.showToast(msg: '회원가입이 완료되었습니다.');
+      AidolUtils.showToast('회원가입이 완료되었습니다.');
       context.goNamed(MainScreen.routeName);
     } catch (e) {
       print(e);
-      Fluttertoast.showToast(msg: '오류가 발생했습니다.');
+      AidolUtils.showToast('오류가 발생했습니다.');
     }
   }
 
@@ -93,7 +94,7 @@ class _PhoneJoinScreenState extends ConsumerState<PhoneJoinScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Fluttertoast.showToast(msg: '동의해야 가입이 가능합니다.');
+                AidolUtils.showToast('동의해야 가입이 가능합니다.');
                 context.goNamed(PhoneLoginScreen.routeName);
               },
               child: const Text("동의 안함"),

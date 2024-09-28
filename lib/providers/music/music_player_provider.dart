@@ -9,9 +9,9 @@ import 'package:video_player/video_player.dart';
 
 /// providers about music player
 
-/// 플레이어가 전체 화면인지 여부
-final musicPlayerExpandedProvider =
-    StateNotifierProvider<MusicPlayerExpandedStateNotifier, bool>(
+/// 음악 플레이어 상태
+final musicPlayerStatusProvider = StateNotifierProvider<
+    MusicPlayerExpandedStateNotifier, MusicDabangPlayerState>(
   (ref) => MusicPlayerExpandedStateNotifier(),
 );
 
@@ -33,10 +33,27 @@ final currentPlayingMusicProvider =
   (ref) => CurrentPlayingMusicStateNotifier(ref: ref),
 );
 
-class MusicPlayerExpandedStateNotifier extends StateNotifier<bool> {
-  MusicPlayerExpandedStateNotifier() : super(false);
+enum MusicDabangPlayerState {
+  /// 플레이어가 접혀 있음
+  collapsed(false),
 
-  set expanded(bool value) => state = value;
+  /// 플레이어가 확장됨
+  expanded(true),
+
+  /// 플레이어가 확장됨 + 플레이리스트가 확장된 상태
+  expandedWithPlaylist(true);
+
+  /// 전체 화면 여부
+  final bool full;
+
+  const MusicDabangPlayerState(this.full);
+}
+
+class MusicPlayerExpandedStateNotifier
+    extends StateNotifier<MusicDabangPlayerState> {
+  MusicPlayerExpandedStateNotifier() : super(MusicDabangPlayerState.collapsed);
+
+  set status(MusicDabangPlayerState value) => state = value;
 }
 
 class MusicPlayerShowingVideoStateNotifier extends StateNotifier<bool> {
@@ -162,6 +179,7 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
       _playVideo(state!.videoContentUrl);
     } else {
       _videoPlayerController?.dispose();
+      _videoPlayerController = null;
       ref.read(musicPlayerShowingVideoProvider.notifier).showingVideo = false;
     }
   }
@@ -192,6 +210,7 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
         _playVideo(music.videoContentUrl);
       } else {
         _videoPlayerController?.dispose();
+        _videoPlayerController = null;
         ref.read(musicPlayerShowingVideoProvider.notifier).showingVideo = false;
       }
     } else {

@@ -36,7 +36,7 @@ class MusicAutoCompleteStateNotifier extends StateNotifier<List<String>> {
 
     final result = await musicRepository.autoComplete(
       query: keyword,
-      limit: 10,
+      limit: 20,
     );
     _cache[keyword] = _AutoCompleteInfo(
       keyword: keyword,

@@ -71,6 +71,7 @@ dependencies:
   flutter_sliding_up_panel: ^2.1.1
   material_symbols_icons: ^4.2785.1
   chewie: ^1.8.5
+  cached_network_image: ^3.4.1
 
   # data
   json_annotation: ^4.8.1

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:music_dabang/common/utils.dart';
 import 'package:music_dabang/models/common/page_request_model.dart';
 import 'package:music_dabang/models/common/page_response_model.dart';
 
@@ -63,7 +64,7 @@ abstract class AbstractPageNotifier<T> extends StateNotifier<List<T>> {
     } catch (e) {
       print("paging type cast error - type:$T $e");
       print(e);
-      Fluttertoast.showToast(msg: "데이터를 받아오는 중 오류가 발생했습니다");
+      AidolUtils.showToast("데이터를 받아오는 중 오류가 발생했습니다");
     }
     return [];
   }
