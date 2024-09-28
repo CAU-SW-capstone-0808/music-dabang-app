@@ -1,3 +1,4 @@
+import 'package:animated_toggle_switch/animated_toggle_switch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sliding_up_panel/flutter_sliding_up_panel.dart';
@@ -26,6 +27,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     with TickerProviderStateMixin {
   late AnimationController musicPlayerAnimationController;
   final panelController = SlidingUpPanelController();
+  bool showVideo = false;
 
   CurrentPlayingMusicStateNotifier get musicNotifier =>
       ref.read(currentPlayingMusicProvider.notifier);
@@ -74,49 +76,47 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
       );
     }
     if (hasMusicVideo && size > 0.8) {
-      var mvButton = BouncingWidget(
-        onPressed: () async {
-          await musicNotifier.toggleAudioVideo(!showingVideo);
-          setState(() {});
-        },
-        child: Opacity(
-          opacity: (size - 0.8) / 0.2,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(100),
+      Widget mvButton = Opacity(
+        opacity: (size - 0.8) / 0.2,
+        child: AnimatedToggleSwitch<bool>.dual(
+          current: showVideo,
+          first: false,
+          second: true,
+          onChanged: (value) async {
+            setState(() {
+              showVideo = value;
+            });
+          },
+          textBuilder: (value) {
+            return Text(
+              value ? '뮤직비디오 재생 중' : '뮤직비디오 보기',
+              style: const TextStyle(
+                fontSize: 18.0,
+                height: 1.25,
+                fontWeight: FontWeight.w600,
+              ),
+            );
+          },
+          iconBuilder: (value) => SvgPicture.asset(
+            value
+                ? 'assets/icons/music_video_icon.svg'
+                : 'assets/icons/music_lyric_icon.svg',
+            width: 32,
+            height: 32,
+            colorFilter: const ColorFilter.mode(
+              Colors.white,
+              BlendMode.srcIn,
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(3.0),
-                  child: Container(
-                    padding: const EdgeInsets.all(7.0),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: ColorTable.palePink,
-                    ),
-                    child: SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: SvgPicture.asset(
-                        'assets/icons/music_video_icon.svg',
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 9.0),
-                const Text(
-                  '뮤직비디오 보기',
-                  style: TextStyle(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: 12.0),
-              ],
+          ),
+          borderWidth: 0,
+          height: 50,
+          spacing: 120,
+          indicatorSize: const Size.fromWidth(50),
+          style: ToggleStyle(
+            indicatorColor: ColorTable.kPrimaryColor,
+            indicatorBorder: Border.all(
+              color: Colors.white,
+              width: 4,
             ),
           ),
         ),
@@ -124,13 +124,13 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
       return Stack(
         children: [
           Center(child: innerWidget),
-          // Align(
-          //   alignment: Alignment.topCenter,
-          //   child: Padding(
-          //     padding: const EdgeInsets.all(8.0),
-          //     child: mvButton,
-          //   ),
-          // ),
+          Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: mvButton,
+            ),
+          ),
         ],
       );
     } else {

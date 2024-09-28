@@ -1,6 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_sliding_up_panel/sliding_up_panel_widget.dart';
 import 'package:music_dabang/common/utils.dart';
 import 'package:music_dabang/components/bottom_nav_bar.dart';
 import 'package:music_dabang/dialogs/showConfirmDialog.dart';
@@ -85,7 +85,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       onTap: (x) {
                         if (x < 2) {
                           ref.read(bottomNavProvider.notifier).select(x);
-                        } else if (x == 2) {
+                        } else if (x == 2 && kDebugMode) {
                           showConfirmDialog(
                             context,
                             title: '로그아웃하시겠습니까?',

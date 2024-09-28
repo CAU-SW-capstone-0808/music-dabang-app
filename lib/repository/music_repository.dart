@@ -42,6 +42,12 @@ abstract class MusicRepository {
     @Query("item_id") required List<int> itemIds,
   });
 
+  @PATCH("/playlists/items/{itemId}/order")
+  Future<PlaylistItemModel> changeItemOrder({
+    @Path("itemId") required int itemId,
+    @Query("order") required int order,
+  });
+
   @GET("/playlists/{playlistId}/items")
   Future<PageResponseModel> getPlaylistItems({
     @Path("playlistId") required int playlistId,

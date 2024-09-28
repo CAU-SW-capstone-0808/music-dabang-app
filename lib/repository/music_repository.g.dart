@@ -132,6 +132,32 @@ class _MusicRepository implements MusicRepository {
   }
 
   @override
+  Future<PlaylistItemModel> changeItemOrder({
+    required itemId,
+    required order,
+  }) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'order': order};
+    final _headers = <String, dynamic>{};
+    final Map<String, dynamic>? _data = null;
+    final _result = await _dio
+        .fetch<Map<String, dynamic>>(_setStreamType<PlaylistItemModel>(Options(
+      method: 'PATCH',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              '/playlists/items/${itemId}/order',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = PlaylistItemModel.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
   Future<PageResponseModel> getPlaylistItems({
     required playlistId,
     required queries,

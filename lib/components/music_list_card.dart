@@ -10,7 +10,7 @@ class MusicListCard extends StatelessWidget {
   final void Function()? onTap;
 
   /// if not null, there exists a remove interaction
-  final void Function()? onRemove;
+  final Future<void> Function()? onRemove;
   final bool isPlaying;
 
   const MusicListCard({
@@ -121,14 +121,43 @@ class MusicListCard extends StatelessWidget {
         key: key!,
         background: Container(
           color: Colors.red,
-          child: Center(child: Text('삭제!!')),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Icon(
+                  Icons.delete_rounded,
+                  color: Colors.white,
+                  size: 36,
+                ),
+              ),
+            ],
+          ),
+        ),
+        secondaryBackground: Container(
+          color: Colors.red,
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Icon(
+                  Icons.delete_rounded,
+                  color: Colors.white,
+                  size: 36,
+                ),
+              ),
+            ],
+          ),
         ),
         confirmDismiss: (direction) async {
-          // 스와이프를 특정 상황에서 취소하거나 확인할 수 있습니다.
-          if (direction == DismissDirection.startToEnd) {
-            return true; // true면 삭제, false면 스와이프 취소
+          try {
+            await onRemove!();
+            return true;
+          } catch (e) {
+            return false;
           }
-          return false; // endToStart 스와이프는 허용하지 않음
         },
         child: innerWidget,
       );

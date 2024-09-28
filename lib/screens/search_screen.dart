@@ -13,7 +13,6 @@ import 'package:music_dabang/providers/music/music_player_provider.dart';
 import 'package:music_dabang/providers/music/music_search_provider.dart';
 import 'package:music_dabang/providers/music/recent_search_provider.dart';
 
-/// pop with boolean(is music selected)
 class SearchScreen extends ConsumerStatefulWidget {
   static const routeName = 'search';
 
@@ -29,11 +28,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// 공백: 입력 중
   String? searchKeyword;
   final searchController = TextEditingController();
+
   // 결과에 대한 스크롤 컨트롤러
   final resultPageController = PageScrollController();
 
   bool get showRecent => searchKeyword == null;
+
   bool get showAutoComplete => searchKeyword == '';
+
   bool get showResult => searchKeyword != null && searchKeyword!.isNotEmpty;
   bool showToTop = false; // 위로 가기 버튼
 
@@ -150,12 +152,28 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  Widget resultScrollView(List<MusicModel> results, {bool loading = false}) {
+  Widget resultScrollView(List<MusicModel> results) {
+    final loading =
+        ref.read(musicSearchProvider(searchKeyword!).notifier).loading;
+    if (results.isEmpty) {
+      return loading
+          ? const Center(child: CircularProgressIndicator())
+          : const Center(
+              child: Text(
+                '검색 결과가 없습니다.',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            );
+    }
     return RefreshIndicator(
       onRefresh: () async {
         ref.read(musicSearchProvider(searchKeyword!).notifier).refresh();
       },
       child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
         controller: resultPageController,
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         itemCount: results.length,
@@ -208,13 +226,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     List<MusicModel> searchResult =
         ref.watch(musicSearchProvider(searchKeyword ?? ''));
     return PopScope(
-      canPop: false,
+      canPop: !showResult,
       onPopInvokedWithResult: (_, __) {
         if (showResult) {
           setState(() => searchKeyword = null);
           searchController.clear();
-        } else {
-          context.pop(false);
         }
       },
       child: GestureDetector(
@@ -237,7 +253,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 4.0),
                         child: IconButton(
                           onPressed: () {
-                            context.pop(false);
+                            if (context.canPop()) {
+                              context.pop();
+                            }
                           },
                           icon: const Icon(Icons.arrow_back),
                           iconSize: 32,

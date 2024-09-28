@@ -29,24 +29,41 @@ class LoginHomeScreen extends ConsumerWidget {
               child: const LogoTitle(fontSize: 72),
             ),
             const SizedBox(height: 48),
-            BouncingWidget(
-              onPressed: () async {
-                await ref.read(userProvider.notifier).loginWithKakao();
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 36,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: ColorTable.kakaoYellow,
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                child: const Text(
-                  '카카오로 1초만에 회원가입',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: BouncingWidget(
+                onPressed: () async {
+                  await ref.read(userProvider.notifier).loginWithKakao();
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: ColorTable.kakaoYellow,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/images/kakao_logo.png',
+                        width: 32,
+                        height: 32,
+                      ),
+                      const SizedBox(width: 8),
+                      const Flexible(
+                        child: Text(
+                          '카카오로 1초만에 회원가입',
+                          style: TextStyle(
+                            fontSize: 24,
+                            height: 1.25,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:music_dabang/common/colors.dart';
 import 'package:shimmer/shimmer.dart';
 
 class CachedImage extends StatelessWidget {
@@ -22,8 +23,8 @@ class CachedImage extends StatelessWidget {
       height: height,
       fit: BoxFit.cover,
       placeholder: (context, url) => Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
+        baseColor: ColorTable.backGrey,
+        highlightColor: ColorTable.backGrey,
         child: Container(
           width: width,
           height: height,
