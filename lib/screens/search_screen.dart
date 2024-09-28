@@ -169,7 +169,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               await ref
                   .read(currentPlayingMusicProvider.notifier)
                   .setPlayingMusic(m)
-                  .then((_) => context.pop(true));
+                  .then((_) {
+                ref.read(musicPlayerStatusProvider.notifier).expand();
+                context.go('/');
+              });
             },
           );
         },

@@ -21,12 +21,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 class HomeScreen extends ConsumerStatefulWidget {
   static const routeName = 'home';
 
-  final void Function()? expandPlayerFunc;
-
-  const HomeScreen({
-    super.key,
-    this.expandPlayerFunc,
-  });
+  const HomeScreen({super.key});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -233,7 +228,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     await ref
                         .read(currentPlayingMusicProvider.notifier)
                         .setPlayingMusic(p);
-                    widget.expandPlayerFunc?.call();
+                    ref.read(musicPlayerStatusProvider.notifier).expand();
                   },
                 ),
               ))
@@ -245,16 +240,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               horizontal: 16.0,
               vertical: 6.0,
             ),
-            child: PlayListNavItem(
-              playlistModel: p,
-              expandPlayerFunc: widget.expandPlayerFunc,
-            ),
+            child: PlayListNavItem(playlistModel: p),
           ),
         );
     var playlistItems = mainPlaylists.map(
       (p) => PlaylistItemPreviewList(
         playlist: p,
-        onTap: widget.expandPlayerFunc,
+        onTap: () {
+          ref.read(musicPlayerStatusProvider.notifier).expand();
+        },
       ),
     );
     var title1 = ph16(
@@ -320,11 +314,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Positioned.fill(
                     child: GestureDetector(
                       onTap: () async {
-                        final musicSelected = await context
-                            .pushNamed<bool>(SearchScreen.routeName);
-                        if (musicSelected == true) {
-                          widget.expandPlayerFunc?.call();
-                        }
+                        // final musicSelected = await context
+                        //     .pushNamed<bool>(SearchScreen.routeName);
+                        // if (musicSelected == true) {
+                        //   widget.expandPlayerFunc?.call();
+                        // }
+                        context.goNamed(SearchScreen.routeName);
                       },
                     ),
                   ),

@@ -11,12 +11,10 @@ import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 /// 참고: screens/components의 컴포넌트들은 ConsumerWidget
 class PlayListNavItem extends ConsumerWidget {
   final PlaylistModel playlistModel;
-  final void Function()? expandPlayerFunc;
 
   const PlayListNavItem({
     super.key,
     required this.playlistModel,
-    this.expandPlayerFunc,
   });
 
   @override
@@ -34,7 +32,7 @@ class PlayListNavItem extends ConsumerWidget {
         await ref
             .read(currentPlaylistProvider.notifier)
             .setPlaylist(playlistModel);
-        expandPlayerFunc?.call();
+        ref.read(musicPlayerStatusProvider.notifier).expand();
       },
       child: Container(
         decoration: BoxDecoration(

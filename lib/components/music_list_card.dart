@@ -8,6 +8,7 @@ class MusicListCard extends StatelessWidget {
   final String artist;
   final String? imageUrl;
   final void Function()? onTap;
+  final bool isPlaying;
 
   const MusicListCard({
     super.key,
@@ -15,7 +16,10 @@ class MusicListCard extends StatelessWidget {
     required this.artist,
     this.imageUrl,
     this.onTap,
+    this.isPlaying = false,
   });
+
+  Color get textColor => isPlaying ? Colors.white : Colors.black;
 
   Widget albumImage({
     double width = 76,
@@ -52,9 +56,9 @@ class MusicListCard extends StatelessWidget {
           horizontal: 16.0,
           vertical: 12.0,
         ),
-        // decoration: const BoxDecoration(
-        //   color: Colors.transparent,
-        // ),
+        decoration: BoxDecoration(
+          color: isPlaying ? ColorTable.kPrimaryColor : Colors.transparent,
+        ),
         child: Row(
           children: [
             albumImage(),
@@ -67,9 +71,10 @@ class MusicListCard extends StatelessWidget {
                   Text(
                     title,
                     maxLines: 2,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22.0,
                       height: 1.25,
+                      color: textColor,
                       fontWeight: FontWeight.bold,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -77,26 +82,28 @@ class MusicListCard extends StatelessWidget {
                   const SizedBox(height: 8.0),
                   Text(
                     artist,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22.0,
                       height: 1.25,
+                      color: textColor,
                     ),
                   ),
                 ],
               ),
             ),
-            const Column(
+            Column(
               children: [
                 Icon(
                   Icons.play_arrow_rounded,
                   size: 54,
-                  color: ColorTable.kPrimaryColor,
+                  color: isPlaying ? Colors.white : ColorTable.kPrimaryColor,
                 ),
                 Text(
                   "재생",
                   style: TextStyle(
                     fontSize: 18.0,
                     height: 1.25,
+                    color: textColor,
                   ),
                 ),
               ],

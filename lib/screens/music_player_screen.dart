@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sliding_up_panel/flutter_sliding_up_panel.dart';
 import 'package:flutter_sliding_up_panel/sliding_up_panel_widget.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:music_dabang/common/colors.dart';
 import 'package:music_dabang/common/utils.dart';
@@ -17,14 +16,7 @@ import 'package:music_dabang/screens/components/playlist_panel.dart';
 import 'package:video_player/video_player.dart';
 
 class MusicPlayerScreen extends ConsumerStatefulWidget {
-  final SlidingUpPanelController panelController;
-  final SlidingUpPanelController playlistPanelController;
-
-  const MusicPlayerScreen({
-    super.key,
-    required this.panelController,
-    required this.playlistPanelController,
-  });
+  const MusicPlayerScreen({super.key});
 
   @override
   ConsumerState<MusicPlayerScreen> createState() => _MusicPlayerScreenState();
@@ -33,6 +25,7 @@ class MusicPlayerScreen extends ConsumerStatefulWidget {
 class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     with TickerProviderStateMixin {
   late AnimationController musicPlayerAnimationController;
+  final panelController = SlidingUpPanelController();
 
   CurrentPlayingMusicStateNotifier get musicNotifier =>
       ref.read(currentPlayingMusicProvider.notifier);
@@ -149,7 +142,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-            onPressed: () => widget.panelController.collapse(),
+            onPressed: () => panelController.collapse(),
             icon: Transform.rotate(
               angle: 3.141592 / 2,
               child: const Icon(
@@ -542,13 +535,28 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     bool isPlayingVideo = ref.watch(musicPlayerShowingVideoProvider);
     final mpStatus = ref.watch(musicPlayerStatusProvider);
 
+    ref.listen(musicPlayerStatusProvider, (prev, next) {
+      if (prev != next) {
+        if (next.full) {
+          if (panelController.status != SlidingUpPanelStatus.expanded) {
+            panelController.expand();
+          }
+        } else {
+          if (panelController.status != SlidingUpPanelStatus.collapsed) {
+            panelController.collapse();
+          }
+        }
+      }
+    });
+
     return SlidingUpPanelWidget(
-      panelController: widget.panelController,
+      panelController: panelController,
       animationController: musicPlayerAnimationController,
-      // controlHeight: currentPlaying != null ? 90 : 0,
-      controlHeight: 90,
+      controlHeight: currentPlaying != null ? 90 : 0,
+      // controlHeight: 90,
       enableOnTap: false,
       anchor: 1.0,
+      upperBound: 1.0,
       onStatusChanged: (status) {
         // print('status: $status');
         if (status == SlidingUpPanelStatus.collapsed) {
@@ -563,7 +571,8 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
       child: Stack(
         children: [
           GestureDetector(
-            onTap: () => widget.playlistPanelController.collapse(),
+            onTap: () => ref.read(musicPlayerStatusProvider.notifier).status =
+                MusicDabangPlayerState.expanded,
             child: AnimatedBuilder(
               animation: musicPlayerAnimationController,
               builder: (context, child) {
@@ -602,7 +611,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                         stream: musicNotifier.playerStateStream,
                         builder: (context, playerStateAsync) {
                           return GestureDetector(
-                            onTap: () => widget.panelController.expand(),
+                            onTap: () => panelController.expand(),
                             child: PlayingMusicBar(
                               isPlaying:
                                   playerStateAsync.data?.playing ?? false,
@@ -704,7 +713,9 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
             ),
           ),
           if (mpStatus.full)
-            PlaylistPanel(panelController: widget.playlistPanelController),
+            PlaylistPanel(
+              viewPadding: MediaQuery.of(context).viewPadding,
+            ),
         ],
       ),
     );

@@ -54,6 +54,18 @@ class MusicPlayerExpandedStateNotifier
   MusicPlayerExpandedStateNotifier() : super(MusicDabangPlayerState.collapsed);
 
   set status(MusicDabangPlayerState value) => state = value;
+
+  void expand() {
+    state = MusicDabangPlayerState.expanded;
+  }
+
+  void collapse() {
+    state = MusicDabangPlayerState.collapsed;
+  }
+
+  void expandWithPlaylist() {
+    state = MusicDabangPlayerState.expandedWithPlaylist;
+  }
 }
 
 class MusicPlayerShowingVideoStateNotifier extends StateNotifier<bool> {

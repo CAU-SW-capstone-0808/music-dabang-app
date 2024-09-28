@@ -6,9 +6,7 @@ import 'package:music_dabang/providers/music/music_player_provider.dart';
 import 'package:music_dabang/providers/music/my_music_list_provider.dart';
 
 class MyMusicListScreen extends ConsumerStatefulWidget {
-  final void Function()? expandPlayerFunc;
-
-  const MyMusicListScreen({super.key, this.expandPlayerFunc});
+  const MyMusicListScreen({super.key});
 
   @override
   ConsumerState<MyMusicListScreen> createState() => _MyMusicListScreenState();
@@ -46,7 +44,7 @@ class _MyMusicListScreenState extends ConsumerState<MyMusicListScreen> {
                 await ref
                     .read(currentPlayingMusicProvider.notifier)
                     .setPlayingMusic(items[index].musicContent);
-                widget.expandPlayerFunc?.call();
+                ref.read(musicPlayerStatusProvider.notifier).expand();
               },
             );
           },

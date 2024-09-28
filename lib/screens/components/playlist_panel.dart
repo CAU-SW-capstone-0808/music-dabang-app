@@ -1,15 +1,21 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sliding_up_panel/flutter_sliding_up_panel.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:music_dabang/components/music_list_card.dart';
+import 'package:music_dabang/providers/common/page_scroll_controller.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
+import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 
 class PlaylistPanel extends ConsumerStatefulWidget {
-  final SlidingUpPanelController panelController;
+  /// 매우 멍청한 SlidingUpPanel을 위해 viewPadding 정보를 직접 받는다.
+  final EdgeInsets viewPadding;
 
   const PlaylistPanel({
     super.key,
-    required this.panelController,
+    required this.viewPadding,
   });
 
   @override
@@ -17,7 +23,7 @@ class PlaylistPanel extends ConsumerStatefulWidget {
 }
 
 class _PlaylistPanelState extends ConsumerState<PlaylistPanel> {
-  final scrollController = ScrollController();
+  final SlidingUpPanelController panelController = SlidingUpPanelController();
 
   @override
   void initState() {
@@ -26,14 +32,60 @@ class _PlaylistPanelState extends ConsumerState<PlaylistPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final currentPlaylist = ref.watch(currentPlaylistProvider);
+
+    ref.listen(
+      musicPlayerStatusProvider,
+      (prev, next) {
+        if (next != MusicDabangPlayerState.expandedWithPlaylist) {
+          if (panelController.status != SlidingUpPanelStatus.collapsed) {
+            panelController.collapse();
+          }
+        }
+      },
+    );
+
+    var upperTitle = GestureDetector(
+      onTap: () {
+        var panelStatus = panelController.status;
+        if (panelStatus == SlidingUpPanelStatus.collapsed) {
+          panelController.anchor();
+        } else if (panelStatus == SlidingUpPanelStatus.expanded ||
+            panelStatus == SlidingUpPanelStatus.anchored) {
+          panelController.collapse();
+        }
+      },
+      child: SizedBox(
+        height: 60,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              'assets/icons/playlist_icon.svg',
+              width: 32,
+              height: 32,
+            ),
+            const SizedBox(width: 8.0),
+            const Text(
+              '재생목록',
+              style: TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.w600,
+                height: 1.25,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
     return SlidingUpPanelWidget(
       controlHeight: 60,
       anchor: 0.8,
-      panelController: widget.panelController,
+      panelController: panelController,
       onTap: () {
-        if (widget.panelController.status == SlidingUpPanelStatus.collapsed ||
-            widget.panelController.status == SlidingUpPanelStatus.expanded) {
-          widget.panelController.anchor();
+        if (panelController.status == SlidingUpPanelStatus.collapsed) {
+          panelController.anchor();
         }
       },
       onStatusChanged: (status) {
@@ -45,8 +97,13 @@ class _PlaylistPanelState extends ConsumerState<PlaylistPanel> {
           ref.read(musicPlayerStatusProvider.notifier).status =
               MusicDabangPlayerState.expandedWithPlaylist;
         }
+        // 이 자식 아주 멍청하기 때문에 upperBound 따위로 조정하려고 해서는 안 된다.
+        if (status == SlidingUpPanelStatus.expanded) {
+          panelController.anchor();
+        }
       },
       child: Container(
+        // bullshit: this container is fixed to media height
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: const BorderRadius.only(
@@ -67,65 +124,31 @@ class _PlaylistPanelState extends ConsumerState<PlaylistPanel> {
           ],
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            GestureDetector(
-              onTap: () {
-                var panelStatus = widget.panelController.status;
-                if (panelStatus == SlidingUpPanelStatus.collapsed) {
-                  widget.panelController.anchor();
-                } else if (panelStatus == SlidingUpPanelStatus.expanded ||
-                    panelStatus == SlidingUpPanelStatus.anchored) {
-                  widget.panelController.collapse();
-                }
-              },
-              child: Container(
-                color: Colors.white,
-                width: double.infinity,
-                height: 60,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12.5,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SvgPicture.asset(
-                      'assets/icons/playlist_icon.svg',
-                      width: 32,
-                      height: 32,
-                    ),
-                    const SizedBox(width: 8.0),
-                    const Text(
-                      '재생목록',
-                      style: TextStyle(
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.w600,
-                        height: 1.25,
-                      ),
-                    ),
-                  ],
-                ),
+            // 상단 재생 목록 손잡이 (height: 60)
+            upperTitle,
+            SizedBox(
+              height: max(
+                MediaQuery.of(context).size.height * 0.8 -
+                    60 -
+                    widget.viewPadding.vertical,
+                0,
               ),
-            ),
-            NotificationListener<ScrollEndNotification>(
-              onNotification: (notf) {
-                if (scrollController.offset <= 0) {
-                  widget.panelController.collapse();
-                }
-                return true;
-              },
-              child: Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  child: Column(
-                    children: List.generate(20, (index) {
-                      return ListTile(
-                        title: Text('title $index'),
-                        subtitle: Text('subtitle $index'),
-                      );
-                    }),
-                  ),
-                ),
-              ),
+              child: currentPlaylist != null
+                  ? _PlaylistItemListView(
+                      playlistId: currentPlaylist.id,
+                      onTopScrollEnd: () {
+                        if (panelController.status ==
+                            SlidingUpPanelStatus.expanded) {
+                          panelController.anchor();
+                        } else {
+                          panelController.collapse();
+                        }
+                      },
+                    )
+                  : Container(),
             ),
           ],
         ),
@@ -136,6 +159,71 @@ class _PlaylistPanelState extends ConsumerState<PlaylistPanel> {
   @override
   void dispose() {
     super.dispose();
-    scrollController.dispose();
+  }
+}
+
+class _PlaylistItemListView extends ConsumerStatefulWidget {
+  final int playlistId;
+  final void Function()? onTopScrollEnd;
+
+  const _PlaylistItemListView({
+    required this.playlistId,
+    this.onTopScrollEnd,
+  });
+
+  @override
+  ConsumerState<_PlaylistItemListView> createState() =>
+      _PlaylistItemListViewState();
+}
+
+class _PlaylistItemListViewState extends ConsumerState<_PlaylistItemListView> {
+  final pageController = PageScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    pageController.onEnd = () {
+      ref.read(playlistItemsProvider(widget.playlistId).notifier).fetch();
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final items = ref.watch(playlistItemsProvider(widget.playlistId));
+    int? currentItemId = ref
+        .watch(currentPlayingMusicProvider.notifier)
+        .currentPlayingPlaylistItemId;
+    return NotificationListener<ScrollEndNotification>(
+      onNotification: (notification) {
+        if (pageController.offset <= 0) {
+          widget.onTopScrollEnd?.call();
+        }
+        return true;
+      },
+      child: ListView.builder(
+        controller: pageController,
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          return MusicListCard(
+            title: item.musicContent.title,
+            artist: item.musicContent.artist.name,
+            imageUrl: item.musicContent.thumbnailUrl,
+            isPlaying: currentItemId == item.id,
+            onTap: () {
+              ref
+                  .read(currentPlayingMusicProvider.notifier)
+                  .setCurrentPlayingPlaylistItem(item);
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    pageController.dispose();
   }
 }

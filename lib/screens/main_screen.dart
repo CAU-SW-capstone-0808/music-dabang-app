@@ -22,8 +22,6 @@ class MainScreen extends ConsumerStatefulWidget {
 }
 
 class _MainScreenState extends ConsumerState<MainScreen> {
-  final _panelController = SlidingUpPanelController();
-  final _panelPlaylistPanelController = SlidingUpPanelController();
   DateTime? _lastAskedToExit;
 
   bool get canExitByAsk {
@@ -50,17 +48,18 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     // }
     final musicPlayerState = ref.watch(musicPlayerStatusProvider);
     final navIndex = ref.watch(bottomNavProvider);
-    final currentPlaying = ref.watch(currentPlayingMusicProvider);
 
     return PopScope(
       canPop: !musicPlayerState.full && canExitByAsk,
       onPopInvokedWithResult: (_, __) {
         if (musicPlayerState == MusicDabangPlayerState.expanded) {
-          _panelController.collapse();
+          ref.read(musicPlayerStatusProvider.notifier).status =
+              MusicDabangPlayerState.collapsed;
           return;
         } else if (musicPlayerState ==
             MusicDabangPlayerState.expandedWithPlaylist) {
-          _panelPlaylistPanelController.collapse();
+          ref.read(musicPlayerStatusProvider.notifier).status =
+              MusicDabangPlayerState.expanded;
           return;
         }
         if (!musicPlayerState.full && _lastAskedToExit == null ||
@@ -103,24 +102,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         ),
         body: Stack(
           children: [
-            if (navIndex == 0)
-              HomeScreen(
-                expandPlayerFunc: () => _panelController.expand(),
-              ),
-            if (navIndex == 1)
-              MyMusicListScreen(
-                expandPlayerFunc: () => _panelController.expand(),
-              ),
-            Align(
-              heightFactor: currentPlaying != null ? 1 : 0,
-              child: Opacity(
-                opacity: currentPlaying != null ? 1 : 0,
-                child: MusicPlayerScreen(
-                  panelController: _panelController,
-                  playlistPanelController: _panelPlaylistPanelController,
-                ),
-              ),
-            ),
+            if (navIndex == 0) HomeScreen(),
+            if (navIndex == 1) MyMusicListScreen(),
+            // Align(
+            //   heightFactor: currentPlaying != null ? 1 : 0,
+            //   child: Opacity(
+            //     opacity: currentPlaying != null ? 1 : 0,
+            //     child: MusicPlayerScreen(),
+            //   ),
+            // ),
+            MusicPlayerScreen(),
           ],
         ),
       ),
