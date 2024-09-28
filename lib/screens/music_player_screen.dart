@@ -193,7 +193,6 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                   height: 48,
                 ),
                 text: '내음악에 추가',
-                backgroundColor: ColorTable.palePink,
                 onPressed: () async {
                   if (currentMusic != null) {
                     await ref
@@ -213,7 +212,6 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                   height: 48,
                 ),
                 text: '가사보기',
-                backgroundColor: ColorTable.palePink,
                 onPressed: () {},
               ),
             ),
@@ -300,7 +298,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                 padding: const EdgeInsets.all(16.0),
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: ColorTable.iconBlack,
+                  color: ColorTable.kPrimaryColor,
                 ),
                 child: Icon(
                   isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
@@ -406,7 +404,6 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     required Widget? icon,
     required String text,
     required void Function()? onPressed,
-    required Color backgroundColor,
   }) {
     return InkWell(
       borderRadius: BorderRadius.circular(24.0),
@@ -414,10 +411,19 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
       child: Ink(
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: backgroundColor,
-          // border: Border.all(
-          //   color: ColorTable.stroke,
-          // ),
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.24),
+              offset: Offset.zero,
+              blurRadius: 4,
+            ),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.12),
+              offset: const Offset(0, 1),
+              blurRadius: 8,
+            ),
+          ],
           borderRadius: BorderRadius.circular(24.0),
         ),
         child: Column(
@@ -426,7 +432,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (icon != null) icon,
+                  if (icon != null) Expanded(child: icon),
                   Text(
                     text,
                     style: const TextStyle(
@@ -504,6 +510,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
             height: 1.25,
           ),
         ),
+        const SizedBox(height: 8),
       ],
     );
   }
@@ -545,204 +552,264 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
       anchor: 1.0,
       child: currentPlaying == null
           ? Container()
-          : Stack(
-              children: [
-                AnimatedBuilder(
-                  animation: musicPlayerAnimationController,
-                  builder: (context, child) {
-                    final musicPlayerSize =
-                        musicPlayerAnimationController.value;
-                    final musicPlayerHeight =
-                        musicPlayerSize * MediaQuery.of(context).size.height;
-                    bool musicPlayerSizeOver0_25 = musicPlayerSize > 0.25;
-                    return Container(
-                      color: Colors.white,
-                      height: MediaQuery.of(context).size.height,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          if (musicPlayerSizeOver0_25)
-                            SafeArea(
-                              child: Column(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8.0),
-                                    child:
-                                        topTitle(currentPlaying?.title ?? '-'),
+          : PopScope(
+              canPop: _playlistPanelController.status ==
+                  SlidingUpPanelStatus.collapsed,
+              onPopInvokedWithResult: (_, __) {
+                if (_playlistPanelController.status !=
+                    SlidingUpPanelStatus.collapsed) {
+                  _playlistPanelController.collapse();
+                }
+              },
+              child: Stack(
+                children: [
+                  GestureDetector(
+                    onTap: () => _playlistPanelController.collapse(),
+                    child: AnimatedBuilder(
+                      animation: musicPlayerAnimationController,
+                      builder: (context, child) {
+                        final musicPlayerSize =
+                            musicPlayerAnimationController.value;
+                        final musicPlayerHeight = musicPlayerSize *
+                            MediaQuery.of(context).size.height;
+                        bool musicPlayerSizeOver0_25 = musicPlayerSize > 0.25;
+                        return Container(
+                          color: Colors.white,
+                          height: MediaQuery.of(context).size.height,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              if (musicPlayerSizeOver0_25)
+                                SafeArea(
+                                  child: Column(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8.0),
+                                        child: topTitle(
+                                            currentPlaying?.title ?? '-'),
+                                      ),
+                                      const SizedBox(height: 4.0),
+                                      artistName(
+                                          currentPlaying?.artist.name ?? ''),
+                                      const SizedBox(height: 8.0),
+                                      if (musicPlayerSizeOver0_25)
+                                        albumImage(
+                                          size: musicPlayerSize,
+                                          imageUrl:
+                                              currentPlaying?.thumbnailUrl,
+                                          showingVideo: isPlayingVideo,
+                                        ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 4.0),
-                                  artistName(currentPlaying?.artist.name ?? ''),
-                                  const SizedBox(height: 8.0),
-                                  if (musicPlayerSizeOver0_25)
-                                    albumImage(
-                                      size: musicPlayerSize,
-                                      imageUrl: currentPlaying?.thumbnailUrl,
-                                      showingVideo: isPlayingVideo,
+                                ),
+                              StreamBuilder(
+                                stream: musicNotifier.playerStateStream,
+                                builder: (context, playerStateAsync) {
+                                  return PlayingMusicBar(
+                                    isPlaying:
+                                        playerStateAsync.data?.playing ?? false,
+                                    title:
+                                        currentPlaying?.title ?? '음악 재생 대기 중',
+                                    artist: currentPlaying?.artist.name ?? '',
+                                    height: musicPlayerHeight,
+                                    size: musicPlayerSize,
+                                    onPrevious: () {
+                                      playlistNotifier.skipPrevious();
+                                    },
+                                    onPlay: () {
+                                      musicNotifier.togglePlay();
+                                    },
+                                    onNext: () {
+                                      playlistNotifier.skipNext();
+                                    },
+                                  );
+                                },
+                              ),
+                              if (musicPlayerSizeOver0_25)
+                                Expanded(
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: Column(
+                                      children: <Widget>[
+                                        const SizedBox(height: 20),
+                                        Expanded(
+                                            child:
+                                                middleButtons(currentPlaying)),
+                                        // seeLyricButton,
+                                        const SizedBox(height: 12.0),
+                                        StreamBuilder(
+                                          stream: musicNotifier.durationStream,
+                                          builder: (context, maxDuration) {
+                                            return StreamBuilder(
+                                              stream:
+                                                  musicNotifier.positionStream,
+                                              builder: (context, curDuration) {
+                                                return progressBar(
+                                                  curMilliSec: curDuration.data
+                                                          ?.inMilliseconds ??
+                                                      0,
+                                                  maxMilliSec: maxDuration.data
+                                                          ?.inMilliseconds ??
+                                                      0,
+                                                );
+                                              },
+                                            );
+                                          },
+                                        ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: StreamBuilder(
+                                            stream:
+                                                musicNotifier.playerStateStream,
+                                            builder:
+                                                (context, playerStateAsync) {
+                                              return bottomButtonGroup(
+                                                isPlaying: playerStateAsync
+                                                        .data?.playing ??
+                                                    false,
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(height: 60),
+
+                                        // const SizedBox(height: 42.0),
+                                        // Container(
+                                        //   padding: const EdgeInsets.symmetric(
+                                        //     vertical: 12.5,
+                                        //   ),
+                                        //   decoration: const BoxDecoration(
+                                        //     color: ColorTable.palePink,
+                                        //     borderRadius: BorderRadius.only(
+                                        //       topLeft: Radius.circular(24),
+                                        //       topRight: Radius.circular(24),
+                                        //     ),
+                                        //   ),
+                                        //   child: Row(
+                                        //     mainAxisAlignment:
+                                        //         MainAxisAlignment.center,
+                                        //     children: [
+                                        //       SvgPicture.asset(
+                                        //         'assets/icons/playlist_icon.svg',
+                                        //         width: 32,
+                                        //         height: 32,
+                                        //       ),
+                                        //       const SizedBox(width: 8.0),
+                                        //       const Text(
+                                        //         '재생목록',
+                                        //         style: TextStyle(
+                                        //           fontSize: 18.0,
+                                        //           fontWeight: FontWeight.w600,
+                                        //           height: 1.25,
+                                        //         ),
+                                        //       ),
+                                        //     ],
+                                        //   ),
+                                        // ),
+                                      ],
                                     ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  SlidingUpPanelWidget(
+                    controlHeight: 60,
+                    anchor: 0.8,
+                    panelController: _playlistPanelController,
+                    onTap: () {
+                      if (_playlistPanelController.status ==
+                              SlidingUpPanelStatus.collapsed ||
+                          _playlistPanelController.status ==
+                              SlidingUpPanelStatus.expanded) {
+                        _playlistPanelController.anchor();
+                      }
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(24),
+                          topRight: Radius.circular(24),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.24),
+                            offset: Offset.zero,
+                            blurRadius: 4,
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.12),
+                            offset: const Offset(0, 1),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              var panelStatus = _playlistPanelController.status;
+                              if (panelStatus ==
+                                  SlidingUpPanelStatus.collapsed) {
+                                _playlistPanelController.anchor();
+                              } else if (panelStatus ==
+                                      SlidingUpPanelStatus.expanded ||
+                                  panelStatus ==
+                                      SlidingUpPanelStatus.anchored) {
+                                _playlistPanelController.collapse();
+                              }
+                            },
+                            child: Container(
+                              color: Colors.white,
+                              width: double.infinity,
+                              height: 60,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12.5,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SvgPicture.asset(
+                                    'assets/icons/playlist_icon.svg',
+                                    width: 32,
+                                    height: 32,
+                                  ),
+                                  const SizedBox(width: 8.0),
+                                  const Text(
+                                    '재생목록',
+                                    style: TextStyle(
+                                      fontSize: 18.0,
+                                      fontWeight: FontWeight.w600,
+                                      height: 1.25,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
-                          StreamBuilder(
-                            stream: musicNotifier.playerStateStream,
-                            builder: (context, playerStateAsync) {
-                              return PlayingMusicBar(
-                                isPlaying:
-                                    playerStateAsync.data?.playing ?? false,
-                                title: currentPlaying?.title ?? '음악 재생 대기 중',
-                                artist: currentPlaying?.artist.name ?? '',
-                                height: musicPlayerHeight,
-                                size: musicPlayerSize,
-                                onPrevious: () {
-                                  playlistNotifier.skipPrevious();
-                                },
-                                onPlay: () {
-                                  musicNotifier.togglePlay();
-                                },
-                                onNext: () {
-                                  playlistNotifier.skipNext();
-                                },
-                              );
-                            },
                           ),
-                          if (musicPlayerSizeOver0_25)
-                            Expanded(
-                              child: Material(
-                                color: Colors.transparent,
-                                child: Column(
-                                  children: <Widget>[
-                                    const SizedBox(height: 20),
-                                    Expanded(
-                                        child: middleButtons(currentPlaying)),
-                                    // seeLyricButton,
-                                    const SizedBox(height: 12.0),
-                                    StreamBuilder(
-                                      stream: musicNotifier.durationStream,
-                                      builder: (context, maxDuration) {
-                                        return StreamBuilder(
-                                          stream: musicNotifier.positionStream,
-                                          builder: (context, curDuration) {
-                                            return progressBar(
-                                              curMilliSec: curDuration
-                                                      .data?.inMilliseconds ??
-                                                  0,
-                                              maxMilliSec: maxDuration
-                                                      .data?.inMilliseconds ??
-                                                  0,
-                                            );
-                                          },
-                                        );
-                                      },
-                                    ),
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 20,
-                                          vertical: 12,
-                                        ),
-                                        child: StreamBuilder(
-                                          stream:
-                                              musicNotifier.playerStateStream,
-                                          builder: (context, playerStateAsync) {
-                                            return bottomButtonGroup(
-                                              isPlaying: playerStateAsync
-                                                      .data?.playing ??
-                                                  false,
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 60),
-
-                                    // const SizedBox(height: 42.0),
-                                    // Container(
-                                    //   padding: const EdgeInsets.symmetric(
-                                    //     vertical: 12.5,
-                                    //   ),
-                                    //   decoration: const BoxDecoration(
-                                    //     color: ColorTable.palePink,
-                                    //     borderRadius: BorderRadius.only(
-                                    //       topLeft: Radius.circular(24),
-                                    //       topRight: Radius.circular(24),
-                                    //     ),
-                                    //   ),
-                                    //   child: Row(
-                                    //     mainAxisAlignment:
-                                    //         MainAxisAlignment.center,
-                                    //     children: [
-                                    //       SvgPicture.asset(
-                                    //         'assets/icons/playlist_icon.svg',
-                                    //         width: 32,
-                                    //         height: 32,
-                                    //       ),
-                                    //       const SizedBox(width: 8.0),
-                                    //       const Text(
-                                    //         '재생목록',
-                                    //         style: TextStyle(
-                                    //           fontSize: 18.0,
-                                    //           fontWeight: FontWeight.w600,
-                                    //           height: 1.25,
-                                    //         ),
-                                    //       ),
-                                    //     ],
-                                    //   ),
-                                    // ),
-                                  ],
-                                ),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              child: Column(
+                                children: List.generate(20, (index) {
+                                  return ListTile(
+                                    title: Text('title $index'),
+                                    subtitle: Text('subtitle $index'),
+                                  );
+                                }),
                               ),
                             ),
+                          ),
                         ],
                       ),
-                    );
-                  },
-                ),
-                SlidingUpPanelWidget(
-                  controlHeight: 60,
-                  anchor: 0.9,
-                  upperBound: 0.9,
-                  panelController: _playlistPanelController,
-                  child: Container(
-                    color: Colors.white,
-                    child: Column(
-                      children: [
-                        Container(
-                          height: 60,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 12.5,
-                          ),
-                          decoration: const BoxDecoration(
-                            color: ColorTable.palePink,
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(24),
-                              topRight: Radius.circular(24),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SvgPicture.asset(
-                                'assets/icons/playlist_icon.svg',
-                                width: 32,
-                                height: 32,
-                              ),
-                              const SizedBox(width: 8.0),
-                              const Text(
-                                '재생목록',
-                                style: TextStyle(
-                                  fontSize: 18.0,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.25,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
     );
   }

@@ -197,6 +197,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
     final mainPlaylists = ref.watch(playlistMainProvider);
     final livePlaylists = ref.watch(musicLiveItemsProvider);
+    final currentPlayingMusic = ref.watch(currentPlayingMusicProvider);
 
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
@@ -266,6 +267,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 24),
+              if (currentPlayingMusic != null) const SizedBox(height: 60),
             ],
           ),
         ),

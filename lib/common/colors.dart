@@ -4,7 +4,7 @@ import 'package:flutter/rendering.dart';
 
 abstract class ColorTable {
   // static const kPrimaryColor = Color(0xFF2639E5);
-  static const kPrimaryColor = Color(0xFF8453E3);
+  static const kPrimaryColor = Color(0xFFFF8445);
   static const kakaoYellow = Color(0xFFFEE500);
   static const clearIconColor = Color(0xFFC9C9C9);
   static const hintTextColor = Color(0xFFD2D8D8);
@@ -17,7 +17,7 @@ abstract class ColorTable {
   static const border2 = Color(0xFFE3E5E6);
   static const red = Color(0xFFFE537B);
   static const red2 = Color(0xFFE03C3A);
-  static const sliderColor = Color(0xFFD82A75);
+  static const sliderColor = Color(0xFFFF8445);
   static const mRed = Color(0xFFD82A75); // 뮤직다방 레드
   static const palePink = Color(0xFFFCE7F3);
   static const stroke = Color(0xFFD0D0D0);

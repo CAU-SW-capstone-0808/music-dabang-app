@@ -18,6 +18,7 @@ class _MyMusicListScreenState extends ConsumerState<MyMusicListScreen> {
   @override
   Widget build(BuildContext context) {
     final List<PlaylistItemModel> items = ref.watch(myMusicListProvider);
+    final currentPlayingMusic = ref.watch(currentPlayingMusicProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -28,21 +29,28 @@ class _MyMusicListScreenState extends ConsumerState<MyMusicListScreen> {
           ),
         ),
       ),
-      body: ListView.builder(
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          return MusicListCard(
-            title: items[index].musicContent.title,
-            artist: items[index].musicContent.artist.name,
-            imageUrl: items[index].musicContent.thumbnailUrl,
-            onTap: () async {
-              await ref
-                  .read(currentPlayingMusicProvider.notifier)
-                  .setPlayingMusic(items[index].musicContent);
-              widget.expandPlayerFunc?.call();
-            },
-          );
-        },
+      body: RefreshIndicator(
+        onRefresh: () => ref.read(myMusicListProvider.notifier).refresh(),
+        child: ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemCount: items.length + 1,
+          itemBuilder: (context, index) {
+            if (index == items.length) {
+              return SizedBox(height: currentPlayingMusic != null ? 84 : 0);
+            }
+            return MusicListCard(
+              title: items[index].musicContent.title,
+              artist: items[index].musicContent.artist.name,
+              imageUrl: items[index].musicContent.thumbnailUrl,
+              onTap: () async {
+                await ref
+                    .read(currentPlayingMusicProvider.notifier)
+                    .setPlayingMusic(items[index].musicContent);
+                widget.expandPlayerFunc?.call();
+              },
+            );
+          },
+        ),
       ),
     );
   }

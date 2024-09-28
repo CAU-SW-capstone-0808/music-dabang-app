@@ -124,7 +124,7 @@ class PlayListNavItem extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 13.5),
               decoration: BoxDecoration(
-                color: ColorTable.mRed,
+                color: ColorTable.kPrimaryColor,
                 borderRadius: borderRadius.copyWith(
                   topLeft: const Radius.circular(0),
                   topRight: const Radius.circular(0),
