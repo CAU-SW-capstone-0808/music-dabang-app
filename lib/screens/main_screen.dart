@@ -102,8 +102,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         ),
         body: Stack(
           children: [
-            if (navIndex == 0) HomeScreen(),
-            if (navIndex == 1) MyMusicListScreen(),
+            if (navIndex == 0) const HomeScreen(),
+            if (navIndex == 1) const MyMusicListScreen(),
             // Align(
             //   heightFactor: currentPlaying != null ? 1 : 0,
             //   child: Opacity(
@@ -111,7 +111,17 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             //     child: MusicPlayerScreen(),
             //   ),
             // ),
-            MusicPlayerScreen(),
+            if (musicPlayerState.full)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  color: Colors.white,
+                  height: MediaQuery.of(context).viewPadding.top,
+                ),
+              ),
+            const MusicPlayerScreen(),
           ],
         ),
       ),

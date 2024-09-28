@@ -87,7 +87,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget carouselList({required List<Widget> children}) {
     return CarouselSlider(
       options: CarouselOptions(
-        aspectRatio: 1,
+        aspectRatio: 4 / 3,
         viewportFraction: 0.9,
         initialPage: 0,
         enableInfiniteScroll: true,

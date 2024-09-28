@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sliding_up_panel/flutter_sliding_up_panel.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:music_dabang/common/colors.dart';
 import 'package:music_dabang/components/music_list_card.dart';
+import 'package:music_dabang/models/music/playlist_model.dart';
 import 'package:music_dabang/providers/common/page_scroll_controller.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
 import 'package:music_dabang/providers/music/playlist_items_provider.dart';
@@ -138,7 +140,7 @@ class _PlaylistPanelState extends ConsumerState<PlaylistPanel> {
               ),
               child: currentPlaylist != null
                   ? _PlaylistItemListView(
-                      playlistId: currentPlaylist.id,
+                      playlist: currentPlaylist,
                       onTopScrollEnd: () {
                         if (panelController.status ==
                             SlidingUpPanelStatus.expanded) {
@@ -163,11 +165,11 @@ class _PlaylistPanelState extends ConsumerState<PlaylistPanel> {
 }
 
 class _PlaylistItemListView extends ConsumerStatefulWidget {
-  final int playlistId;
+  final PlaylistModel playlist;
   final void Function()? onTopScrollEnd;
 
   const _PlaylistItemListView({
-    required this.playlistId,
+    required this.playlist,
     this.onTopScrollEnd,
   });
 
@@ -183,13 +185,13 @@ class _PlaylistItemListViewState extends ConsumerState<_PlaylistItemListView> {
   void initState() {
     super.initState();
     pageController.onEnd = () {
-      ref.read(playlistItemsProvider(widget.playlistId).notifier).fetch();
+      ref.read(playlistItemsProvider(widget.playlist.id).notifier).fetch();
     };
   }
 
   @override
   Widget build(BuildContext context) {
-    final items = ref.watch(playlistItemsProvider(widget.playlistId));
+    final items = ref.watch(playlistItemsProvider(widget.playlist.id));
     int? currentItemId = ref
         .watch(currentPlayingMusicProvider.notifier)
         .currentPlayingPlaylistItemId;
@@ -202,8 +204,25 @@ class _PlaylistItemListViewState extends ConsumerState<_PlaylistItemListView> {
       },
       child: ListView.builder(
         controller: pageController,
-        itemCount: items.length,
+        itemCount: items.length + 1,
         itemBuilder: (context, index) {
+          // index == 0: playlist title
+          if (index == 0) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              decoration: const BoxDecoration(
+                color: ColorTable.backGrey,
+              ),
+              child: Text(
+                '재생 중: ${widget.playlist.name}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            );
+          }
+          index--;
           final item = items[index];
           return MusicListCard(
             title: item.musicContent.title,

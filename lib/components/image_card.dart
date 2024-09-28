@@ -56,14 +56,15 @@ class ImageCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 13),
+            const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Text(
-                '$title\n\n',
-                maxLines: 3,
+                '$title\n',
+                maxLines: 2,
                 style: const TextStyle(
                   fontSize: 22,
+                  height: 1.25,
                   fontWeight: FontWeight.w600,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -87,7 +88,7 @@ class ImageCard extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
           ],
         ),
       ),

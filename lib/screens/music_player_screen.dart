@@ -189,6 +189,10 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                   'assets/icons/playlists_icon.svg',
                   width: 48,
                   height: 48,
+                  // colorFilter: const ColorFilter.mode(
+                  //   ColorTable.kPrimaryColor,
+                  //   BlendMode.srcIn,
+                  // ),
                 ),
                 text: '내음악에 추가',
                 onPressed: () async {
@@ -587,25 +591,31 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       if (musicPlayerSizeOver0_25)
-                        SafeArea(
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 8.0),
-                                child: topTitle(currentPlaying?.title ?? '-'),
+                        Column(
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: topTitle(currentPlaying?.title ?? '-'),
+                            ),
+                            const SizedBox(height: 4.0),
+                            artistName(currentPlaying?.artist.name ?? ''),
+                            const SizedBox(height: 8.0),
+                            if (musicPlayerSizeOver0_25)
+                              albumImage(
+                                size: musicPlayerSize,
+                                imageUrl: currentPlaying?.thumbnailUrl,
+                                showingVideo: isPlayingVideo,
                               ),
-                              const SizedBox(height: 4.0),
-                              artistName(currentPlaying?.artist.name ?? ''),
-                              const SizedBox(height: 8.0),
-                              if (musicPlayerSizeOver0_25)
-                                albumImage(
-                                  size: musicPlayerSize,
-                                  imageUrl: currentPlaying?.thumbnailUrl,
-                                  showingVideo: isPlayingVideo,
-                                ),
-                            ],
-                          ),
+                            // Expanded(
+                            //   child: ClipRRect(
+                            //     borderRadius: BorderRadius.circular(24),
+                            //     child: currentPlaying?.thumbnailUrl != null
+                            //         ? CachedImage(currentPlaying!.thumbnailUrl)
+                            //         : Container(color: ColorTable.backGrey),
+                            //   ),
+                            // ),
+                          ],
                         ),
                       StreamBuilder(
                         stream: musicNotifier.playerStateStream,

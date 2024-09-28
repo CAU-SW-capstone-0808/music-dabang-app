@@ -37,6 +37,7 @@ class _MyMusicListScreenState extends ConsumerState<MyMusicListScreen> {
               return SizedBox(height: currentPlayingMusic != null ? 84 : 0);
             }
             return MusicListCard(
+              key: Key('mymusic_${items[index].id}'),
               title: items[index].musicContent.title,
               artist: items[index].musicContent.artist.name,
               imageUrl: items[index].musicContent.thumbnailUrl,
@@ -46,6 +47,7 @@ class _MyMusicListScreenState extends ConsumerState<MyMusicListScreen> {
                     .setPlayingMusic(items[index].musicContent);
                 ref.read(musicPlayerStatusProvider.notifier).expand();
               },
+              onRemove: () {},
             );
           },
         ),

@@ -8,6 +8,9 @@ class MusicListCard extends StatelessWidget {
   final String artist;
   final String? imageUrl;
   final void Function()? onTap;
+
+  /// if not null, there exists a remove interaction
+  final void Function()? onRemove;
   final bool isPlaying;
 
   const MusicListCard({
@@ -16,6 +19,7 @@ class MusicListCard extends StatelessWidget {
     required this.artist,
     this.imageUrl,
     this.onTap,
+    this.onRemove,
     this.isPlaying = false,
   });
 
@@ -44,7 +48,7 @@ class MusicListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassMorphing(
+    var innerWidget = GlassMorphing(
       background: albumImage(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.width,
@@ -99,7 +103,7 @@ class MusicListCard extends StatelessWidget {
                   color: isPlaying ? Colors.white : ColorTable.kPrimaryColor,
                 ),
                 Text(
-                  "재생",
+                  isPlaying ? "재생 중" : "재생",
                   style: TextStyle(
                     fontSize: 18.0,
                     height: 1.25,
@@ -112,5 +116,24 @@ class MusicListCard extends StatelessWidget {
         ),
       ),
     );
+    if (onRemove != null && key != null) {
+      return Dismissible(
+        key: key!,
+        background: Container(
+          color: Colors.red,
+          child: Center(child: Text('삭제!!')),
+        ),
+        confirmDismiss: (direction) async {
+          // 스와이프를 특정 상황에서 취소하거나 확인할 수 있습니다.
+          if (direction == DismissDirection.startToEnd) {
+            return true; // true면 삭제, false면 스와이프 취소
+          }
+          return false; // endToStart 스와이프는 허용하지 않음
+        },
+        child: innerWidget,
+      );
+    } else {
+      return innerWidget;
+    }
   }
 }

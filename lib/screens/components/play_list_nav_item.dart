@@ -97,16 +97,18 @@ class PlayListNavItem extends ConsumerWidget {
                               if (firstItem != null)
                                 Text(
                                   firstItem.musicContent.title,
+                                  maxLines: 1,
                                   style: const TextStyle(
-                                    fontSize: 18.0,
+                                    fontSize: 24.0,
                                     height: 1.25,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               if (itemsCount != null && itemsCount > 1)
                                 Text(
                                   "외 ${itemsCount - 1}곡",
                                   style: const TextStyle(
-                                    fontSize: 18.0,
+                                    fontSize: 24.0,
                                     height: 1.25,
                                   ),
                                 ),
@@ -120,7 +122,7 @@ class PlayListNavItem extends ConsumerWidget {
               ],
             ),
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 13.5),
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
               decoration: BoxDecoration(
                 color: ColorTable.kPrimaryColor,
                 borderRadius: borderRadius.copyWith(
@@ -134,7 +136,7 @@ class PlayListNavItem extends ConsumerWidget {
                   Text(
                     "바로 재생",
                     style: TextStyle(
-                      fontSize: 22.0,
+                      fontSize: 28.0,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       height: 1.25,
