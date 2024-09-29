@@ -78,45 +78,66 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     if (hasMusicVideo && size > 0.8) {
       Widget mvButton = Opacity(
         opacity: (size - 0.8) / 0.2,
-        child: AnimatedToggleSwitch<bool>.dual(
-          current: showVideo,
-          first: false,
-          second: true,
-          onChanged: (value) async {
-            setState(() {
-              showVideo = value;
-            });
-          },
-          textBuilder: (value) {
-            return Text(
-              value ? '뮤직비디오 재생 중' : '뮤직비디오 보기',
-              style: const TextStyle(
-                fontSize: 18.0,
-                height: 1.25,
-                fontWeight: FontWeight.w600,
-              ),
-            );
-          },
-          iconBuilder: (value) => SvgPicture.asset(
-            value
-                ? 'assets/icons/music_video_icon.svg'
-                : 'assets/icons/music_lyric_icon.svg',
-            width: 32,
-            height: 32,
-            colorFilter: const ColorFilter.mode(
-              Colors.white,
-              BlendMode.srcIn,
+        child: Theme(
+          data: ThemeData(
+            iconTheme: const IconThemeData(
+              color: Colors.white,
+              size: 24,
             ),
           ),
-          borderWidth: 0,
-          height: 50,
-          spacing: 120,
-          indicatorSize: const Size.fromWidth(50),
-          style: ToggleStyle(
-            indicatorColor: ColorTable.kPrimaryColor,
-            indicatorBorder: Border.all(
-              color: Colors.white,
-              width: 4,
+          child: AnimatedToggleSwitch<bool>.dual(
+            current: showingVideo,
+            first: false,
+            second: true,
+            onChanged: (value) async {
+              await ref
+                  .read(currentPlayingMusicProvider.notifier)
+                  .toggleAudioVideo(value);
+            },
+            textBuilder: (value) {
+              return Text(
+                value ? '뮤직비디오 재생 중' : '뮤직비디오 보기',
+                style: const TextStyle(
+                  fontSize: 18.0,
+                  height: 1.25,
+                  fontWeight: FontWeight.w600,
+                ),
+              );
+            },
+            iconBuilder: (value) => SvgPicture.asset(
+              value
+                  ? 'assets/icons/music_video_icon.svg'
+                  : 'assets/icons/music_lyric_icon.svg',
+              width: 32,
+              height: 32,
+              colorFilter: const ColorFilter.mode(
+                Colors.white,
+                BlendMode.srcIn,
+              ),
+            ),
+            borderWidth: 0,
+            height: 50,
+            spacing: 120,
+            indicatorSize: const Size.fromWidth(50),
+            style: ToggleStyle(
+              backgroundColor: Colors.white,
+              indicatorColor: ColorTable.kPrimaryColor,
+              indicatorBorder: Border.all(
+                color: Colors.white,
+                width: 4,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.24),
+                  offset: Offset.zero,
+                  blurRadius: 4,
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.12),
+                  offset: const Offset(0, 1),
+                  blurRadius: 8,
+                ),
+              ],
             ),
           ),
         ),
@@ -128,7 +149,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
             alignment: Alignment.topCenter,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: mvButton,
+              child: BouncingWidget(child: mvButton),
             ),
           ),
         ],
@@ -606,6 +627,8 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                                 size: musicPlayerSize,
                                 imageUrl: currentPlaying?.thumbnailUrl,
                                 showingVideo: isPlayingVideo,
+                                hasMusicVideo:
+                                    currentPlaying?.videoContentUrl != null,
                               ),
                             // Expanded(
                             //   child: ClipRRect(

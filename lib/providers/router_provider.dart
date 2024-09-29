@@ -1,10 +1,13 @@
 import 'dart:async';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:music_dabang/common/firebase_logger.dart';
+import 'package:music_dabang/common/firebase_route_observer.dart';
 import 'package:music_dabang/models/user/user_model.dart';
-import 'package:music_dabang/providers/user_provider.dart';
+import 'package:music_dabang/providers/user/user_provider.dart';
 import 'package:music_dabang/screens/login/login_home_screen.dart';
 import 'package:music_dabang/screens/login/phone_join_screen.dart';
 import 'package:music_dabang/screens/login/phone_login_screen.dart';
@@ -22,17 +25,21 @@ final routerProvider = Provider<GoRouter>((ref) {
     final UserModelBase user = ref.watch(userProvider);
     debugPrint('redirect - from=${state.uri} user: $user');
 
+    String? redirectTo;
     if (user is UserModelLoading) {
-      debugPrint('redirect result: ');
-      return '/splash';
+      redirectTo = '/splash';
     } else if (user is UserModelNone || user is UserModelError) {
-      debugPrint('redirect result: /login');
-      return '/login';
+      redirectTo = '/login';
     } else if (user is UserModel) {
       if (currentPath == '/login' || currentPath == '/splash') {
-        debugPrint('redirect result: /');
-        return '/';
+        redirectTo = '/';
       }
+    }
+
+    if (redirectTo != null) {
+      FirebaseLogger.redirect(from: state.uri.path, to: redirectTo);
+      debugPrint('redirect result: $redirectTo');
+      return redirectTo;
     }
 
     debugPrint('redirect result: no redirect');
@@ -43,6 +50,9 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/splash',
     routerNeglect: true,
     redirect: redirect,
+    observers: [
+      FirebaseAnalyticsGoRouterObserver(analytics: FirebaseAnalytics.instance),
+    ],
     routes: [
       GoRoute(
         path: '/splash',

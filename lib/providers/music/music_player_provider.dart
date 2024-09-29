@@ -1,4 +1,5 @@
 import 'package:just_audio/just_audio.dart';
+import 'package:music_dabang/common/firebase_logger.dart';
 import 'package:music_dabang/common/utils.dart';
 import 'package:music_dabang/models/music/music_model.dart';
 import 'package:music_dabang/models/music/playlist_item_model.dart';
@@ -164,7 +165,6 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   final Ref ref;
   final AudioPlayer _audioPlayer = AudioPlayer();
   VideoPlayerController? _videoPlayerController;
-  bool _showVideo = false;
   double _volume = 1.0; // 기본 볼륨 설정
   int? _currentPlayingPlaylistItemId;
 
@@ -180,15 +180,14 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   }
 
   /// 사용자 요청에 따라 비디오를 보여주는 여부.
-  bool get showVideo => _showVideo;
+  bool get showVideo => ref.read(musicPlayerShowingVideoProvider);
 
   /// 현재 재생 위치
   Duration get currentPosition => _audioPlayer.position;
 
   set showVideo(bool value) {
-    _showVideo = value;
-    if (value) {
-      _playVideo(state!.videoContentUrl);
+    if (value && state?.videoContentUrl != null) {
+      _playVideo(state!.videoContentUrl!);
     } else {
       _videoPlayerController?.dispose();
       _videoPlayerController = null;
@@ -196,11 +195,21 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
     }
   }
 
+  /// 생성자
   CurrentPlayingMusicStateNotifier({required this.ref}) : super(null) {
+    // 이벤트 등록
     _audioPlayer.playerStateStream.listen((PlayerState playerState) {
       if (playerState.processingState == ProcessingState.completed) {
         _handleMusicCompletion();
       }
+      FirebaseLogger.audioPlayerStatus(
+        eventName: playerState.processingState.name,
+        isPlaying: playerState.playing,
+        playlistId: ref.read(currentPlaylistProvider)?.id,
+        musicId: state?.id,
+        title: state?.title,
+        position: _audioPlayer.duration,
+      );
     });
   }
 
@@ -218,8 +227,8 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
     AidolUtils.d("set music ${music?.title}");
     if (music != null) {
       _playMusic(music.musicContentUrl);
-      if (showVideo || music.musicContentType == MusicContentType.live) {
-        _playVideo(music.videoContentUrl);
+      if (showVideo && music.videoContentUrl != null) {
+        _playVideo(music.videoContentUrl!);
       } else {
         _videoPlayerController?.dispose();
         _videoPlayerController = null;
@@ -268,7 +277,9 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
         // 오디오와 비디오 간 동기화
         await _videoPlayerController!.seekTo(_audioPlayer.position);
       }
-      await _videoPlayerController!.play();
+      if (_audioPlayer.playing) {
+        await _videoPlayerController!.play();
+      }
       // 5초까지 대기
       int waitForVideoToInit = 0;
       while (waitForVideoToInit < 500 &&
@@ -287,9 +298,9 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   Future<void> toggleAudioVideo(bool playVideo) async {
     if (playVideo == ref.read(musicPlayerShowingVideoProvider)) return;
 
-    if (playVideo) {
+    if (playVideo && state?.videoContentUrl != null) {
       final currentPosition = _audioPlayer.position;
-      await _playVideo(state!.videoContentUrl, currentPosition);
+      await _playVideo(state!.videoContentUrl!, currentPosition);
     } else {
       await _videoPlayerController?.pause();
       await _videoPlayerController?.dispose();

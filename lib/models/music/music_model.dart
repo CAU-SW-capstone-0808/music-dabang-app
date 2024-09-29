@@ -15,7 +15,7 @@ class MusicModel {
   final String title;
   final String thumbnailUrl;
   final String musicContentUrl;
-  final String videoContentUrl;
+  final String? videoContentUrl;
   final MusicContentType musicContentType;
 
   MusicModel({

@@ -1,17 +1,16 @@
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:music_dabang/common/colors.dart';
-import 'package:music_dabang/common/regex_table.dart';
-import 'package:music_dabang/common/utils.dart';
-import 'package:music_dabang/components/input_field.dart';
-import 'package:music_dabang/components/common_layout.dart';
-import 'package:music_dabang/components/title_description_text.dart';
-import 'package:music_dabang/components/wide_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:music_dabang/common/colors.dart';
+import 'package:music_dabang/common/regex_table.dart';
+import 'package:music_dabang/common/utils.dart';
+import 'package:music_dabang/components/common_layout.dart';
+import 'package:music_dabang/components/input_field.dart';
+import 'package:music_dabang/components/title_description_text.dart';
+import 'package:music_dabang/components/wide_button.dart';
 import 'package:music_dabang/models/user/user_login_model.dart';
-import 'package:music_dabang/providers/user_provider.dart';
+import 'package:music_dabang/providers/user/user_provider.dart';
 import 'package:music_dabang/screens/login/phone_join_screen.dart';
 
 class PhoneLoginScreen extends ConsumerStatefulWidget {

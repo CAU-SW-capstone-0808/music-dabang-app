@@ -12,7 +12,7 @@ MusicModel _$MusicModelFromJson(Map<String, dynamic> json) => MusicModel(
       title: json['title'] as String,
       thumbnailUrl: json['thumbnailUrl'] as String,
       musicContentUrl: json['musicContentUrl'] as String,
-      videoContentUrl: json['videoContentUrl'] as String,
+      videoContentUrl: json['videoContentUrl'] as String?,
       musicContentType:
           $enumDecode(_$MusicContentTypeEnumMap, json['musicContentType']),
     );

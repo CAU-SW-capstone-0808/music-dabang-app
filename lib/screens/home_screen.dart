@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,11 +13,10 @@ import 'package:music_dabang/providers/music/music_live_items_provider.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
 import 'package:music_dabang/providers/music/playlist_main_provider.dart';
 import 'package:music_dabang/providers/music_player_size_provider.dart';
-import 'package:music_dabang/providers/user_provider.dart';
+import 'package:music_dabang/providers/user/user_provider.dart';
 import 'package:music_dabang/screens/components/play_list_nav_item.dart';
 import 'package:music_dabang/screens/components/playlist_item_preview_list.dart';
 import 'package:music_dabang/screens/search_screen.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   static const routeName = 'home';

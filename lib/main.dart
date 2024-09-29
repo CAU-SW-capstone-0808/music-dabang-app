@@ -1,4 +1,6 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
@@ -11,16 +13,39 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // 디버깅 모드 여부를 사용자 속성으로 설정
+  await FirebaseAnalytics.instance.setUserProperty(
+    name: 'debug_mode',
+    value: kDebugMode.toString(),
+  );
   KakaoSdk.init(
     nativeAppKey: '77e0c7bca12daad215f23b6a143c962b',
     javaScriptAppKey: '7c9a44473ebe4bec739fe0dea137871f',
   );
-
   runApp(const ProviderScope(child: MusicDabang()));
 }
 
-class MusicDabang extends ConsumerWidget {
+class MusicDabang extends ConsumerWidget with WidgetsBindingObserver {
   const MusicDabang({super.key});
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.paused) {
+      // 앱이 백그라운드로 전환될 때
+      print('App went to the background.');
+    } else if (state == AppLifecycleState.resumed) {
+      // 앱이 다시 포그라운드로 전환될 때
+      print('App returned to the foreground.');
+    } else if (state == AppLifecycleState.inactive) {
+      // 앱이 비활성화될 때
+      print('App is inactive.');
+    } else if (state == AppLifecycleState.detached) {
+      // 앱이 완전히 종료되기 전에 호출
+      print('App is detached.');
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

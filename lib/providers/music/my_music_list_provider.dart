@@ -144,7 +144,7 @@ class MyMusicListStateNotifier extends AbstractPageNotifier<PlaylistItemModel> {
       // 중간에 삽입하는 경우
       else {
         int newOrder =
-            (state[targetIndex - 1].order + state[targetIndex].order) ~/ 2;
+            (state[targetIndex - 1].order + state[targetIndex + 1].order) ~/ 2;
         // positive feedback
         final filtered = state.where((e) => e.id != itemId).toList();
         state = [

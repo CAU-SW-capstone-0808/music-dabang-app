@@ -7,7 +7,7 @@ import 'package:music_dabang/dialogs/showConfirmDialog.dart';
 import 'package:music_dabang/models/user/user_model.dart';
 import 'package:music_dabang/providers/bottom_nav_provider.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
-import 'package:music_dabang/providers/user_provider.dart';
+import 'package:music_dabang/providers/user/user_provider.dart';
 import 'package:music_dabang/screens/home_screen.dart';
 import 'package:music_dabang/screens/music_player_screen.dart';
 import 'package:music_dabang/screens/my_music_list_screen.dart';

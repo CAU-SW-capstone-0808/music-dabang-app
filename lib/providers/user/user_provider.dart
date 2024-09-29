@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:music_dabang/common/firebase_logger.dart';
 import 'package:music_dabang/common/utils.dart';
 import 'package:music_dabang/models/user/token_model.dart';
 import 'package:music_dabang/models/user/user_join_model.dart';
@@ -10,7 +11,6 @@ import 'package:music_dabang/providers/secret_value_provider.dart';
 import 'package:music_dabang/providers/secure_storage_provider.dart';
 import 'package:music_dabang/repository/user_repository.dart';
 import 'package:riverpod/riverpod.dart';
-import 'package:synchronized/synchronized.dart';
 
 final userProvider =
     StateNotifierProvider<UserStateNotifier, UserModelBase>((ref) {
@@ -200,7 +200,9 @@ class UserStateNotifier extends StateNotifier<UserModelBase> {
   }
 
   Future<UserModel> fetch() async {
-    return state = await userRepository.getMe();
+    var me = await userRepository.getMe();
+    FirebaseLogger.initUser(me);
+    return state = me;
   }
 
   Future<void> logout() async {

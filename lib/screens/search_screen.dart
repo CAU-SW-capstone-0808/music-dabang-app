@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:music_dabang/common/colors.dart';
+import 'package:music_dabang/common/firebase_logger.dart';
 import 'package:music_dabang/components/custom_search_bar.dart';
 import 'package:music_dabang/components/music_list_card.dart';
 import 'package:music_dabang/components/to_top_button.dart';
@@ -128,9 +129,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ...recentItems.map(
             (q) => searchItem(
               content: q,
-              onTap: search,
+              onTap: (q) async {
+                search(q);
+                FirebaseLogger.useRecentSearchKeyword(keyword: q);
+              },
               onRemove: (q) {
                 ref.read(recentSearchProvider.notifier).remove(q);
+                FirebaseLogger.deleteRecentSearchKeyword(keyword: q);
               },
             ),
           ),
@@ -145,7 +150,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         children: autoCompletes
             .map((q) => searchItem(
                   content: q,
-                  onTap: search,
+                  onTap: (q) {
+                    FirebaseLogger.useAutoCompleteSearchMusic(
+                      currentKeyword: searchController.value.text,
+                      selectedKeyword: q,
+                    );
+                    search(q);
+                  },
                 ))
             .toList(),
       ),
@@ -191,6 +202,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 ref.read(musicPlayerStatusProvider.notifier).expand();
                 context.go('/');
               });
+              FirebaseLogger.playMusicInSearchScreen(
+                musicId: m.id,
+                keyword: searchController.value.text,
+                title: m.title,
+                artist: m.artist.name,
+                index: index,
+              );
             },
           );
         },
@@ -203,6 +221,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     setState(() => searchKeyword = q);
     searchController.text = q;
     ref.read(recentSearchProvider.notifier).add(q);
+    FirebaseLogger.searchMusic(keyword: q);
   }
 
   @override
@@ -271,6 +290,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             onClear: () {
                               setState(() => searchKeyword = null);
                               searchController.clear();
+                              FirebaseLogger.clearMusicSearchField();
                             },
                             onChanged: (value) {
                               ref

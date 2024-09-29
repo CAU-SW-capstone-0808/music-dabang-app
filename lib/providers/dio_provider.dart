@@ -1,12 +1,12 @@
 import 'dart:convert';
 
-import 'package:music_dabang/common/utils.dart';
-import 'package:music_dabang/providers/secret_value_provider.dart';
-import 'package:music_dabang/providers/secure_storage_provider.dart';
-import 'package:music_dabang/providers/user_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:music_dabang/common/utils.dart';
+import 'package:music_dabang/providers/secret_value_provider.dart';
+import 'package:music_dabang/providers/secure_storage_provider.dart';
+import 'package:music_dabang/providers/user/user_provider.dart';
 
 final dioProvider = Provider<Dio>((ref) {
   final secureStorage = ref.watch(secureStorageProvider);
