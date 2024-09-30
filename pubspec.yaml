@@ -51,6 +51,7 @@ dependencies:
   kakao_flutter_sdk: ^1.9.6
   kakao_flutter_sdk_auth: ^1.9.6
   audio_session: ^0.1.21
+  native_device_orientation: ^2.0.3
 
   # ui
   flutter_svg: ^2.0.10+1

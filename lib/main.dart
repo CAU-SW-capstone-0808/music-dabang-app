@@ -2,6 +2,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:music_dabang/common/colors.dart';
@@ -22,6 +23,10 @@ void main() async {
     nativeAppKey: '77e0c7bca12daad215f23b6a143c962b',
     javaScriptAppKey: '7c9a44473ebe4bec739fe0dea137871f',
   );
+  // 앱이 시작될 때 화면 회전을 금지합니다.
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp, // 세로 모드만 허용
+  ]);
   runApp(const ProviderScope(child: MusicDabang()));
 }
 

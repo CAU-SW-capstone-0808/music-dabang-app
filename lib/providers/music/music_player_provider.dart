@@ -1,3 +1,4 @@
+import 'package:flick_video_player/flick_video_player.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music_dabang/common/firebase_logger.dart';
 import 'package:music_dabang/common/utils.dart';
@@ -165,10 +166,13 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   final Ref ref;
   final AudioPlayer _audioPlayer = AudioPlayer();
   VideoPlayerController? _videoPlayerController;
+  FlickManager? _flickManager;
   double _volume = 1.0; // 기본 볼륨 설정
   int? _currentPlayingPlaylistItemId;
 
-  VideoPlayerController? get videoPlayerController => _videoPlayerController;
+  // VideoPlayerController? get videoPlayerController => _videoPlayerController;
+
+  FlickManager? get flickManager => _flickManager;
 
   /// 현재 실행 중인 플레이리스트 아이템 ID
   int? get currentPlayingPlaylistItemId => _currentPlayingPlaylistItemId;
@@ -192,8 +196,7 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
     if (value && state?.videoContentUrl != null) {
       _playVideo(state!.videoContentUrl!);
     } else {
-      _videoPlayerController?.dispose();
-      _videoPlayerController = null;
+      _disposeVideo();
       ref.read(musicPlayerShowingVideoProvider.notifier).showingVideo = false;
     }
   }
@@ -239,14 +242,12 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
           music.videoContentUrl != null) {
         _playVideo(music.videoContentUrl!);
       } else {
-        _videoPlayerController?.dispose();
-        _videoPlayerController = null;
+        _disposeVideo();
         ref.read(musicPlayerShowingVideoProvider.notifier).showingVideo = false;
       }
     } else {
       _audioPlayer.stop();
-      _videoPlayerController?.dispose();
-      _videoPlayerController = null;
+      _disposeVideo();
     }
   }
 
@@ -276,11 +277,19 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
       _videoPlayerController = VideoPlayerController.networkUrl(
         Uri.parse(url),
         // 오디오 재생 중에 다른 오디오 재생 허용
-        videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+        videoPlayerOptions: VideoPlayerOptions(
+          mixWithOthers: true,
+          allowBackgroundPlayback: false, // 백그라운드 재생 비허용
+        ),
+      );
+      _flickManager = FlickManager(
+        videoPlayerController: _videoPlayerController!,
+        autoInitialize: false,
+        autoPlay: false,
       );
       _videoPlayerController!.addListener(() {
         // TODO: 버퍼링 걸렸을 경우 audio와 adjust 필요
-        if (_videoPlayerController!.value.isBuffering) {
+        if (_videoPlayerController?.value.isBuffering ?? false) {
           AidolUtils.d('video buffering: ${_videoPlayerController!.value}');
           // _videoPlayerController!.seekTo(_audioPlayer.position);
         }
@@ -329,10 +338,20 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
       final currentPosition = _audioPlayer.position;
       await _playVideo(state!.videoContentUrl!, currentPosition);
     } else {
-      await _videoPlayerController?.pause();
-      await _videoPlayerController?.dispose();
-      _videoPlayerController = null;
+      // await _videoPlayerController?.pause();
+      // await _videoPlayerController?.dispose();
+      // _videoPlayerController = null;
+      _disposeVideo();
       ref.read(musicPlayerShowingVideoProvider.notifier).showingVideo = false;
+    }
+  }
+
+  Future<void> toggleFullscreen(bool value) async {
+    AidolUtils.d('toggle fullscreen(value=$value)');
+    if (value) {
+      _flickManager?.flickControlManager?.enterFullscreen();
+    } else {
+      _flickManager?.flickControlManager?.exitFullscreen();
     }
   }
 
@@ -346,7 +365,11 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   Future<void> seekAudio(Duration position) async {
     await Future.wait([
       if (_videoPlayerController != null)
-        _videoPlayerController!.seekTo(position),
+        _videoPlayerController!.seekTo(position).then((_) {
+          if (_audioPlayer.playing) {
+            _videoPlayerController!.play();
+          }
+        }),
       _audioPlayer.seek(position),
     ]);
   }
@@ -382,11 +405,18 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   // 전체 재생 시간 스트림
   Stream<Duration?> get durationStream => _audioPlayer.durationStream;
 
+  void _disposeVideo() {
+    _videoPlayerController?.dispose();
+    _flickManager?.dispose();
+    _flickManager = null;
+    _videoPlayerController = null;
+  }
+
   // 상태 해제 시 리소스 정리
   @override
   void dispose() {
-    _audioPlayer.dispose();
     _videoPlayerController?.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 }

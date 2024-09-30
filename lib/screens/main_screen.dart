@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_dabang/common/firebase_logger.dart';
 import 'package:music_dabang/common/utils.dart';
@@ -29,6 +30,15 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     return _lastAskedToExit != null &&
         DateTime.now().difference(_lastAskedToExit!) <
             const Duration(seconds: 2);
+  }
+
+  DeviceOrientation _getDeviceOrientation() {
+    var pSize = View.of(context).physicalSize;
+    if (pSize.width > pSize.height) {
+      return DeviceOrientation.landscapeLeft;
+    } else {
+      return DeviceOrientation.portraitUp;
+    }
   }
 
   @override

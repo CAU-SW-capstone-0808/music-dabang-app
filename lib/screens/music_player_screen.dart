@@ -1,5 +1,7 @@
 import 'package:animated_toggle_switch/animated_toggle_switch.dart';
+import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sliding_up_panel/flutter_sliding_up_panel.dart';
 import 'package:flutter_sliding_up_panel/sliding_up_panel_widget.dart';
@@ -14,8 +16,8 @@ import 'package:music_dabang/components/playing_music_bar.dart';
 import 'package:music_dabang/models/music/music_model.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
 import 'package:music_dabang/providers/music/my_music_list_provider.dart';
+import 'package:music_dabang/screens/components/flick_custom_controls.dart';
 import 'package:music_dabang/screens/components/playlist_panel.dart';
-import 'package:video_player/video_player.dart';
 
 class MusicPlayerScreen extends ConsumerStatefulWidget {
   const MusicPlayerScreen({super.key});
@@ -27,6 +29,7 @@ class MusicPlayerScreen extends ConsumerStatefulWidget {
 class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     with TickerProviderStateMixin {
   late AnimationController musicPlayerAnimationController;
+  DeviceOrientation _orientation = DeviceOrientation.portraitUp;
   final panelController = SlidingUpPanelController();
 
   CurrentPlayingMusicStateNotifier get musicNotifier =>
@@ -46,14 +49,52 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     final albumWidth = MediaQuery.of(context).size.width * size - 60;
     late Widget innerWidget;
     if (showingVideo) {
-      final videoController = musicNotifier.videoPlayerController;
-      if (videoController?.value.isInitialized ?? false) {
+      final flickManager = musicNotifier.flickManager;
+      if (flickManager?.flickVideoManager?.isVideoInitialized ?? false) {
+        // innerWidget = SizedBox(
+        //   height: albumWidth,
+        //   child: Center(
+        //     child: AspectRatio(
+        //       aspectRatio: videoController!.value.aspectRatio,
+        //       child: VideoPlayer(videoController),
+        //     ),
+        //   ),
+        // );
+        var flickVideoPlayer = FlickVideoPlayer(
+          preferredDeviceOrientationFullscreen: const [
+            DeviceOrientation.portraitUp,
+          ],
+          flickVideoWithControls: FlickVideoWithControls(
+            videoFit: BoxFit.contain,
+            controls: FlickCustomControls(
+              iconSize: 36,
+              fontSize: 22,
+              onFullScreenToggle: () async {
+                musicNotifier.toggleFullscreen(true);
+              },
+            ),
+          ),
+          flickVideoWithControlsFullscreen: RotatedBox(
+            quarterTurns: 1,
+            child: FlickVideoWithControls(
+              videoFit: BoxFit.contain,
+              controls: FlickCustomControls(
+                iconSize: 36,
+                fontSize: 22,
+                onFullScreenToggle: () async {
+                  musicNotifier.toggleFullscreen(false);
+                },
+              ),
+            ),
+          ),
+          flickManager: flickManager!,
+        );
         innerWidget = SizedBox(
           height: albumWidth,
           child: Center(
             child: AspectRatio(
-              aspectRatio: videoController!.value.aspectRatio,
-              child: VideoPlayer(videoController),
+              aspectRatio: 16 / 9,
+              child: flickVideoPlayer,
             ),
           ),
         );
@@ -162,6 +203,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
 
   /// 주의: 파이어베이스 로깅만을 위한 변수. 이해하기 번거로우면 지울 것.
   bool _touchedToChangeMusicPlayer = false;
+
   Widget topTitle(String title) => Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -581,6 +623,15 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     );
   }
 
+  DeviceOrientation _getDeviceOrientation() {
+    var pSize = View.of(context).physicalSize;
+    if (pSize.width > pSize.height) {
+      return DeviceOrientation.landscapeLeft;
+    } else {
+      return DeviceOrientation.portraitUp;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -641,6 +692,11 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
         var mpStatus = ref.read(musicPlayerStatusProvider);
         if (status == SlidingUpPanelStatus.collapsed) {
           if (mpStatus != MusicDabangPlayerState.collapsed) {
+            // 전체화면 -> SlidingUpPanel 자동 변경됨 -> expand
+            // if (fullScreen) {
+            //   panelController.expand();
+            //   return;
+            // }
             // 드래그에 의해 닫힌 경우
             AidolUtils.d('music_player collapse:drag');
             ref.read(musicPlayerStatusProvider.notifier).status =
