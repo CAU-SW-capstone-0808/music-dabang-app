@@ -22,6 +22,7 @@ class FirebaseLogger {
   }
 
   /// 화면 리다이렉트 기록
+  @Deprecated('Use logScreenView instead')
   static Future<void> redirect({
     required String from,
     required String to,
@@ -183,6 +184,7 @@ class FirebaseLogger {
   static Future<void> touchLivePlaylistItem({
     required int musicId,
     required String title,
+    required String musicContentType,
     required String artistName,
     required int index,
   }) async {
@@ -191,6 +193,7 @@ class FirebaseLogger {
       parameters: <String, Object>{
         'music_id': musicId,
         'title': title,
+        'music_content_type': musicContentType,
         'artist_name': artistName,
         'index': index,
       },
@@ -202,6 +205,7 @@ class FirebaseLogger {
     required int playlistId,
     required String playlistName,
     required String? firstMusicTitle,
+    required String? firstMusicContentType,
     required int? firstMusicId,
     required int index,
   }) async {
@@ -211,6 +215,8 @@ class FirebaseLogger {
         'playlist_id': playlistId,
         'playlist_name': playlistName,
         if (firstMusicTitle != null) 'first_music_title': firstMusicTitle,
+        if (firstMusicContentType != null)
+          'first_music_content_type': firstMusicContentType,
         if (firstMusicId != null) 'first_music_id': firstMusicId,
         'index': index,
       },
@@ -223,6 +229,7 @@ class FirebaseLogger {
     required int playlistItemId,
     required int musicId,
     required String title,
+    required String musicContentType,
     required int index,
   }) async {
     await FirebaseAnalytics.instance.logEvent(
@@ -232,6 +239,118 @@ class FirebaseLogger {
         'playlist_item_id': playlistItemId,
         'music_id': musicId,
         'title': title,
+        'music_content_type': musicContentType,
+        'index': index,
+      },
+    );
+  }
+
+  /// 음악 플레이어 변화 기록
+  static Future<void> changeMusicPlayerStatus({
+    required String musicPlayerStatus,
+    required String userAction, // touch(사용자 터치), drag(사용자 드래그), auto(자동)
+  }) async {
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'change_music_player_status',
+      parameters: <String, Object>{
+        'music_player_status': musicPlayerStatus,
+        'user_action': userAction,
+      },
+    );
+  }
+
+  /// 비디오 오디오 전환
+  static Future<void> toggleVideo({
+    required bool showVideo,
+    required int musicId,
+    required String musicTitle,
+    required String musicContentType,
+    required String artistName,
+    required Duration position,
+  }) async {
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'toggle_video',
+      parameters: <String, Object>{
+        'show_video': showVideo.toString(),
+        'music_id': musicId,
+        'music_title': musicTitle,
+        'music_content_type': musicContentType,
+        'artist_name': artistName,
+        'position': position.inSeconds,
+      },
+    );
+  }
+
+  /// 뮤직 플레이어 버튼 터치
+  static Future<void> touchMusicPlayerAction({
+    required String action,
+    required int? musicId,
+    required String? musicTitle,
+    required String? musicContentType,
+    required String? artistName,
+    required int? playlistId,
+    required String? playlistName,
+    required Duration? position,
+    required bool playerExpanded, // 플레이어 확장 여부
+  }) async {
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'touch_music_player_button',
+      parameters: <String, Object>{
+        'action': action,
+        if (musicId != null) 'music_id': musicId,
+        if (musicTitle != null) 'music_title': musicTitle,
+        if (musicContentType != null) 'music_content_type': musicContentType,
+        if (artistName != null) 'artist_name': artistName,
+        if (playlistId != null) 'playlist_id': playlistId,
+        if (playlistName != null) 'playlist_name': playlistName,
+        if (position != null) 'position': position.inSeconds,
+        'player_expanded': playerExpanded.toString(),
+      },
+    );
+  }
+
+  /// 뮤직 플레이어 UI - 플레이리스트 상태 변경
+  static Future<void> changeMusicPlayerPlaylistStatus({
+    required String status,
+    required String userAction, // auto, touch, drag
+  }) async {
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'music_player_playlist_viewer_status',
+      parameters: <String, Object>{
+        'status': status,
+        'user_action': userAction,
+      },
+    );
+  }
+
+  /// 뮤직 플레이어 UI - 플레이리스트 아이템 재생
+  static Future<void> playMusicInPlaylist({
+    required int? prevMusicId,
+    required String? prevMusicTitle,
+    required String? prevMusicContentType,
+    required int? musicId,
+    required String? musicTitle,
+    required String? musicContentType,
+    required int? playlistId,
+    required String? playlistName,
+    required Duration? position,
+    required Duration? maxPosition,
+    required int index,
+  }) async {
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'change_music_in_playlist_player',
+      parameters: <String, Object>{
+        if (prevMusicId != null) 'prev_music_id': prevMusicId,
+        if (prevMusicTitle != null) 'prev_music_title': prevMusicTitle,
+        if (prevMusicContentType != null)
+          'prev_music_content_type': prevMusicContentType,
+        if (musicId != null) 'music_id': musicId,
+        if (musicTitle != null) 'music_title': musicTitle,
+        if (musicContentType != null) 'music_content_type': musicContentType,
+        if (playlistId != null) 'playlist_id': playlistId,
+        if (playlistName != null) 'playlist_name': playlistName,
+        if (position != null) 'position': position.inSeconds,
+        if (maxPosition != null) 'max_position': maxPosition.inSeconds,
         'index': index,
       },
     );

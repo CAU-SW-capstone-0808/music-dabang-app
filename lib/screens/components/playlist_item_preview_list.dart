@@ -59,6 +59,7 @@ class PlaylistItemPreviewList extends ConsumerWidget {
                 playlistItemId: e.id,
                 musicId: e.musicContent.id,
                 title: e.musicContent.title,
+                musicContentType: e.musicContent.musicContentType.name,
                 index: i,
               );
             },

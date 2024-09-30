@@ -40,6 +40,7 @@ class PlayListNavItem extends ConsumerWidget {
           playlistId: playlistModel.id,
           playlistName: playlistModel.name,
           firstMusicTitle: firstItem?.musicContent.title,
+          firstMusicContentType: firstItem?.musicContent.musicContentType.name,
           firstMusicId: firstItem?.musicContent.id,
           index: index,
         );

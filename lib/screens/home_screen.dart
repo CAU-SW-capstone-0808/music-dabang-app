@@ -234,6 +234,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     FirebaseLogger.touchLivePlaylistItem(
                       musicId: m.id,
                       title: m.title,
+                      musicContentType: m.musicContentType.name,
                       artistName: m.artist.name,
                       index: livePlaylists.indexOf(m),
                     );

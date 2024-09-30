@@ -185,6 +185,9 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   /// 현재 재생 위치
   Duration get currentPosition => _audioPlayer.position;
 
+  /// 전체 재생 시간
+  Duration? get maxPosition => _audioPlayer.duration;
+
   set showVideo(bool value) {
     if (value && state?.videoContentUrl != null) {
       _playVideo(state!.videoContentUrl!);
@@ -232,7 +235,8 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
     AidolUtils.d("set music ${music?.title}");
     if (music != null) {
       _playMusic(music.musicContentUrl);
-      if (showVideo && music.videoContentUrl != null) {
+      if ((showVideo || music.musicContentType == MusicContentType.live) &&
+          music.videoContentUrl != null) {
         _playVideo(music.videoContentUrl!);
       } else {
         _videoPlayerController?.dispose();
@@ -274,6 +278,13 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
         // 오디오 재생 중에 다른 오디오 재생 허용
         videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
       );
+      _videoPlayerController!.addListener(() {
+        // TODO: 버퍼링 걸렸을 경우 audio와 adjust 필요
+        if (_videoPlayerController!.value.isBuffering) {
+          AidolUtils.d('video buffering: ${_videoPlayerController!.value}');
+          // _videoPlayerController!.seekTo(_audioPlayer.position);
+        }
+      });
       await _videoPlayerController!.initialize();
       await _videoPlayerController!.setVolume(0); // 오디오를 비활성화
       if (startPosition != Duration.zero) {
@@ -303,6 +314,17 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   Future<void> toggleAudioVideo(bool playVideo) async {
     if (playVideo == ref.read(musicPlayerShowingVideoProvider)) return;
 
+    if (state != null) {
+      FirebaseLogger.toggleVideo(
+        showVideo: playVideo,
+        musicId: state!.id,
+        musicTitle: state!.title,
+        musicContentType: state!.musicContentType.name,
+        artistName: state!.artist.name,
+        position: _audioPlayer.position,
+      );
+    }
+
     if (playVideo && state?.videoContentUrl != null) {
       final currentPosition = _audioPlayer.position;
       await _playVideo(state!.videoContentUrl!, currentPosition);
@@ -315,34 +337,39 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   }
 
   // 볼륨 조정 함수
-  void setVolume(double volume) {
+  Future<void> setVolume(double volume) async {
     _volume = volume;
-    _audioPlayer.setVolume(_volume);
+    await _audioPlayer.setVolume(_volume);
   }
 
   // 특정 위치로 커서 이동 (seek)
-  void seekAudio(Duration position) async {
-    await _videoPlayerController?.seekTo(position);
-    _audioPlayer.seek(position);
+  Future<void> seekAudio(Duration position) async {
+    await Future.wait([
+      if (_videoPlayerController != null)
+        _videoPlayerController!.seekTo(position),
+      _audioPlayer.seek(position),
+    ]);
   }
 
-  void pauseAudio() {
-    _audioPlayer.pause();
-    _videoPlayerController?.pause();
+  Future<void> pauseAudio() async {
+    await Future.wait([
+      _audioPlayer.pause(),
+      if (_videoPlayerController != null) _videoPlayerController!.pause(),
+    ]);
   }
 
-  void playAudio() async {
+  Future<void> playAudio() async {
     await _videoPlayerController?.seekTo(_audioPlayer.position);
     await _videoPlayerController?.play();
-    _audioPlayer.play();
+    await _audioPlayer.play();
   }
 
-  void togglePlay() {
+  Future<void> togglePlay() async {
     if (_audioPlayer.playing ||
         _videoPlayerController?.value.isPlaying == true) {
-      pauseAudio();
+      await pauseAudio();
     } else {
-      playAudio();
+      await playAudio();
     }
   }
 

@@ -6,6 +6,7 @@ import 'package:flutter_sliding_up_panel/sliding_up_panel_widget.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:music_dabang/common/colors.dart';
+import 'package:music_dabang/common/firebase_logger.dart';
 import 'package:music_dabang/common/utils.dart';
 import 'package:music_dabang/components/bouncing_widget.dart';
 import 'package:music_dabang/components/cached_image.dart';
@@ -27,7 +28,6 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     with TickerProviderStateMixin {
   late AnimationController musicPlayerAnimationController;
   final panelController = SlidingUpPanelController();
-  bool showVideo = false;
 
   CurrentPlayingMusicStateNotifier get musicNotifier =>
       ref.read(currentPlayingMusicProvider.notifier);
@@ -35,8 +35,9 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
   CurrentPlayingPlaylistStateNotifier get playlistNotifier =>
       ref.read(currentPlaylistProvider.notifier);
 
+  /// [중앙 미디어 위젯]
   /// target : 30px horizontal padding
-  Widget albumImage({
+  Widget centerMedia({
     required double size,
     String? imageUrl,
     bool showingVideo = false,
@@ -46,19 +47,19 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     late Widget innerWidget;
     if (showingVideo) {
       final videoController = musicNotifier.videoPlayerController;
-      innerWidget = (videoController?.value.isInitialized ?? false)
-          ? SizedBox(
-              height: albumWidth,
-              child: Center(
-                child: AspectRatio(
-                  aspectRatio: videoController!.value.aspectRatio,
-                  child: VideoPlayer(videoController),
-                ),
-              ),
-            )
-          : SizedBox(
-              height: albumWidth,
-            );
+      if (videoController?.value.isInitialized ?? false) {
+        innerWidget = SizedBox(
+          height: albumWidth,
+          child: Center(
+            child: AspectRatio(
+              aspectRatio: videoController!.value.aspectRatio,
+              child: VideoPlayer(videoController),
+            ),
+          ),
+        );
+      } else {
+        innerWidget = SizedBox(height: albumWidth);
+      }
     } else {
       innerWidget = ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -159,11 +160,22 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     }
   }
 
+  /// 주의: 파이어베이스 로깅만을 위한 변수. 이해하기 번거로우면 지울 것.
+  bool _touchedToChangeMusicPlayer = false;
   Widget topTitle(String title) => Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-            onPressed: () => panelController.collapse(),
+            onPressed: () {
+              setState(() => _touchedToChangeMusicPlayer = true);
+              ref.read(musicPlayerStatusProvider.notifier).collapse();
+              AidolUtils.d('music_player collapse:touch');
+              panelController.collapse();
+              FirebaseLogger.changeMusicPlayerStatus(
+                musicPlayerStatus: 'collapse',
+                userAction: 'touch',
+              );
+            },
             icon: Transform.rotate(
               angle: 3.141592 / 2,
               child: const Icon(
@@ -222,6 +234,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                         .read(myMusicListProvider.notifier)
                         .addItem(musicId: currentMusic.id);
                     AidolUtils.showToast('내음악에 추가되었습니다.');
+                    _logEvent('add_to_my_music');
                   }
                 },
               ),
@@ -235,7 +248,10 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                   height: 48,
                 ),
                 text: '가사보기',
-                onPressed: () {},
+                onPressed: () {
+                  _logEvent('show_lyrics');
+                  AidolUtils.showToast('가사보기는 아직 지원되지 않습니다.');
+                },
               ),
             ),
           ],
@@ -367,16 +383,36 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
         ],
       );
 
+  void _logEvent(String action) {
+    var currentPosition = musicNotifier.currentPosition;
+    var currentMusic = ref.read(currentPlayingMusicProvider);
+    var currentPlaylist = ref.read(currentPlaylistProvider);
+    var musicPlayerStatus = ref.read(musicPlayerStatusProvider);
+    FirebaseLogger.touchMusicPlayerAction(
+      action: action,
+      musicId: currentMusic?.id,
+      musicTitle: currentMusic?.title,
+      musicContentType: currentMusic?.musicContentType.name,
+      artistName: currentMusic?.artist.name,
+      playlistId: currentPlaylist?.id,
+      playlistName: currentPlaylist?.name,
+      position: currentPosition,
+      playerExpanded: musicPlayerStatus.full,
+    );
+  }
+
   void skipNext() async {
     final item = await playlistNotifier.skipNext();
     if (item == null) {
       AidolUtils.showToast('다음 곡이 없습니다.');
     }
+    _logEvent('skip_next');
   }
 
   void skipPrevious() async {
     // 3초 이상이면 처음으로, 아니면 이전곡
-    if (musicNotifier.currentPosition.inMilliseconds > 3000) {
+    var currentPosition = musicNotifier.currentPosition;
+    if (currentPosition.inMilliseconds > 3000) {
       musicNotifier.seekAudio(Duration.zero);
     } else {
       final item = await playlistNotifier.skipPrevious();
@@ -386,10 +422,12 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
         AidolUtils.showToast('첫 번째 곡입니다.');
       }
     }
+    _logEvent('skip_previous');
   }
 
   void togglePlay() {
     musicNotifier.togglePlay();
+    _logEvent('toggle_play');
   }
 
   Widget get seeLyricButton => Padding(
@@ -492,7 +530,6 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
           min: 0,
           max: maxMilliSec.toDouble() + 20, // 오차로 인한 20ms의 여백
           onChanged: (double value) {
-            print('value: $value');
             musicNotifier.seekAudio(Duration(milliseconds: value.toInt()));
           },
         ),
@@ -562,13 +599,30 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
 
     ref.listen(musicPlayerStatusProvider, (prev, next) {
       if (prev != next) {
+        if (_touchedToChangeMusicPlayer) {
+          _touchedToChangeMusicPlayer = false;
+          return;
+        }
         if (next.full) {
+          if (prev != null && prev.full) {
+            return;
+          }
           if (panelController.status != SlidingUpPanelStatus.expanded) {
             panelController.expand();
+            AidolUtils.d('music_player expand:auto');
+            FirebaseLogger.changeMusicPlayerStatus(
+              musicPlayerStatus: 'expand',
+              userAction: 'auto',
+            );
           }
         } else {
           if (panelController.status != SlidingUpPanelStatus.collapsed) {
             panelController.collapse();
+            AidolUtils.d('music_player collapse:auto');
+            FirebaseLogger.changeMusicPlayerStatus(
+              musicPlayerStatus: 'collapse',
+              userAction: 'auto',
+            );
           }
         }
       }
@@ -584,166 +638,197 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
       upperBound: 1.0,
       onStatusChanged: (status) {
         // print('status: $status');
+        var mpStatus = ref.read(musicPlayerStatusProvider);
         if (status == SlidingUpPanelStatus.collapsed) {
-          ref.read(musicPlayerStatusProvider.notifier).status =
-              MusicDabangPlayerState.collapsed;
+          if (mpStatus != MusicDabangPlayerState.collapsed) {
+            // 드래그에 의해 닫힌 경우
+            AidolUtils.d('music_player collapse:drag');
+            ref.read(musicPlayerStatusProvider.notifier).status =
+                MusicDabangPlayerState.collapsed;
+            // 파이어베이스 로깅
+            FirebaseLogger.changeMusicPlayerStatus(
+              musicPlayerStatus: 'collapse',
+              userAction: 'drag',
+            );
+          }
         } else if (status == SlidingUpPanelStatus.anchored ||
             status == SlidingUpPanelStatus.expanded) {
-          ref.read(musicPlayerStatusProvider.notifier).status =
-              MusicDabangPlayerState.expanded;
+          // 드래그에 의해 확장된 경우
+          if (mpStatus != MusicDabangPlayerState.expanded &&
+              mpStatus != MusicDabangPlayerState.expandedWithPlaylist) {
+            AidolUtils.d('music_player($mpStatus) expand:drag');
+            ref.read(musicPlayerStatusProvider.notifier).status =
+                MusicDabangPlayerState.expanded;
+            // 파이어베이스 로깅
+            FirebaseLogger.changeMusicPlayerStatus(
+              musicPlayerStatus: 'expand',
+              userAction: 'drag',
+            );
+          } else if (mpStatus == MusicDabangPlayerState.expandedWithPlaylist) {
+            ref.read(musicPlayerStatusProvider.notifier).status =
+                MusicDabangPlayerState.expanded;
+          }
         }
       },
       child: Stack(
         children: [
-          GestureDetector(
-            onTap: () => ref.read(musicPlayerStatusProvider.notifier).status =
-                MusicDabangPlayerState.expanded,
-            child: AnimatedBuilder(
-              animation: musicPlayerAnimationController,
-              builder: (context, child) {
-                final musicPlayerSize = musicPlayerAnimationController.value;
-                final musicPlayerHeight =
-                    musicPlayerSize * MediaQuery.of(context).size.height;
-                bool musicPlayerSizeOver0_25 = musicPlayerSize > 0.25;
-                return Container(
-                  color: Colors.white,
-                  height: MediaQuery.of(context).size.height,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      if (musicPlayerSizeOver0_25)
-                        Column(
-                          children: [
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8.0),
-                              child: topTitle(currentPlaying?.title ?? '-'),
-                            ),
-                            const SizedBox(height: 4.0),
-                            artistName(currentPlaying?.artist.name ?? ''),
-                            const SizedBox(height: 8.0),
-                            if (musicPlayerSizeOver0_25)
-                              albumImage(
-                                size: musicPlayerSize,
-                                imageUrl: currentPlaying?.thumbnailUrl,
-                                showingVideo: isPlayingVideo,
-                                hasMusicVideo:
-                                    currentPlaying?.videoContentUrl != null,
-                              ),
-                            // Expanded(
-                            //   child: ClipRRect(
-                            //     borderRadius: BorderRadius.circular(24),
-                            //     child: currentPlaying?.thumbnailUrl != null
-                            //         ? CachedImage(currentPlaying!.thumbnailUrl)
-                            //         : Container(color: ColorTable.backGrey),
-                            //   ),
-                            // ),
-                          ],
-                        ),
-                      StreamBuilder(
-                        stream: musicNotifier.playerStateStream,
-                        builder: (context, playerStateAsync) {
-                          return GestureDetector(
-                            onTap: () => panelController.expand(),
-                            child: PlayingMusicBar(
-                              isPlaying:
-                                  playerStateAsync.data?.playing ?? false,
-                              title: currentPlaying?.title ?? '음악 재생 대기 중',
-                              artist: currentPlaying?.artist.name ?? '',
-                              height: musicPlayerHeight,
+          AnimatedBuilder(
+            animation: musicPlayerAnimationController,
+            builder: (context, child) {
+              final musicPlayerSize = musicPlayerAnimationController.value;
+              final musicPlayerHeight =
+                  musicPlayerSize * MediaQuery.of(context).size.height;
+              bool musicPlayerSizeOver0_25 = musicPlayerSize > 0.25;
+              return Container(
+                color: Colors.white,
+                height: MediaQuery.of(context).size.height,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (musicPlayerSizeOver0_25)
+                      Column(
+                        children: [
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: topTitle(currentPlaying?.title ?? '-'),
+                          ),
+                          const SizedBox(height: 4.0),
+                          artistName(currentPlaying?.artist.name ?? ''),
+                          const SizedBox(height: 8.0),
+                          if (musicPlayerSizeOver0_25)
+                            centerMedia(
                               size: musicPlayerSize,
-                              onPrevious: skipPrevious,
-                              onPlay: togglePlay,
-                              onNext: skipNext,
+                              imageUrl: currentPlaying?.thumbnailUrl,
+                              showingVideo: isPlayingVideo,
+                              hasMusicVideo:
+                                  currentPlaying?.videoContentUrl != null,
                             ),
-                          );
-                        },
+                          // Expanded(
+                          //   child: ClipRRect(
+                          //     borderRadius: BorderRadius.circular(24),
+                          //     child: currentPlaying?.thumbnailUrl != null
+                          //         ? CachedImage(currentPlaying!.thumbnailUrl)
+                          //         : Container(color: ColorTable.backGrey),
+                          //   ),
+                          // ),
+                        ],
                       ),
-                      if (musicPlayerSizeOver0_25)
-                        Expanded(
-                          child: Material(
-                            color: Colors.transparent,
-                            child: Column(
-                              children: <Widget>[
-                                const SizedBox(height: 20),
-                                Expanded(child: middleButtons(currentPlaying)),
-                                // seeLyricButton,
-                                const SizedBox(height: 12.0),
-                                StreamBuilder(
-                                  stream: musicNotifier.durationStream,
-                                  builder: (context, maxDuration) {
-                                    return StreamBuilder(
-                                      stream: musicNotifier.positionStream,
-                                      builder: (context, curDuration) {
-                                        return progressBar(
-                                          curMilliSec: curDuration
-                                                  .data?.inMilliseconds ??
-                                              0,
-                                          maxMilliSec: maxDuration
-                                                  .data?.inMilliseconds ??
-                                              0,
-                                        );
-                                      },
+                    StreamBuilder(
+                      stream: musicNotifier.playerStateStream,
+                      builder: (context, playerStateAsync) {
+                        return GestureDetector(
+                          onTap: () async {
+                            setState(() => _touchedToChangeMusicPlayer = true);
+                            ref
+                                .read(musicPlayerStatusProvider.notifier)
+                                .expand();
+                            panelController.expand();
+                            AidolUtils.d('music_player exapnd:touch');
+                            FirebaseLogger.changeMusicPlayerStatus(
+                              musicPlayerStatus: 'expand',
+                              userAction: 'touch',
+                            );
+                          },
+                          child: PlayingMusicBar(
+                            isPlaying: playerStateAsync.data?.playing ?? false,
+                            title: currentPlaying?.title ?? '음악 재생 대기 중',
+                            artist: currentPlaying?.artist.name ?? '',
+                            height: musicPlayerHeight,
+                            size: musicPlayerSize,
+                            onPrevious: () {
+                              skipPrevious();
+                            },
+                            onPlay: togglePlay,
+                            onNext: skipNext,
+                          ),
+                        );
+                      },
+                    ),
+                    if (musicPlayerSizeOver0_25)
+                      Expanded(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: Column(
+                            children: <Widget>[
+                              const SizedBox(height: 20),
+                              Expanded(child: middleButtons(currentPlaying)),
+                              // seeLyricButton,
+                              const SizedBox(height: 12.0),
+                              StreamBuilder(
+                                stream: musicNotifier.durationStream,
+                                builder: (context, maxDuration) {
+                                  return StreamBuilder(
+                                    stream: musicNotifier.positionStream,
+                                    builder: (context, curDuration) {
+                                      return progressBar(
+                                        curMilliSec:
+                                            curDuration.data?.inMilliseconds ??
+                                                0,
+                                        maxMilliSec:
+                                            maxDuration.data?.inMilliseconds ??
+                                                0,
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: StreamBuilder(
+                                  stream: musicNotifier.playerStateStream,
+                                  builder: (context, playerStateAsync) {
+                                    return bottomButtonGroup(
+                                      isPlaying:
+                                          playerStateAsync.data?.playing ??
+                                              false,
                                     );
                                   },
                                 ),
-                                Expanded(
-                                  flex: 2,
-                                  child: StreamBuilder(
-                                    stream: musicNotifier.playerStateStream,
-                                    builder: (context, playerStateAsync) {
-                                      return bottomButtonGroup(
-                                        isPlaying:
-                                            playerStateAsync.data?.playing ??
-                                                false,
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(height: 60),
+                              ),
+                              const SizedBox(height: 60),
 
-                                // const SizedBox(height: 42.0),
-                                // Container(
-                                //   padding: const EdgeInsets.symmetric(
-                                //     vertical: 12.5,
-                                //   ),
-                                //   decoration: const BoxDecoration(
-                                //     color: ColorTable.palePink,
-                                //     borderRadius: BorderRadius.only(
-                                //       topLeft: Radius.circular(24),
-                                //       topRight: Radius.circular(24),
-                                //     ),
-                                //   ),
-                                //   child: Row(
-                                //     mainAxisAlignment:
-                                //         MainAxisAlignment.center,
-                                //     children: [
-                                //       SvgPicture.asset(
-                                //         'assets/icons/playlist_icon.svg',
-                                //         width: 32,
-                                //         height: 32,
-                                //       ),
-                                //       const SizedBox(width: 8.0),
-                                //       const Text(
-                                //         '재생목록',
-                                //         style: TextStyle(
-                                //           fontSize: 18.0,
-                                //           fontWeight: FontWeight.w600,
-                                //           height: 1.25,
-                                //         ),
-                                //       ),
-                                //     ],
-                                //   ),
-                                // ),
-                              ],
-                            ),
+                              // const SizedBox(height: 42.0),
+                              // Container(
+                              //   padding: const EdgeInsets.symmetric(
+                              //     vertical: 12.5,
+                              //   ),
+                              //   decoration: const BoxDecoration(
+                              //     color: ColorTable.palePink,
+                              //     borderRadius: BorderRadius.only(
+                              //       topLeft: Radius.circular(24),
+                              //       topRight: Radius.circular(24),
+                              //     ),
+                              //   ),
+                              //   child: Row(
+                              //     mainAxisAlignment:
+                              //         MainAxisAlignment.center,
+                              //     children: [
+                              //       SvgPicture.asset(
+                              //         'assets/icons/playlist_icon.svg',
+                              //         width: 32,
+                              //         height: 32,
+                              //       ),
+                              //       const SizedBox(width: 8.0),
+                              //       const Text(
+                              //         '재생목록',
+                              //         style: TextStyle(
+                              //           fontSize: 18.0,
+                              //           fontWeight: FontWeight.w600,
+                              //           height: 1.25,
+                              //         ),
+                              //       ),
+                              //     ],
+                              //   ),
+                              // ),
+                            ],
                           ),
                         ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                      ),
+                  ],
+                ),
+              );
+            },
           ),
           if (mpStatus.full)
             PlaylistPanel(
