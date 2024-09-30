@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:music_dabang/common/firebase_logger.dart';
 import 'package:music_dabang/common/utils.dart';
 import 'package:music_dabang/components/bottom_nav_bar.dart';
 import 'package:music_dabang/dialogs/showConfirmDialog.dart';
@@ -33,6 +34,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FirebaseLogger.setScreenSize(MediaQuery.of(context).size);
+    });
   }
 
   @override

@@ -131,11 +131,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               content: q,
               onTap: (q) async {
                 search(q);
-                FirebaseLogger.useRecentSearchKeyword(keyword: q);
+                FirebaseLogger.useRecentSearchKeyword(
+                  keyword: q,
+                  index: recentItems.indexOf(q),
+                );
               },
               onRemove: (q) {
                 ref.read(recentSearchProvider.notifier).remove(q);
-                FirebaseLogger.deleteRecentSearchKeyword(keyword: q);
+                FirebaseLogger.deleteRecentSearchKeyword(
+                  keyword: q,
+                  index: recentItems.indexOf(q),
+                );
               },
             ),
           ),
@@ -154,6 +160,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     FirebaseLogger.useAutoCompleteSearchMusic(
                       currentKeyword: searchController.value.text,
                       selectedKeyword: q,
+                      index: autoCompletes.indexOf(q),
                     );
                     search(q);
                   },

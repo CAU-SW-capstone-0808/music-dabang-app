@@ -55,6 +55,13 @@ class FirebaseLogger {
     );
   }
 
+  static Future<void> setScreenSize(Size screenSize) async {
+    await FirebaseAnalytics.instance.setUserProperty(
+      name: 'screen_size',
+      value: '${screenSize.width.toInt()}x${screenSize.height.toInt()}',
+    );
+  }
+
   /// 로그인 성공 기록
   static Future<void> initUser(UserModel user) async {
     await FirebaseAnalytics.instance.setUserId(id: user.id.toString());
@@ -63,11 +70,15 @@ class FirebaseLogger {
   }
 
   /// 최근 검색어 사용
-  static Future<void> useRecentSearchKeyword({required String keyword}) async {
+  static Future<void> useRecentSearchKeyword({
+    required String keyword,
+    required int index,
+  }) async {
     await FirebaseAnalytics.instance.logEvent(
       name: 'search_music_use_recent',
       parameters: {
         'keyword': keyword,
+        'index': index,
       },
     );
   }
@@ -75,6 +86,7 @@ class FirebaseLogger {
   /// 최근 검색어 사용 삭제
   static Future<void> deleteRecentSearchKeyword({
     required String keyword,
+    required int index,
   }) async {
     await FirebaseAnalytics.instance.logEvent(
       name: 'search_music_delete_recent',
@@ -88,12 +100,14 @@ class FirebaseLogger {
   static Future<void> useAutoCompleteSearchMusic({
     required String currentKeyword,
     required String selectedKeyword,
+    required int index,
   }) async {
     await FirebaseAnalytics.instance.logEvent(
       name: 'search_music_auto_complete',
       parameters: {
         'current_keyword': currentKeyword,
         'keyword': selectedKeyword,
+        'index': index,
       },
     );
   }
@@ -151,12 +165,16 @@ class FirebaseLogger {
       name: 'music_audio_event',
       parameters: <String, Object>{
         'event_name': eventName,
-        'is_playing': isPlaying,
+        'is_playing': isPlaying.toString(),
         if (playlistId != null) 'playlist_id': playlistId,
         if (musicId != null) 'music_id': musicId,
         if (title != null) 'title': title,
         if (position != null) 'position': position.inSeconds,
       },
     );
+  }
+
+  static Future<void> logScreenView(String screenName) async {
+    await FirebaseAnalytics.instance.logScreenView(screenName: screenName);
   }
 }

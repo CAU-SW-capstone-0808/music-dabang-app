@@ -4,7 +4,6 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:music_dabang/common/firebase_logger.dart';
 import 'package:music_dabang/common/firebase_route_observer.dart';
 import 'package:music_dabang/models/user/user_model.dart';
 import 'package:music_dabang/providers/user/user_provider.dart';
@@ -37,7 +36,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     }
 
     if (redirectTo != null) {
-      FirebaseLogger.redirect(from: state.uri.path, to: redirectTo);
+      // FirebaseLogger.redirect(from: state.uri.path, to: redirectTo);
       debugPrint('redirect result: $redirectTo');
       return redirectTo;
     }
@@ -70,6 +69,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const SearchScreen(),
             pageBuilder: (context, state) => createSlideGoRoute(
               const SearchScreen(),
+              name: SearchScreen.routeName,
             ),
           ),
         ],
@@ -100,8 +100,10 @@ final routerProvider = Provider<GoRouter>((ref) {
 CustomTransitionPage createSlideGoRoute(
   Widget child, {
   bool opaque = true,
+  String? name,
 }) {
   return CustomTransitionPage(
+    name: name,
     child: child,
     opaque: opaque,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {

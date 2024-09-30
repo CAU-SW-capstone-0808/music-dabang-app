@@ -199,17 +199,22 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   CurrentPlayingMusicStateNotifier({required this.ref}) : super(null) {
     // 이벤트 등록
     _audioPlayer.playerStateStream.listen((PlayerState playerState) {
-      if (playerState.processingState == ProcessingState.completed) {
+      final processingState = playerState.processingState;
+      if (processingState == ProcessingState.completed) {
         _handleMusicCompletion();
       }
-      FirebaseLogger.audioPlayerStatus(
-        eventName: playerState.processingState.name,
-        isPlaying: playerState.playing,
-        playlistId: ref.read(currentPlaylistProvider)?.id,
-        musicId: state?.id,
-        title: state?.title,
-        position: _audioPlayer.duration,
-      );
+      // firebase analytics
+      if (processingState == ProcessingState.ready ||
+          processingState == ProcessingState.completed) {
+        FirebaseLogger.audioPlayerStatus(
+          eventName: processingState.name,
+          isPlaying: playerState.playing,
+          playlistId: ref.read(currentPlaylistProvider)?.id,
+          musicId: state?.id,
+          title: state?.title,
+          position: _audioPlayer.position,
+        );
+      }
     });
   }
 
