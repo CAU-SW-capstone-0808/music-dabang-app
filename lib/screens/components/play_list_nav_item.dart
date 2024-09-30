@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_dabang/common/colors.dart';
+import 'package:music_dabang/common/firebase_logger.dart';
 import 'package:music_dabang/components/bouncing_widget.dart';
 import 'package:music_dabang/components/cached_image.dart';
 import 'package:music_dabang/models/music/playlist_item_model.dart';
@@ -11,10 +12,12 @@ import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 /// 참고: screens/components의 컴포넌트들은 ConsumerWidget
 class PlayListNavItem extends ConsumerWidget {
   final PlaylistModel playlistModel;
+  final int index;
 
   const PlayListNavItem({
     super.key,
     required this.playlistModel,
+    required this.index,
   });
 
   @override
@@ -24,15 +27,22 @@ class PlayListNavItem extends ConsumerWidget {
         ref.watch(playlistItemsProvider(playlistModel.id));
     int? itemsCount = ref.watch(playlistItemsCountProvider(playlistModel.id));
     PlaylistItemModel? firstItem = items.isNotEmpty ? items[0] : null;
-    if (items.length > 10) {
-      items = items.sublist(0, 10);
-    }
+    // if (items.length > 10) {
+    //   items = items.sublist(0, 10);
+    // }
     return BouncingWidget(
       onPressed: () async {
         await ref
             .read(currentPlaylistProvider.notifier)
             .setPlaylist(playlistModel);
         ref.read(musicPlayerStatusProvider.notifier).expand();
+        FirebaseLogger.touchPlaylist(
+          playlistId: playlistModel.id,
+          playlistName: playlistModel.name,
+          firstMusicTitle: firstItem?.musicContent.title,
+          firstMusicId: firstItem?.musicContent.id,
+          index: index,
+        );
       },
       child: Container(
         decoration: BoxDecoration(

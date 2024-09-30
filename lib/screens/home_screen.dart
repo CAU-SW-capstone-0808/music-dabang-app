@@ -4,6 +4,8 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:music_dabang/common/extensions.dart';
+import 'package:music_dabang/common/firebase_logger.dart';
 import 'package:music_dabang/components/arrow_button.dart';
 import 'package:music_dabang/components/custom_search_bar.dart';
 import 'package:music_dabang/components/image_card.dart';
@@ -218,31 +220,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     var livePlayItems = carouselList(
       children: livePlaylists
           .sublist(0, min(10, livePlaylists.length))
-          .map((p) => Padding(
+          .map((m) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ImageCard(
                   width: double.infinity,
-                  title: p.title,
-                  imageUrl: p.thumbnailUrl,
+                  title: m.title,
+                  imageUrl: m.thumbnailUrl,
                   onTap: () async {
                     await ref
                         .read(currentPlayingMusicProvider.notifier)
-                        .setPlayingMusic(p);
+                        .setPlayingMusic(m);
                     ref.read(musicPlayerStatusProvider.notifier).expand();
+                    FirebaseLogger.touchLivePlaylistItem(
+                      musicId: m.id,
+                      title: m.title,
+                      artistName: m.artist.name,
+                      index: livePlaylists.indexOf(m),
+                    );
                   },
                 ),
               ))
           .toList(),
     );
-    var playlists = mainPlaylists.where((p) => p.userVisible).map(
-          (p) => Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 6.0,
-            ),
-            child: PlayListNavItem(playlistModel: p),
-          ),
-        );
+    var playlists =
+        mainPlaylists.where((p) => p.userVisible).toList().mapWithIndex(
+              (p, i) => Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 6.0,
+                ),
+                child: PlayListNavItem(playlistModel: p, index: i),
+              ),
+            );
     var playlistItems = mainPlaylists.map(
       (p) => PlaylistItemPreviewList(
         playlist: p,

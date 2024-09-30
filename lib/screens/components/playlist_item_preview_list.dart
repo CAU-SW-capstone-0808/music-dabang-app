@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:music_dabang/common/extensions.dart';
+import 'package:music_dabang/common/firebase_logger.dart';
 import 'package:music_dabang/components/music_list_card.dart';
 import 'package:music_dabang/models/music/playlist_item_model.dart';
 import 'package:music_dabang/models/music/playlist_model.dart';
@@ -41,8 +43,8 @@ class PlaylistItemPreviewList extends ConsumerWidget {
             ),
           ),
         ),
-        ...items.map(
-          (e) => MusicListCard(
+        ...items.mapWithIndex(
+          (e, i) => MusicListCard(
             title: e.musicContent.title,
             artist: e.musicContent.artist.name,
             imageUrl: e.musicContent.thumbnailUrl,
@@ -52,6 +54,13 @@ class PlaylistItemPreviewList extends ConsumerWidget {
                     itemToPlay: e,
                   );
               onTap?.call();
+              FirebaseLogger.touchPlaylistItem(
+                playlistId: playlist.id,
+                playlistItemId: e.id,
+                musicId: e.musicContent.id,
+                title: e.musicContent.title,
+                index: i,
+              );
             },
           ),
         ),

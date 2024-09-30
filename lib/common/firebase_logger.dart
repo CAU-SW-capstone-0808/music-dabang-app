@@ -174,7 +174,66 @@ class FirebaseLogger {
     );
   }
 
+  /// 스크린 기록
   static Future<void> logScreenView(String screenName) async {
     await FirebaseAnalytics.instance.logScreenView(screenName: screenName);
+  }
+
+  /// 홈: 라이브 영상 터치
+  static Future<void> touchLivePlaylistItem({
+    required int musicId,
+    required String title,
+    required String artistName,
+    required int index,
+  }) async {
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'touch_live_item',
+      parameters: <String, Object>{
+        'music_id': musicId,
+        'title': title,
+        'artist_name': artistName,
+        'index': index,
+      },
+    );
+  }
+
+  /// 홈: 플레이리스트 터치
+  static Future<void> touchPlaylist({
+    required int playlistId,
+    required String playlistName,
+    required String? firstMusicTitle,
+    required int? firstMusicId,
+    required int index,
+  }) async {
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'touch_playlist',
+      parameters: <String, Object>{
+        'playlist_id': playlistId,
+        'playlist_name': playlistName,
+        if (firstMusicTitle != null) 'first_music_title': firstMusicTitle,
+        if (firstMusicId != null) 'first_music_id': firstMusicId,
+        'index': index,
+      },
+    );
+  }
+
+  /// 홈: 플레이리스트 아이템 터치
+  static Future<void> touchPlaylistItem({
+    required int playlistId,
+    required int playlistItemId,
+    required int musicId,
+    required String title,
+    required int index,
+  }) async {
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'touch_playlist_item',
+      parameters: <String, Object>{
+        'playlist_id': playlistId,
+        'playlist_item_id': playlistItemId,
+        'music_id': musicId,
+        'title': title,
+        'index': index,
+      },
+    );
   }
 }
