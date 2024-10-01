@@ -15,7 +15,6 @@ import 'package:music_dabang/components/cached_image.dart';
 import 'package:music_dabang/components/playing_music_bar.dart';
 import 'package:music_dabang/models/music/music_model.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
-import 'package:music_dabang/providers/music/my_music_list_provider.dart';
 import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 import 'package:music_dabang/screens/components/flick_custom_controls.dart';
 import 'package:music_dabang/screens/components/playlist_panel.dart';
@@ -663,8 +662,12 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     final currentPlaying = ref.watch(currentPlayingMusicProvider);
     bool isPlayingVideo = ref.watch(musicPlayerShowingVideoProvider);
     final mpStatus = ref.watch(musicPlayerStatusProvider);
-    final isInMyMusicList =
-        ref.watch(isInMyMusicListProvider(currentPlaying?.id));
+    // bool? isInMyMusicList =
+    //     ref.watch(isInMyMusicListProvider(currentPlaying?.id));
+    bool? isInMyMusicList = false;
+
+    print(
+        'music player build - currentPlaying: $currentPlaying / isPlayingVideo: $isPlayingVideo / mpStatus: $mpStatus / isInMyMusicList: $isInMyMusicList');
 
     ref.listen(musicPlayerStatusProvider, (prev, next) {
       if (prev != next) {
@@ -700,7 +703,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     return SlidingUpPanelWidget(
       panelController: panelController,
       animationController: musicPlayerAnimationController,
-      controlHeight: currentPlaying != null ? 90 : 0,
+      controlHeight: currentPlaying != null ? 90 : 90,
       // controlHeight: 90,
       enableOnTap: false,
       anchor: 1.0,

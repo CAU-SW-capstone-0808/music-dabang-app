@@ -7,7 +7,6 @@ import 'package:music_dabang/common/utils.dart';
 import 'package:music_dabang/models/music/music_model.dart';
 import 'package:music_dabang/models/music/playlist_item_model.dart';
 import 'package:music_dabang/models/music/playlist_model.dart';
-import 'package:music_dabang/providers/music/my_music_list_provider.dart';
 import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:video_player/video_player.dart';
@@ -176,6 +175,7 @@ class CurrentPlayingPlaylistStateNotifier
 
 class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   final Ref ref;
+
   AudioPlayer get _audioPlayer => MyAudioHandler.instance.player;
   VideoPlayerController? _videoPlayerController;
   FlickManager? _flickManager;
@@ -254,7 +254,7 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
       await _playMusic(music);
       if ((showVideo || music.musicContentType == MusicContentType.live) &&
           music.videoContentUrl != null) {
-        _playVideo(music.videoContentUrl!);
+        await _playVideo(music.videoContentUrl!);
       } else {
         await _disposeVideo();
         ref.read(musicPlayerShowingVideoProvider.notifier).showingVideo = false;
@@ -284,13 +284,14 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
       if (startPosition != Duration.zero) {
         await _audioPlayer.seek(startPosition); // 현재 위치에서 시작
       }
-      await _audioPlayer.play();
+      // await _audioPlayer.play();
     } catch (e) {
       print('Error playing music: $e');
     }
   }
 
   bool wasBuffering = false;
+
   // 비디오 재생 함수 (위치 동기화 추가)
   Future<void> _playVideo(
     String url, [
@@ -403,6 +404,7 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   }
 
   bool _toggledFullScreen = false;
+
   bool get toggledFullScreen {
     if (_toggledFullScreen) {
       _toggledFullScreen = false;
@@ -473,7 +475,7 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   Stream<Duration?> get durationStream => _audioPlayer.durationStream;
 
   Future<void> _disposeVideo() async {
-    await _videoPlayerController?.dispose();
+    // await _videoPlayerController?.dispose();
     await _flickManager?.dispose();
     _flickManager = null;
     _videoPlayerController = null;
@@ -482,8 +484,7 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   // 상태 해제 시 리소스 정리
   @override
   void dispose() {
-    _videoPlayerController?.dispose();
-    _audioPlayer.dispose();
+    _disposeVideo();
     super.dispose();
   }
 }

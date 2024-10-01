@@ -13,6 +13,13 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
 
   MyAudioHandler() {
     player.playbackEventStream.map(_transformEvent).pipe(playbackState);
+
+    mediaItem.stream.listen((ms) async {
+      if (ms != null) {
+        await player.setUrl(ms.id);
+        await player.play();
+      }
+    });
   }
 
   static Future<void> init() async {
@@ -62,12 +69,16 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
         ProcessingState.ready: AudioProcessingState.ready,
         ProcessingState.completed: AudioProcessingState.completed,
       }[player.processingState]!,
-      playing: player.playing, // is playing status
-      updatePosition: player.position, // the current playing position
-      bufferedPosition:
-          player.duration ?? player.bufferedPosition, // the buffered position
-      speed: player.speed, // player speed
-      queueIndex: event.currentIndex, // the index of the current queue
+      playing: player.playing,
+      // is playing status
+      updatePosition: player.position,
+      // the current playing position
+      bufferedPosition: player.duration ?? player.bufferedPosition,
+      // the buffered position
+      speed: player.speed,
+      // player speed
+      queueIndex: event.currentIndex,
+      // the index of the current queue
       // queueIndex: 0,
       updateTime: DateTime.now(), // 마지막 업데이트 시간
     );
@@ -75,7 +86,9 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
 
   // The most common callbacks:
   Future<void> play() async => await onPlay?.call();
+
   Future<void> pause() async => await onPause?.call();
+
   Future<void> stop() => player.stop();
 
   Future<void> seek(Duration position) async {
@@ -107,7 +120,5 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   @override
   Future<void> playMediaItem(MediaItem mediaItem) async {
     this.mediaItem.add(mediaItem);
-    await player.setUrl(mediaItem.id);
-    await player.play();
   }
 }
