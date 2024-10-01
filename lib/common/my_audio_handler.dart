@@ -6,6 +6,8 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   static late MyAudioHandler instance;
   final player = AudioPlayer();
 
+  Future<void> Function()? onPlay;
+  Future<void> Function()? onPause;
   Future<Object?> Function()? onSkipToPrevious;
   Future<Object?> Function()? onSkipToNext;
 
@@ -72,8 +74,8 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   }
 
   // The most common callbacks:
-  Future<void> play() => player.play();
-  Future<void> pause() => player.pause();
+  Future<void> play() async => await onPlay?.call();
+  Future<void> pause() async => await onPause?.call();
   Future<void> stop() => player.stop();
 
   Future<void> seek(Duration position) async {

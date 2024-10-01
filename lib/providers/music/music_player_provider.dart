@@ -234,6 +234,8 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
         );
       }
     });
+    MyAudioHandler.instance.onPlay = playAudio;
+    MyAudioHandler.instance.onPause = pauseAudio;
   }
 
   // 음악 재생 완료 시 처리
