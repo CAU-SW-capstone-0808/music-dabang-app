@@ -62,18 +62,18 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
         //   ),
         // );
         var flickVideoPlayer = FlickVideoPlayer(
-          preferredDeviceOrientationFullscreen: const [
-            DeviceOrientation.portraitUp,
-          ],
+          // preferredDeviceOrientationFullscreen: const [
+          //   DeviceOrientation.portraitUp,
+          // ],
           flickVideoWithControls: FlickVideoWithControls(
             videoFit: BoxFit.contain,
-            controls: FlickCustomControls(
-              iconSize: 36,
-              fontSize: 22,
-              onFullScreenToggle: () async {
-                musicNotifier.toggleFullscreen(true);
-              },
-            ),
+            // controls: FlickCustomControls(
+            //   iconSize: 36,
+            //   fontSize: 22,
+            //   onFullScreenToggle: () async {
+            //     musicNotifier.toggleFullscreen(true);
+            //   },
+            // ),
           ),
           flickVideoWithControlsFullscreen: RotatedBox(
             quarterTurns: 1,

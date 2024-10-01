@@ -402,8 +402,19 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
     }
   }
 
+  bool _toggledFullScreen = false;
+  bool get toggledFullScreen {
+    if (_toggledFullScreen) {
+      _toggledFullScreen = false;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   Future<void> toggleFullscreen(bool value) async {
     AidolUtils.d('toggle fullscreen(value=$value)');
+    _toggledFullScreen = true;
     if (value) {
       _flickManager?.flickControlManager?.enterFullscreen();
     } else {
