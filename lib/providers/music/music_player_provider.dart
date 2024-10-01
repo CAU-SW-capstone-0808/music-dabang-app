@@ -7,6 +7,7 @@ import 'package:music_dabang/common/utils.dart';
 import 'package:music_dabang/models/music/music_model.dart';
 import 'package:music_dabang/models/music/playlist_item_model.dart';
 import 'package:music_dabang/models/music/playlist_model.dart';
+import 'package:music_dabang/providers/music/my_music_list_provider.dart';
 import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:video_player/video_player.dart';
@@ -97,17 +98,16 @@ class CurrentPlayingPlaylistStateNotifier
     // }
     state = playlist;
     // 플레이리스트가 변경되면 플레이리스트 아이템 목록을 다시 불러옴 -> 현재 재생 중인 음악이 변경됨
-    if (playlist != null) {
-      // 지정된 아이템이 있으면 해당 아이템을 재생
-      if (itemToPlay != null) {
+    // 지정된 아이템이 있으면 해당 아이템을 재생
+    if (itemToPlay != null) {
+      await ref
+          .read(currentPlayingMusicProvider.notifier)
+          .setCurrentPlayingPlaylistItem(itemToPlay);
+    } else {
+      // 지정된 아이템이 없으면+플레이리스트가 있으면 첫 번째 아이템을 재생
+      if (playlist != null) {
         await ref
-            .read(currentPlayingMusicProvider.notifier)
-            .setCurrentPlayingPlaylistItem(itemToPlay);
-      }
-      // 없으면 첫 번째 아이템을 재생
-      else {
-        await ref
-            .read(playlistItemsProvider(playlist.id).notifier)
+            .read(playlistItemsProvider(state?.id).notifier)
             .refresh()
             .then((items) async {
           if (items.isNotEmpty) {
@@ -117,6 +117,12 @@ class CurrentPlayingPlaylistStateNotifier
           }
         });
       }
+      // 지정된 아이템이 없음 + 플레이리스트 없음.
+      else {
+        await ref
+            .read(currentPlayingMusicProvider.notifier)
+            .setCurrentPlayingPlaylistItem(null);
+      }
     }
   }
 
@@ -124,13 +130,13 @@ class CurrentPlayingPlaylistStateNotifier
     int? currentPlayingItemId = ref
         .read(currentPlayingMusicProvider.notifier)
         .currentPlayingPlaylistItemId;
-    if (state != null && currentPlayingItemId != null) {
+    if (currentPlayingItemId != null) {
       PlaylistItemModel? currentPlayingItem = ref
-          .read(playlistItemsProvider(state!.id).notifier)
+          .read(playlistItemsProvider(state?.id).notifier)
           .findById(currentPlayingItemId);
       if (currentPlayingItem != null) {
         PlaylistItemModel? prevItem = ref
-            .read(playlistItemsProvider(state!.id).notifier)
+            .read(playlistItemsProvider(state?.id).notifier)
             .getPrevious(currentPlayingItemId);
         if (prevItem != null) {
           await ref
@@ -148,13 +154,13 @@ class CurrentPlayingPlaylistStateNotifier
         .read(currentPlayingMusicProvider.notifier)
         .currentPlayingPlaylistItemId;
     print("skipNext $currentPlayingItemId");
-    if (state != null && currentPlayingItemId != null) {
+    if (currentPlayingItemId != null) {
       PlaylistItemModel? currentPlayingItem = ref
-          .read(playlistItemsProvider(state!.id).notifier)
+          .read(playlistItemsProvider(state?.id).notifier)
           .findById(currentPlayingItemId);
       if (currentPlayingItem != null) {
         PlaylistItemModel? nextItem = ref
-            .read(playlistItemsProvider(state!.id).notifier)
+            .read(playlistItemsProvider(state?.id).notifier)
             .getNext(currentPlayingItemId);
         if (nextItem != null) {
           await ref

@@ -1,10 +1,13 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:music_dabang/common/firebase_logger.dart';
 import 'package:music_dabang/components/music_list_card.dart';
 import 'package:music_dabang/models/music/playlist_item_model.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
 import 'package:music_dabang/providers/music/my_music_list_provider.dart';
+import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 
 class MyMusicListScreen extends ConsumerStatefulWidget {
   const MyMusicListScreen({super.key});
@@ -15,14 +18,17 @@ class MyMusicListScreen extends ConsumerStatefulWidget {
 
 class _MyMusicListScreenState extends ConsumerState<MyMusicListScreen> {
   Widget get noItemsWidget {
-    if (ref.read(myMusicListProvider.notifier).loading) {
+    if (ref.read(playlistItemsProvider(null).notifier).loading) {
       return const Center(
         child: CircularProgressIndicator(),
       );
     }
 
     return RefreshIndicator(
-      onRefresh: () => ref.read(myMusicListProvider.notifier).refresh(),
+      onRefresh: () async {
+        ref.read(playlistItemsProvider(null).notifier).refresh();
+        FirebaseLogger.refreshItems();
+      },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
@@ -68,7 +74,8 @@ class _MyMusicListScreenState extends ConsumerState<MyMusicListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<PlaylistItemModel> items = ref.watch(myMusicListProvider);
+    final List<PlaylistItemModel> items =
+        ref.watch(playlistItemsProvider(null));
     final currentPlayingMusic = ref.watch(currentPlayingMusicProvider);
 
     return Scaffold(
@@ -84,7 +91,8 @@ class _MyMusicListScreenState extends ConsumerState<MyMusicListScreen> {
       body: items.isEmpty
           ? noItemsWidget
           : RefreshIndicator(
-              onRefresh: () => ref.read(myMusicListProvider.notifier).refresh(),
+              onRefresh: () =>
+                  ref.read(playlistItemsProvider(null).notifier).refresh(),
               child: ReorderableListView.builder(
                 padding: EdgeInsets.only(
                   bottom: currentPlayingMusic != null ? 84 : 0,
@@ -92,28 +100,48 @@ class _MyMusicListScreenState extends ConsumerState<MyMusicListScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 onReorder: (oldIndex, newIndex) async {
                   print('oldIndex: $oldIndex, newIndex: $newIndex');
-                  await ref.read(myMusicListProvider.notifier).changeOrder(
+                  await ref
+                      .read(playlistItemsProvider(null).notifier)
+                      .changeOrder(
                         oldIndex: oldIndex,
                         newIndex: oldIndex < newIndex ? newIndex - 1 : newIndex,
                       );
                 },
                 itemCount: items.length,
                 itemBuilder: (context, index) {
+                  var item = items[index];
                   return MusicListCard(
-                    key: Key('mymusic_${items[index].id}'),
-                    title: items[index].musicContent.title,
-                    artist: items[index].musicContent.artist.name,
-                    imageUrl: items[index].musicContent.thumbnailUrl,
+                    key: Key('mymusic_${item.id}'),
+                    title: item.musicContent.title,
+                    artist: item.musicContent.artist.name,
+                    imageUrl: item.musicContent.thumbnailUrl,
                     onTap: () async {
                       await ref
-                          .read(currentPlayingMusicProvider.notifier)
-                          .setPlayingMusic(items[index].musicContent);
+                          .read(currentPlaylistProvider.notifier)
+                          .setPlaylist(null, itemToPlay: item);
+                      // await ref
+                      //     .read(currentPlayingMusicProvider.notifier)
+                      //     .setPlayingMusic(item.musicContent);
                       ref.read(musicPlayerStatusProvider.notifier).expand();
+                      FirebaseLogger.touchMyMusicItem(
+                        musicId: item.musicContent.id,
+                        musicTitle: item.musicContent.title,
+                        musicContentType:
+                            item.musicContent.musicContentType.name,
+                        index: index,
+                      );
                     },
                     onRemove: () async {
                       await ref
-                          .read(myMusicListProvider.notifier)
-                          .removeItems(itemIds: [items[index].id]);
+                          .read(playlistItemsProvider(null).notifier)
+                          .removeItems(itemIds: [item.id]);
+                      FirebaseLogger.removeMyMusicItem(
+                        musicId: item.musicContent.id,
+                        musicTitle: item.musicContent.title,
+                        musicContentType:
+                            item.musicContent.musicContentType.name,
+                        index: index,
+                      );
                     },
                   );
                 },

@@ -189,6 +189,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return RefreshIndicator(
       onRefresh: () async {
         ref.read(musicSearchProvider(searchKeyword!).notifier).refresh();
+        FirebaseLogger.refreshItems();
       },
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -202,6 +203,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             artist: m.artist.name,
             imageUrl: m.thumbnailUrl,
             onTap: () async {
+              await ref
+                  .read(currentPlaylistProvider.notifier)
+                  .setPlaylist(null);
               await ref
                   .read(currentPlayingMusicProvider.notifier)
                   .setPlayingMusic(m)

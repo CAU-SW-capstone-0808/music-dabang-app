@@ -12,6 +12,7 @@ import 'package:music_dabang/models/music/playlist_item_model.dart';
 import 'package:music_dabang/models/music/playlist_model.dart';
 import 'package:music_dabang/providers/common/page_scroll_controller.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
+import 'package:music_dabang/providers/music/my_music_list_provider.dart';
 import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 
 class PlaylistPanel extends ConsumerStatefulWidget {
@@ -175,19 +176,16 @@ class _PlaylistPanelState extends ConsumerState<PlaylistPanel> {
                     widget.viewPadding.vertical,
                 0,
               ),
-              child: currentPlaylist != null
-                  ? _PlaylistItemListView(
-                      playlist: currentPlaylist,
-                      onTopScrollEnd: () {
-                        if (panelController.status ==
-                            SlidingUpPanelStatus.expanded) {
-                          panelController.anchor();
-                        } else {
-                          panelController.collapse();
-                        }
-                      },
-                    )
-                  : Container(),
+              child: _PlaylistItemListView(
+                playlist: currentPlaylist,
+                onTopScrollEnd: () {
+                  if (panelController.status == SlidingUpPanelStatus.expanded) {
+                    panelController.anchor();
+                  } else {
+                    panelController.collapse();
+                  }
+                },
+              ),
             ),
           ],
         ),
@@ -202,7 +200,7 @@ class _PlaylistPanelState extends ConsumerState<PlaylistPanel> {
 }
 
 class _PlaylistItemListView extends ConsumerStatefulWidget {
-  final PlaylistModel playlist;
+  final PlaylistModel? playlist;
   final void Function()? onTopScrollEnd;
 
   const _PlaylistItemListView({
@@ -243,13 +241,13 @@ class _PlaylistItemListViewState extends ConsumerState<_PlaylistItemListView> {
   void initState() {
     super.initState();
     pageController.onEnd = () {
-      ref.read(playlistItemsProvider(widget.playlist.id).notifier).fetch();
+      ref.read(playlistItemsProvider(widget.playlist?.id).notifier).fetch();
     };
   }
 
   @override
   Widget build(BuildContext context) {
-    final items = ref.watch(playlistItemsProvider(widget.playlist.id));
+    final items = ref.watch(playlistItemsProvider(widget.playlist?.id));
     int? currentItemId = ref
         .watch(currentPlayingMusicProvider.notifier)
         .currentPlayingPlaylistItemId;
@@ -272,7 +270,7 @@ class _PlaylistItemListViewState extends ConsumerState<_PlaylistItemListView> {
                 color: ColorTable.backGrey,
               ),
               child: Text(
-                '재생 중: ${widget.playlist.name}',
+                '재생 중: ${widget.playlist?.name ?? '내 음악'}',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,

@@ -13,6 +13,7 @@ import 'package:music_dabang/components/logo_title.dart';
 import 'package:music_dabang/models/user/user_model.dart';
 import 'package:music_dabang/providers/music/music_live_items_provider.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
+import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 import 'package:music_dabang/providers/music/playlist_main_provider.dart';
 import 'package:music_dabang/providers/music_player_size_provider.dart';
 import 'package:music_dabang/providers/user/user_provider.dart';
@@ -214,29 +215,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     }
     final mainPlaylists = ref.watch(playlistMainProvider);
-    final livePlaylists = ref.watch(musicLiveItemsProvider);
+    final livePlaylists = ref.watch(playlistItemsProvider(5));
     final currentPlayingMusic = ref.watch(currentPlayingMusicProvider);
 
     var livePlayItems = carouselList(
       children: livePlaylists
           .sublist(0, min(10, livePlaylists.length))
-          .map((m) => Padding(
+          .map((p) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ImageCard(
                   width: double.infinity,
-                  title: m.title,
-                  imageUrl: m.thumbnailUrl,
+                  title: p.musicContent.title,
+                  imageUrl: p.musicContent.thumbnailUrl,
                   onTap: () async {
+                    var playlist =
+                        mainPlaylists.firstWhere((element) => element.id == 5);
                     await ref
-                        .read(currentPlayingMusicProvider.notifier)
-                        .setPlayingMusic(m);
+                        .read(currentPlaylistProvider.notifier)
+                        .setPlaylist(playlist, itemToPlay: p);
                     ref.read(musicPlayerStatusProvider.notifier).expand();
                     FirebaseLogger.touchLivePlaylistItem(
-                      musicId: m.id,
-                      title: m.title,
-                      musicContentType: m.musicContentType.name,
-                      artistName: m.artist.name,
-                      index: livePlaylists.indexOf(m),
+                      musicId: p.musicContent.id,
+                      title: p.musicContent.title,
+                      musicContentType: p.musicContent.musicContentType.name,
+                      artistName: p.musicContent.artist.name,
+                      index: livePlaylists.indexOf(p),
                     );
                   },
                 ),

@@ -15,7 +15,7 @@ import 'package:music_dabang/components/cached_image.dart';
 import 'package:music_dabang/components/playing_music_bar.dart';
 import 'package:music_dabang/models/music/music_model.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
-import 'package:music_dabang/providers/music/my_music_list_provider.dart';
+import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 import 'package:music_dabang/screens/components/flick_custom_controls.dart';
 import 'package:music_dabang/screens/components/playlist_panel.dart';
 
@@ -272,9 +272,15 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                 text: '내음악에 추가',
                 onPressed: () async {
                   if (currentMusic != null) {
-                    await ref
-                        .read(myMusicListProvider.notifier)
+                    final newItem = await ref
+                        .read(playlistItemsProvider(null).notifier)
                         .addItem(musicId: currentMusic.id);
+                    // 내 음악 재생 중인 경우
+                    if (ref.read(currentPlaylistProvider) == null) {
+                      ref
+                          .read(currentPlayingMusicProvider.notifier)
+                          .setCurrentPlayingPlaylistItem(newItem);
+                    }
                     AidolUtils.showToast('내음악에 추가되었습니다.');
                     _logEvent('add_to_my_music');
                   }

@@ -355,4 +355,47 @@ class FirebaseLogger {
       },
     );
   }
+
+  /// 내 음악 재생
+  static Future<void> touchMyMusicItem({
+    required int? musicId,
+    required String? musicTitle,
+    required String? musicContentType,
+    required int index,
+  }) async {
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'touch_my_music_item',
+      parameters: <String, Object>{
+        if (musicId != null) 'music_id': musicId,
+        if (musicTitle != null) 'music_title': musicTitle,
+        if (musicContentType != null) 'music_content_type': musicContentType,
+        'index': index,
+      },
+    );
+  }
+
+  /// 새로고침 행동
+  static Future<void> refreshItems() async {
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'refresh_items',
+    );
+  }
+
+  /// 내 음악 삭제
+  static Future<void> removeMyMusicItem({
+    required int? musicId,
+    required String? musicTitle,
+    required String? musicContentType,
+    required int index,
+  }) async {
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'remove_my_music_item',
+      parameters: <String, Object>{
+        if (musicId != null) 'music_id': musicId,
+        if (musicTitle != null) 'music_title': musicTitle,
+        if (musicContentType != null) 'music_content_type': musicContentType,
+        'index': index,
+      },
+    );
+  }
 }

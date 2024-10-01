@@ -6,12 +6,12 @@ import 'package:music_dabang/providers/common/abstract_page_notifier.dart';
 import 'package:music_dabang/repository/music_repository.dart';
 import 'package:synchronized/synchronized.dart';
 
-final myMusicListProvider =
-    StateNotifierProvider<MyMusicListStateNotifier, List<PlaylistItemModel>>(
-        (ref) {
-  final musicRepository = ref.watch(musicRepositoryProvider);
-  return MyMusicListStateNotifier(ref: ref, musicRepository: musicRepository);
-});
+// final myMusicListProvider =
+//     StateNotifierProvider<MyMusicListStateNotifier, List<PlaylistItemModel>>(
+//         (ref) {
+//   final musicRepository = ref.watch(musicRepositoryProvider);
+//   return MyMusicListStateNotifier(ref: ref, musicRepository: musicRepository);
+// });
 
 final myMusicListCountProvider =
     StateNotifierProvider<MyMusicListCountStateNotifier, int?>(
