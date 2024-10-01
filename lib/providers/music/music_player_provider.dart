@@ -1,6 +1,8 @@
+import 'package:audio_service/audio_service.dart';
 import 'package:flick_video_player/flick_video_player.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music_dabang/common/firebase_logger.dart';
+import 'package:music_dabang/common/my_audio_handler.dart';
 import 'package:music_dabang/common/utils.dart';
 import 'package:music_dabang/models/music/music_model.dart';
 import 'package:music_dabang/models/music/playlist_item_model.dart';
@@ -76,11 +78,15 @@ class MusicPlayerShowingVideoStateNotifier extends StateNotifier<bool> {
   set showingVideo(bool value) => state = value;
 }
 
+/// 현재 재생 중인 플레이리스트 상태
 class CurrentPlayingPlaylistStateNotifier
     extends StateNotifier<PlaylistModel?> {
   final Ref ref;
 
-  CurrentPlayingPlaylistStateNotifier({required this.ref}) : super(null);
+  CurrentPlayingPlaylistStateNotifier({required this.ref}) : super(null) {
+    MyAudioHandler.instance.onSkipToPrevious = skipPrevious;
+    MyAudioHandler.instance.onSkipToNext = skipNext;
+  }
 
   Future<void> setPlaylist(
     PlaylistModel? playlist, {
@@ -164,7 +170,7 @@ class CurrentPlayingPlaylistStateNotifier
 
 class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   final Ref ref;
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  AudioPlayer get _audioPlayer => MyAudioHandler.instance.player;
   VideoPlayerController? _videoPlayerController;
   FlickManager? _flickManager;
   double _volume = 1.0; // 기본 볼륨 설정
@@ -231,13 +237,13 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
 
   // 현재 재생 중인 음악 설정
   Future<void> setPlayingMusic(MusicModel? music) async {
+    AidolUtils.d("set music ${music?.title}");
     // if (music?.id == state?.id) {
     //   return;
     // }
     state = music;
-    AidolUtils.d("set music ${music?.title}");
     if (music != null) {
-      _playMusic(music.musicContentUrl);
+      _playMusic(music);
       if ((showVideo || music.musicContentType == MusicContentType.live) &&
           music.videoContentUrl != null) {
         _playVideo(music.videoContentUrl!);
@@ -253,12 +259,20 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
 
   // 오디오 재생 함수 (위치 동기화 추가)
   Future<void> _playMusic(
-    String url, [
+    MusicModel music, [
     Duration startPosition = Duration.zero,
   ]) async {
     try {
-      await _audioPlayer.setUrl(url);
-      await _audioPlayer.setVolume(_volume); // 현재 볼륨 설정
+      var mediaItem = MediaItem(
+        id: music.musicContentUrl,
+        title: music.title,
+        displayTitle: music.title,
+        artist: music.artist.name,
+        artUri: Uri.parse(music.thumbnailUrl),
+      );
+      await MyAudioHandler.instance.playMediaItem(mediaItem);
+      // await _audioPlayer.setUrl(url);
+      // await _audioPlayer.setVolume(_volume); // 현재 볼륨 설정
       if (startPosition != Duration.zero) {
         await _audioPlayer.seek(startPosition); // 현재 위치에서 시작
       }
