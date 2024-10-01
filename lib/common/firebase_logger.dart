@@ -418,4 +418,21 @@ class FirebaseLogger {
       },
     );
   }
+
+  /// '맨 위로' 버튼 터치
+  static Future<void> touchToTopButton() async {
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'touch_to_top_button',
+    );
+  }
+
+  /// 오류 기록
+  static Future<void> logError(String errorMessage) {
+    return FirebaseAnalytics.instance.logEvent(
+      name: 'error',
+      parameters: <String, Object>{
+        'error_message': errorMessage,
+      },
+    );
+  }
 }

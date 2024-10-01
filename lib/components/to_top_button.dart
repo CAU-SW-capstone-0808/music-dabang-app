@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:music_dabang/common/firebase_logger.dart';
 
 class ToTopButton extends ConsumerWidget {
   final ScrollController scrollController;
@@ -26,6 +27,7 @@ class ToTopButton extends ConsumerWidget {
               curve: Curves.fastOutSlowIn,
             );
           }
+          FirebaseLogger.touchToTopButton();
         },
         backgroundColor: Colors.white,
         elevation: 0,

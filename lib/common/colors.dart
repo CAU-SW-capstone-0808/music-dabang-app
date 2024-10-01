@@ -4,7 +4,8 @@ import 'package:flutter/rendering.dart';
 
 abstract class ColorTable {
   // static const kPrimaryColor = Color(0xFF2639E5);
-  static const kPrimaryColor = Color(0xFFFF8445);
+  // static const kPrimaryColor = Color(0xFFFF8445);
+  static const kPrimaryColor = Color(0xFFFF6131);
   static const kakaoYellow = Color(0xFFFEE500);
   static const clearIconColor = Color(0xFFC9C9C9);
   static const hintTextColor = Color(0xFFD2D8D8);

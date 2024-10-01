@@ -45,7 +45,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     required double size,
     String? imageUrl,
     bool showingVideo = false,
-    bool hasMusicVideo = true,
+    bool showMusicVideoToggle = true,
   }) {
     final albumWidth = MediaQuery.of(context).size.width * size - 60;
     late Widget innerWidget;
@@ -118,7 +118,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
               ),
       );
     }
-    if (hasMusicVideo && size > 0.8) {
+    if (showMusicVideoToggle && size > 0.8) {
       Widget mvButton = Opacity(
         opacity: (size - 0.8) / 0.2,
         child: Theme(
@@ -775,8 +775,10 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                               size: musicPlayerSize,
                               imageUrl: currentPlaying?.thumbnailUrl,
                               showingVideo: isPlayingVideo,
-                              hasMusicVideo:
-                                  currentPlaying?.videoContentUrl != null,
+                              showMusicVideoToggle:
+                                  currentPlaying?.musicContentType !=
+                                          MusicContentType.live &&
+                                      currentPlaying?.videoContentUrl != null,
                             ),
                           // Expanded(
                           //   child: ClipRRect(

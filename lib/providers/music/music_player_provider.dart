@@ -249,17 +249,17 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
     // }
     state = music;
     if (music != null) {
-      _playMusic(music);
+      await _playMusic(music);
       if ((showVideo || music.musicContentType == MusicContentType.live) &&
           music.videoContentUrl != null) {
         _playVideo(music.videoContentUrl!);
       } else {
-        _disposeVideo();
+        await _disposeVideo();
         ref.read(musicPlayerShowingVideoProvider.notifier).showingVideo = false;
       }
     } else {
-      _audioPlayer.stop();
-      _disposeVideo();
+      await _audioPlayer.stop();
+      await _disposeVideo();
     }
   }
 
@@ -288,12 +288,17 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
     }
   }
 
+  bool wasBuffering = false;
   // 비디오 재생 함수 (위치 동기화 추가)
   Future<void> _playVideo(
     String url, [
     Duration startPosition = Duration.zero,
   ]) async {
     try {
+      if (_videoPlayerController != null) {
+        ref.read(musicPlayerShowingVideoProvider.notifier).showingVideo = false;
+        await _disposeVideo();
+      }
       _videoPlayerController = VideoPlayerController.networkUrl(
         Uri.parse(url),
         // 오디오 재생 중에 다른 오디오 재생 허용
@@ -305,15 +310,8 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
       _flickManager = FlickManager(
         videoPlayerController: _videoPlayerController!,
         autoInitialize: false,
-        autoPlay: false,
+        autoPlay: true,
       );
-      _videoPlayerController!.addListener(() {
-        // TODO: 버퍼링 걸렸을 경우 audio와 adjust 필요
-        if (_videoPlayerController?.value.isBuffering ?? false) {
-          AidolUtils.d('video buffering: ${_videoPlayerController!.value}');
-          // _videoPlayerController!.seekTo(_audioPlayer.position);
-        }
-      });
       await _videoPlayerController!.initialize();
       await _videoPlayerController!.setVolume(0); // 오디오를 비활성화
       if (startPosition != Duration.zero) {
@@ -322,9 +320,6 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
         // 오디오와 비디오 간 동기화
         await _videoPlayerController!.seekTo(_audioPlayer.position);
       }
-      if (_audioPlayer.playing) {
-        await _videoPlayerController!.play();
-      }
       // 5초까지 대기
       int waitForVideoToInit = 0;
       while (waitForVideoToInit < 500 &&
@@ -332,10 +327,49 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
         await Future.delayed(const Duration(milliseconds: 10));
         waitForVideoToInit++;
       }
+      if (_audioPlayer.playing) {
+        await _videoPlayerController!.play();
+      }
       ref.read(musicPlayerShowingVideoProvider.notifier).showingVideo = false;
       ref.read(musicPlayerShowingVideoProvider.notifier).showingVideo = true;
+
+      _videoPlayerController!.addListener(() {
+        bool isBuffering = _videoPlayerController?.value.isBuffering ?? false;
+
+        // Buffering state changed
+        if (isBuffering != wasBuffering) {
+          if (isBuffering) {
+            // Video started buffering
+            AidolUtils.d('Video started buffering');
+            // Pause the audio player to maintain synchronization
+            if (_audioPlayer.playing) {
+              _audioPlayer.pause();
+            }
+          } else {
+            // Video buffering ended
+            AidolUtils.d('Video buffering ended');
+            // Sync audio player to the video's current position
+            final videoPosition = _videoPlayerController!.value.position;
+            final audioPosition = _audioPlayer.position;
+
+            // 200 ms 이상 차이가 나면 오디오 위치를 비디오 위치에 맞춤
+            if ((videoPosition - audioPosition).inMilliseconds.abs() > 200) {
+              // Adjust audio position to match video
+              _audioPlayer.seek(videoPosition);
+            }
+
+            // Resume the audio player if it's paused
+            if (!_audioPlayer.playing) {
+              _audioPlayer.play();
+            }
+          }
+          // Update the previous buffering state
+          wasBuffering = isBuffering;
+        }
+      });
     } catch (e) {
       print('Error playing video: $e');
+      FirebaseLogger.logError(e.toString());
     }
   }
 
@@ -361,8 +395,8 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
       // await _videoPlayerController?.pause();
       // await _videoPlayerController?.dispose();
       // _videoPlayerController = null;
-      _disposeVideo();
       ref.read(musicPlayerShowingVideoProvider.notifier).showingVideo = false;
+      await _disposeVideo();
     }
   }
 
@@ -425,9 +459,9 @@ class CurrentPlayingMusicStateNotifier extends StateNotifier<MusicModel?> {
   // 전체 재생 시간 스트림
   Stream<Duration?> get durationStream => _audioPlayer.durationStream;
 
-  void _disposeVideo() {
-    _videoPlayerController?.dispose();
-    _flickManager?.dispose();
+  Future<void> _disposeVideo() async {
+    await _videoPlayerController?.dispose();
+    await _flickManager?.dispose();
     _flickManager = null;
     _videoPlayerController = null;
   }

@@ -42,7 +42,7 @@ class BottomNavBar extends StatelessWidget {
           label: userName,
         ),
       ],
-      selectedItemColor: ColorTable.purple,
+      selectedItemColor: ColorTable.kPrimaryColor,
       unselectedItemColor: ColorTable.bottomNavBlack,
       onTap: onTap,
       backgroundColor: Colors.white,
