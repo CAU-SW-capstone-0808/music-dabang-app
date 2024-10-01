@@ -281,6 +281,7 @@ class _PlaylistItemListViewState extends ConsumerState<_PlaylistItemListView> {
           index--;
           final item = items[index];
           return MusicListCard(
+            key: Key('playlist_${item.id}'),
             title: item.musicContent.title,
             artist: item.musicContent.artist.name,
             imageUrl: item.musicContent.thumbnailUrl,

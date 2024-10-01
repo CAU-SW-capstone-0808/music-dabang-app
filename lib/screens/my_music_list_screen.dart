@@ -1,12 +1,13 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:music_dabang/common/firebase_logger.dart';
 import 'package:music_dabang/components/music_list_card.dart';
 import 'package:music_dabang/models/music/playlist_item_model.dart';
+import 'package:music_dabang/providers/common/page_scroll_controller.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
-import 'package:music_dabang/providers/music/my_music_list_provider.dart';
 import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 
 class MyMusicListScreen extends ConsumerStatefulWidget {
@@ -17,6 +18,8 @@ class MyMusicListScreen extends ConsumerStatefulWidget {
 }
 
 class _MyMusicListScreenState extends ConsumerState<MyMusicListScreen> {
+  final scrollPageController = PageScrollController();
+
   Widget get noItemsWidget {
     if (ref.read(playlistItemsProvider(null).notifier).loading) {
       return const Center(
@@ -73,6 +76,14 @@ class _MyMusicListScreenState extends ConsumerState<MyMusicListScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    scrollPageController.onEnd = () async {
+      await ref.read(playlistItemsProvider(null).notifier).fetch();
+    };
+  }
+
+  @override
   Widget build(BuildContext context) {
     final List<PlaylistItemModel> items =
         ref.watch(playlistItemsProvider(null));
@@ -94,6 +105,7 @@ class _MyMusicListScreenState extends ConsumerState<MyMusicListScreen> {
               onRefresh: () =>
                   ref.read(playlistItemsProvider(null).notifier).refresh(),
               child: ReorderableListView.builder(
+                scrollController: scrollPageController,
                 padding: EdgeInsets.only(
                   bottom: currentPlayingMusic != null ? 84 : 0,
                 ),
@@ -116,6 +128,7 @@ class _MyMusicListScreenState extends ConsumerState<MyMusicListScreen> {
                     artist: item.musicContent.artist.name,
                     imageUrl: item.musicContent.thumbnailUrl,
                     onTap: () async {
+                      print('나요 나');
                       await ref
                           .read(currentPlaylistProvider.notifier)
                           .setPlaylist(null, itemToPlay: item);

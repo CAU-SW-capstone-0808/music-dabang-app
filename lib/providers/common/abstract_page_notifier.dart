@@ -59,7 +59,7 @@ abstract class AbstractPageNotifier<T> extends StateNotifier<List<T>> {
 
     try {
       final data = lastResponse!.getData<T>(this.fromJson);
-      state += data;
+      state = [...state, ...data];
       return data;
     } catch (e) {
       print("paging type cast error - type:$T $e");
