@@ -3,6 +3,7 @@ import 'package:music_dabang/models/common/page_request_model.dart';
 import 'package:music_dabang/models/common/page_response_model.dart';
 import 'package:music_dabang/models/music/playlist_item_model.dart';
 import 'package:music_dabang/providers/common/abstract_page_notifier.dart';
+import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 import 'package:music_dabang/repository/music_repository.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -18,6 +19,18 @@ final myMusicListCountProvider =
   (ref) {
     final musicRepository = ref.watch(musicRepositoryProvider);
     return MyMusicListCountStateNotifier(musicRepository: musicRepository);
+  },
+);
+
+final isInMyMusicListProvider =
+    StateNotifierProviderFamily<IsInMyMusicListStateNotifier, bool?, int?>(
+  (ref, musicId) {
+    final musicRepository = ref.watch(musicRepositoryProvider);
+    return IsInMyMusicListStateNotifier(
+      ref: ref,
+      musicId: musicId,
+      musicRepository: musicRepository,
+    );
   },
 );
 
@@ -232,5 +245,37 @@ class MyMusicListCountStateNotifier extends StateNotifier<int?> {
         state = 0;
       }
     }
+  }
+}
+
+class IsInMyMusicListStateNotifier extends StateNotifier<bool?> {
+  final Ref ref;
+  final int? musicId;
+  final MusicRepository musicRepository;
+
+  IsInMyMusicListStateNotifier({
+    required this.ref,
+    required this.musicId,
+    required this.musicRepository,
+  }) : super(null) {
+    if (musicId != null) {
+      fetch();
+    } else {
+      state = false;
+    }
+  }
+
+  set value(bool x) => state = x;
+
+  Future<bool> fetch() async {
+    if (musicId == null) {
+      return state = false;
+    }
+    if (ref
+        .read(playlistItemsProvider(null).notifier)
+        .isMusicInList(musicId!)) {
+      return state = true;
+    }
+    return state = await musicRepository.isInMyMusicItems(musicId: musicId!);
   }
 }

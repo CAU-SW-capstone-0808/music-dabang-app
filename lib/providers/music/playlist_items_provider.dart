@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:music_dabang/common/firebase_logger.dart';
 import 'package:music_dabang/models/common/page_request_model.dart';
 import 'package:music_dabang/models/common/page_response_model.dart';
 import 'package:music_dabang/models/music/playlist_item_model.dart';
 import 'package:music_dabang/providers/common/abstract_page_notifier.dart';
+import 'package:music_dabang/providers/music/my_music_list_provider.dart';
 import 'package:music_dabang/repository/music_repository.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -72,6 +74,15 @@ class PlaylistItemsStateNotifier
     return null;
   }
 
+  bool isMusicInList(int musicId) {
+    for (final item in state) {
+      if (item.musicContent.id == musicId) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   PlaylistItemModel? getPrevious(int id) {
     for (int i = 0; i < state.length; i++) {
       if (state[i].id == id) {
@@ -101,6 +112,7 @@ class PlaylistItemsStateNotifier
         await musicRepository.addMyMusicItem(musicId: musicId);
     state = [...state, addMyMusicItem];
     ref.read(playlistItemsCountProvider(playlistId).notifier).add(1);
+    ref.read(isInMyMusicListProvider(musicId).notifier).value = true;
     return addMyMusicItem;
   }
 
@@ -109,7 +121,16 @@ class PlaylistItemsStateNotifier
     ref
         .read(playlistItemsCountProvider(playlistId).notifier)
         .add(-itemIds.length);
-    state = state.where((e) => !itemIds.contains(e.id)).toList();
+    state = state.where((e) {
+      if (itemIds.contains(e.id)) {
+        ref.read(isInMyMusicListProvider(e.musicContent.id).notifier).value =
+            false;
+        return false;
+      } else {
+        return true;
+      }
+      return !itemIds.contains(e.id);
+    }).toList();
   }
 
   Future<void> changeOrder({
@@ -119,7 +140,15 @@ class PlaylistItemsStateNotifier
     if (oldIndex < 0 || oldIndex >= state.length || oldIndex == newIndex) {
       return;
     }
-    return changeOrderById(itemId: state[oldIndex].id, targetIndex: newIndex);
+    var item = state[oldIndex];
+    FirebaseLogger.changeMyMusicListOrder(
+      musicId: item.musicContent.id,
+      title: item.musicContent.title,
+      musicContentType: item.musicContent.musicContentType.name,
+      fromIndex: oldIndex,
+      toIndex: newIndex,
+    );
+    return changeOrderById(itemId: item.id, targetIndex: newIndex);
   }
 
   Future<void> changeOrderById({

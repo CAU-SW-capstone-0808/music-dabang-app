@@ -29,6 +29,9 @@ abstract class MusicRepository {
     @Queries() required Map<String, dynamic> queries,
   });
 
+  @GET("/playlists/my/items/in")
+  Future<bool> isInMyMusicItems({@Query("music_id") required int musicId});
+
   @GET("/playlists/my/items/count")
   Future<int> getMyMusicItemsCount();
 

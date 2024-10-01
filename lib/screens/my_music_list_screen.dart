@@ -128,7 +128,6 @@ class _MyMusicListScreenState extends ConsumerState<MyMusicListScreen> {
                     artist: item.musicContent.artist.name,
                     imageUrl: item.musicContent.thumbnailUrl,
                     onTap: () async {
-                      print('나요 나');
                       await ref
                           .read(currentPlaylistProvider.notifier)
                           .setPlaylist(null, itemToPlay: item);

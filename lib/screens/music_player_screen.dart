@@ -15,6 +15,7 @@ import 'package:music_dabang/components/cached_image.dart';
 import 'package:music_dabang/components/playing_music_bar.dart';
 import 'package:music_dabang/models/music/music_model.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
+import 'package:music_dabang/providers/music/my_music_list_provider.dart';
 import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 import 'package:music_dabang/screens/components/flick_custom_controls.dart';
 import 'package:music_dabang/screens/components/playlist_panel.dart';
@@ -254,7 +255,11 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
         ],
       );
 
-  Widget middleButtons(MusicModel? currentMusic) => Padding(
+  Widget middleButtons(
+    MusicModel? currentMusic, {
+    bool isInMyMusicList = false,
+  }) =>
+      Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Row(
           children: [
@@ -264,13 +269,18 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                   'assets/icons/playlists_icon.svg',
                   width: 48,
                   height: 48,
-                  // colorFilter: const ColorFilter.mode(
-                  //   ColorTable.kPrimaryColor,
-                  //   BlendMode.srcIn,
-                  // ),
+                  colorFilter: ColorFilter.mode(
+                    isInMyMusicList ? ColorTable.kPrimaryColor : Colors.black,
+                    BlendMode.srcIn,
+                  ),
                 ),
-                text: '내음악에 추가',
+                text: isInMyMusicList ? '내음악에 추가됨' : '내음악에 추가',
                 onPressed: () async {
+                  if (isInMyMusicList) {
+                    AidolUtils.showToast('이미 내음악에 추가되었습니다.');
+                    _logEvent('add_to_my_music_wrong_already_added');
+                    return;
+                  }
                   if (currentMusic != null) {
                     final newItem = await ref
                         .read(playlistItemsProvider(null).notifier)
@@ -653,6 +663,8 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     final currentPlaying = ref.watch(currentPlayingMusicProvider);
     bool isPlayingVideo = ref.watch(musicPlayerShowingVideoProvider);
     final mpStatus = ref.watch(musicPlayerStatusProvider);
+    final isInMyMusicList =
+        ref.watch(isInMyMusicListProvider(currentPlaying?.id));
 
     ref.listen(musicPlayerStatusProvider, (prev, next) {
       if (prev != next) {
@@ -814,7 +826,12 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                           child: Column(
                             children: <Widget>[
                               const SizedBox(height: 20),
-                              Expanded(child: middleButtons(currentPlaying)),
+                              Expanded(
+                                child: middleButtons(
+                                  currentPlaying,
+                                  isInMyMusicList: isInMyMusicList ?? false,
+                                ),
+                              ),
                               // seeLyricButton,
                               const SizedBox(height: 12.0),
                               StreamBuilder(

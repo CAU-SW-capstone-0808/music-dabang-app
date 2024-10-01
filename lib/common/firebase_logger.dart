@@ -398,4 +398,24 @@ class FirebaseLogger {
       },
     );
   }
+
+  /// 내 음악 순서 변경
+  static Future<void> changeMyMusicListOrder({
+    required int? musicId,
+    required String? title,
+    required String? musicContentType,
+    required int fromIndex,
+    required int toIndex,
+  }) async {
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'change_my_music_list_order',
+      parameters: <String, Object>{
+        if (musicId != null) 'music_id': musicId,
+        if (title != null) 'title': title,
+        if (musicContentType != null) 'music_content_type': musicContentType,
+        'from_index': fromIndex,
+        'to_index': toIndex,
+      },
+    );
+  }
 }
