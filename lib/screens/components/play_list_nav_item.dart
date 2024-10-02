@@ -66,68 +66,71 @@ class PlayListNavItem extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: ClipRRect(
-                    borderRadius: borderRadius,
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      color: firstItem != null
-                          ? Colors.white
-                          : ColorTable.backGrey,
-                      child: firstItem != null
-                          ? CachedImage(
-                              firstItem.musicContent.thumbnailUrl,
-                            )
-                          : null,
+                Expanded(
+                  flex: 1,
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: ClipRRect(
+                      borderRadius: borderRadius,
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: Container(
+                          // width: 120,
+                          // height: 120,
+                          color: firstItem != null
+                              ? Colors.white
+                              : ColorTable.backGrey,
+                          child: firstItem != null
+                              ? CachedImage(
+                                  firstItem.musicContent.thumbnailUrl,
+                                )
+                              : null,
+                        ),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10.0),
                 Expanded(
-                  child: SizedBox(
-                    height: 120,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          playlistModel.name,
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w600,
-                            height: 1.25,
-                          ),
+                  flex: 1,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        playlistModel.name,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w600,
+                          height: 1.25,
                         ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const SizedBox(height: 12.0),
-                              if (firstItem != null)
-                                Text(
-                                  firstItem.musicContent.title,
-                                  maxLines: 1,
-                                  style: const TextStyle(
-                                    fontSize: 24.0,
-                                    height: 1.25,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              if (itemsCount != null && itemsCount > 1)
-                                Text(
-                                  "외 ${itemsCount - 1}곡",
-                                  style: const TextStyle(
-                                    fontSize: 24.0,
-                                    height: 1.25,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 12.0),
+                          if (firstItem != null)
+                            Text(
+                              firstItem.musicContent.title,
+                              maxLines: 1,
+                              style: const TextStyle(
+                                fontSize: 24.0,
+                                height: 1.25,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          if (itemsCount != null && itemsCount > 1)
+                            Text(
+                              "외 ${itemsCount - 1}곡",
+                              maxLines: 1,
+                              style: const TextStyle(
+                                fontSize: 24.0,
+                                height: 1.25,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],

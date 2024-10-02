@@ -15,6 +15,7 @@ import 'package:music_dabang/components/cached_image.dart';
 import 'package:music_dabang/components/playing_music_bar.dart';
 import 'package:music_dabang/models/music/music_model.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
+import 'package:music_dabang/providers/music/my_music_list_provider.dart';
 import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 import 'package:music_dabang/screens/components/flick_custom_controls.dart';
 import 'package:music_dabang/screens/components/playlist_panel.dart';
@@ -46,7 +47,10 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     bool showingVideo = false,
     bool showMusicVideoToggle = true,
   }) {
-    final albumWidth = MediaQuery.of(context).size.width * size - 60;
+    final albumWidth = MediaQuery.of(context).size.width *
+            size /
+            MediaQuery.of(context).textScaler.scale(1) -
+        60;
     late Widget innerWidget;
     if (showingVideo) {
       final flickManager = musicNotifier.flickManager;
@@ -139,6 +143,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
             textBuilder: (value) {
               return Text(
                 value ? '뮤직비디오 재생 중' : '뮤직비디오 보기',
+                maxLines: 1,
                 style: const TextStyle(
                   fontSize: 18.0,
                   height: 1.25,
@@ -159,7 +164,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
             ),
             borderWidth: 0,
             height: 50,
-            spacing: 120,
+            spacing: MediaQuery.of(context).size.width * 0.4,
             indicatorSize: const Size.fromWidth(50),
             style: ToggleStyle(
               backgroundColor: Colors.white,
@@ -273,7 +278,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                     BlendMode.srcIn,
                   ),
                 ),
-                text: isInMyMusicList ? '내음악에 추가됨' : '내음악에 추가',
+                text: isInMyMusicList ? '내음악 추가됨' : '내음악에 추가',
                 onPressed: () async {
                   if (isInMyMusicList) {
                     AidolUtils.showToast('이미 내음악에 추가되었습니다.');
@@ -662,9 +667,9 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     final currentPlaying = ref.watch(currentPlayingMusicProvider);
     bool isPlayingVideo = ref.watch(musicPlayerShowingVideoProvider);
     final mpStatus = ref.watch(musicPlayerStatusProvider);
-    // bool? isInMyMusicList =
-    //     ref.watch(isInMyMusicListProvider(currentPlaying?.id));
-    bool? isInMyMusicList = false;
+    bool? isInMyMusicList =
+        ref.watch(isInMyMusicListProvider(currentPlaying?.id));
+    // bool? isInMyMusicList = false;
 
     print(
         'music player build - currentPlaying: $currentPlaying / isPlayingVideo: $isPlayingVideo / mpStatus: $mpStatus / isInMyMusicList: $isInMyMusicList');
@@ -703,11 +708,11 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     return SlidingUpPanelWidget(
       panelController: panelController,
       animationController: musicPlayerAnimationController,
-      controlHeight: currentPlaying != null ? 90 : 90,
+      controlHeight: currentPlaying != null ? 95 : 0,
       // controlHeight: 90,
       enableOnTap: false,
       anchor: 1.0,
-      upperBound: 1.0,
+      // upperBound: 1.0,
       onStatusChanged: (status) {
         // print('status: $status');
         var mpStatus = ref.read(musicPlayerStatusProvider);
@@ -793,44 +798,62 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                           // ),
                         ],
                       ),
-                    StreamBuilder(
-                      stream: musicNotifier.playerStateStream,
-                      builder: (context, playerStateAsync) {
-                        return GestureDetector(
-                          onTap: () async {
-                            setState(() => _touchedToChangeMusicPlayer = true);
-                            ref
-                                .read(musicPlayerStatusProvider.notifier)
-                                .expand();
-                            panelController.expand();
-                            AidolUtils.d('music_player exapnd:touch');
-                            FirebaseLogger.changeMusicPlayerStatus(
-                              musicPlayerStatus: 'expand',
-                              userAction: 'touch',
-                            );
-                          },
-                          child: PlayingMusicBar(
-                            isPlaying: playerStateAsync.data?.playing ?? false,
-                            title: currentPlaying?.title ?? '음악 재생 대기 중',
-                            artist: currentPlaying?.artist.name ?? '',
-                            height: musicPlayerHeight,
-                            size: musicPlayerSize,
-                            onPrevious: () {
-                              skipPrevious();
+                    if (!musicPlayerSizeOver0_25)
+                      StreamBuilder(
+                        stream: musicNotifier.playerStateStream,
+                        builder: (context, playerStateAsync) {
+                          return GestureDetector(
+                            onTap: () async {
+                              setState(
+                                  () => _touchedToChangeMusicPlayer = true);
+                              ref
+                                  .read(musicPlayerStatusProvider.notifier)
+                                  .expand();
+                              panelController.expand();
+                              AidolUtils.d('music_player exapnd:touch');
+                              FirebaseLogger.changeMusicPlayerStatus(
+                                musicPlayerStatus: 'expand',
+                                userAction: 'touch',
+                              );
                             },
-                            onPlay: togglePlay,
-                            onNext: skipNext,
-                          ),
-                        );
-                      },
-                    ),
+                            child: StreamBuilder(
+                              stream: musicNotifier.positionStream,
+                              builder: (context, currentPos) {
+                                double progress = 0.0;
+                                if (currentPos.hasData) {
+                                  Duration? maxPos = musicNotifier.maxPosition;
+                                  if (maxPos != null) {
+                                    progress = currentPos.data!.inMilliseconds /
+                                        maxPos.inMilliseconds;
+                                  }
+                                }
+
+                                return PlayingMusicBar(
+                                  isPlaying:
+                                      playerStateAsync.data?.playing ?? false,
+                                  title: currentPlaying?.title ?? '음악 재생 대기 중',
+                                  artist: currentPlaying?.artist.name ?? '',
+                                  height: musicPlayerHeight,
+                                  size: musicPlayerSize,
+                                  onPrevious: () {
+                                    skipPrevious();
+                                  },
+                                  onPlay: togglePlay,
+                                  onNext: skipNext,
+                                  progress: progress,
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
                     if (musicPlayerSizeOver0_25)
                       Expanded(
                         child: Material(
                           color: Colors.transparent,
                           child: Column(
                             children: <Widget>[
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 16),
                               Expanded(
                                 child: middleButtons(
                                   currentPlaying,
@@ -838,7 +861,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
                                 ),
                               ),
                               // seeLyricButton,
-                              const SizedBox(height: 12.0),
+                              // const SizedBox(height: 12.0),
                               StreamBuilder(
                                 stream: musicNotifier.durationStream,
                                 builder: (context, maxDuration) {

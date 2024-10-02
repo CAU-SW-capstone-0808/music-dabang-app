@@ -16,11 +16,13 @@ class LogoTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       c.serviceName,
+      maxLines: 1,
       style: TextStyle(
         fontFamily: 'ChangwonDangamAsac',
-        fontSize: fontSize,
+        fontSize: fontSize / MediaQuery.of(context).textScaler.scale(1),
         fontWeight: FontWeight.bold,
         color: color,
+        overflow: TextOverflow.visible,
       ),
     );
   }

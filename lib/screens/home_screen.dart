@@ -11,7 +11,6 @@ import 'package:music_dabang/components/custom_search_bar.dart';
 import 'package:music_dabang/components/image_card.dart';
 import 'package:music_dabang/components/logo_title.dart';
 import 'package:music_dabang/models/user/user_model.dart';
-import 'package:music_dabang/providers/music/music_live_items_provider.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
 import 'package:music_dabang/providers/music/playlist_items_provider.dart';
 import 'package:music_dabang/providers/music/playlist_main_provider.dart';
@@ -148,11 +147,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }) {
     final titleWidget = Text(
       title,
+      maxLines: 1,
       style: const TextStyle(
         fontSize: 32.0,
         fontFamily: 'Roboto',
         fontWeight: FontWeight.w600,
         height: 1.25,
+        overflow: TextOverflow.visible,
       ),
     );
     if (onPressed == null) {
@@ -266,7 +267,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
     var title1 = ph16(
       child: titleLink(
-        title: "임영웅의 공연영상",
+        title: "임영웅 공연영상",
         onPressed: null,
       ),
     );
@@ -326,7 +327,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   Positioned.fill(
                     child: GestureDetector(
-                      onTap: () async {
+                      onTapUp: (_) async {
                         // final musicSelected = await context
                         //     .pushNamed<bool>(SearchScreen.routeName);
                         // if (musicSelected == true) {
@@ -362,7 +363,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
 
     return GestureDetector(
-      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      onTap: () {
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      onTapUp: (details) {
+        FirebaseLogger.touchMistake(
+          path: 'main',
+          position: details.globalPosition,
+        );
+      },
       child: Scaffold(
         body: scrollView,
       ),

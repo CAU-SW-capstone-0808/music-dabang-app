@@ -1,4 +1,3 @@
-import 'package:audio_service/audio_service.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -75,9 +74,8 @@ class MusicDabang extends ConsumerWidget with WidgetsBindingObserver {
       data: MediaQuery.of(context).copyWith(
         textScaler: MediaQuery.of(context).textScaler.clamp(
               minScaleFactor: 1.0,
-              maxScaleFactor: 1.0,
-            ), // 최소 1.0, 최대 1.5배까지만 확대
-        size: MediaQuery.of(context).size,
+              maxScaleFactor: 1.25,
+            ), // 최소 1.0, 최대 1.25배까지만 확대
         devicePixelRatio: 1.0,
       ),
       child: MaterialApp.router(
@@ -98,9 +96,9 @@ class MusicDabang extends ConsumerWidget with WidgetsBindingObserver {
             iconTheme: IconThemeData(color: Colors.black),
           ),
           sliderTheme: const SliderThemeData(
-            activeTrackColor: ColorTable.sliderColor,
+            activeTrackColor: ColorTable.kPrimaryColor,
             inactiveTrackColor: ColorTable.backGrey,
-            thumbColor: ColorTable.sliderColor,
+            thumbColor: ColorTable.kPrimaryColor,
             trackHeight: 8.0,
             thumbShape: RoundSliderThumbShape(
               enabledThumbRadius: 5.0,

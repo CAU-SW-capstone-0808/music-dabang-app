@@ -21,6 +21,9 @@ class PlayingMusicBar extends StatelessWidget {
   final void Function()? onPlay;
   final void Function()? onNext;
 
+  /// 음악의 진행도
+  final double progress;
+
   const PlayingMusicBar({
     super.key,
     required this.title,
@@ -31,6 +34,7 @@ class PlayingMusicBar extends StatelessWidget {
     this.onPrevious,
     this.onPlay,
     this.onNext,
+    this.progress = 0,
   });
 
   double? albumSize({required double deviceWidth}) {
@@ -41,6 +45,7 @@ class PlayingMusicBar extends StatelessWidget {
   }
 
   bool get sizeOver0_15 => size > 0.15;
+
   bool get sizeOver0_25 => size > 0.25;
 
   double get textOpacity {
@@ -50,6 +55,7 @@ class PlayingMusicBar extends StatelessWidget {
   }
 
   Color get backgroundColor {
+    return ColorTable.backGrey;
     return Color.lerp(
           ColorTable.backGrey,
           Colors.white,
@@ -82,25 +88,24 @@ class PlayingMusicBar extends StatelessWidget {
     }) {
       return Material(
         color: Colors.transparent,
-        child: Opacity(
-          opacity: textOpacity,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(12),
-            child: Ink(
-              padding: const EdgeInsets.all(4.0),
-              child: Column(
-                children: [
-                  child,
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 18.0,
-                      color: Colors.black.withOpacity(textOpacity),
-                    ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Ink(
+            padding: const EdgeInsets.all(4.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                child,
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 18.0,
+                    height: 1.25,
+                    color: Colors.black,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -108,6 +113,7 @@ class PlayingMusicBar extends StatelessWidget {
     }
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         withLabel(
           label: '이전곡',
@@ -142,7 +148,7 @@ class PlayingMusicBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final deviceWidth = MediaQuery.of(context).size.width;
+    // final deviceWidth = MediaQuery.of(context).size.width;
     if (sizeOver0_25) return Container();
     // if (sizeOver0_25) {
     //   return Container(
@@ -158,48 +164,78 @@ class PlayingMusicBar extends StatelessWidget {
     //     ),
     //   );
     // }
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 4, 4, 0),
-      decoration: BoxDecoration(color: backgroundColor),
-      child: Row(
-        children: [
-          // albumImage(
-          //   width: albumSize(deviceWidth: deviceWidth),
-          //   height: albumSize(deviceWidth: deviceWidth),
-          // ),
-          // const SizedBox(width: 20.0),
-          Expanded(
-            child: GestureDetector(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Material(
+      color: Colors.transparent,
+      child: Opacity(
+        opacity: textOpacity,
+        // opacity: 1,
+        child: Stack(
+          children: [
+            Container(
+              height: 90,
+              padding: const EdgeInsets.fromLTRB(16, 0, 4, 4),
+              decoration: BoxDecoration(color: backgroundColor),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    style: TextStyle(
-                      fontSize: 22.0,
-                      height: 1.25,
-                      fontWeight: FontWeight.w600,
-                      overflow: TextOverflow.ellipsis,
-                      color: Colors.black.withOpacity(textOpacity),
+                  // albumImage(
+                  //   width: albumSize(deviceWidth: deviceWidth),
+                  //   height: albumSize(deviceWidth: deviceWidth),
+                  // ),
+                  // const SizedBox(width: 20.0),
+                  Expanded(
+                    child: GestureDetector(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Text(
+                              title,
+                              maxLines: 1,
+                              style: const TextStyle(
+                                fontSize: 22.0,
+                                height: 1.25,
+                                fontWeight: FontWeight.w600,
+                                overflow: TextOverflow.ellipsis,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4.0),
+                          Text(
+                            artist,
+                            style: const TextStyle(
+                              fontSize: 18.0,
+                              height: 1.25,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 4.0),
-                  Text(
-                    artist,
-                    style: TextStyle(
-                      fontSize: 18.0,
-                      height: 1.25,
-                      color: Colors.black.withOpacity(textOpacity),
-                    ),
-                  ),
+                  actionButtons,
                 ],
               ),
             ),
-          ),
-          actionButtons,
-        ],
+            Positioned(
+              left: 0,
+              child: Container(
+                width: MediaQuery.of(context).size.width * progress,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: ColorTable.kPrimaryColor,
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(4),
+                    bottomRight: Radius.circular(4),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
