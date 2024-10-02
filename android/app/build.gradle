@@ -56,6 +56,24 @@ android {
             signingConfig = signingConfigs.debug
         }
     }
+
+    signingConfigs {
+        release {
+            keyAlias 'mdabang-key'
+            keyPassword System.getenv('KEY_PASSWORD') ?: project.KEY_PASSWORD
+            storeFile file('release-key.jks')
+            storePassword System.getenv('KEYSTORE_PASSWORD') ?: project.KEYSTORE_PASSWORD
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            shrinkResources false
+            // Proguard rules for obfuscation and optimization (optional)
+        }
+    }
 }
 
 flutter {
