@@ -71,41 +71,52 @@ class MusicDabang extends ConsumerWidget with WidgetsBindingObserver {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
 
-    return MaterialApp.router(
-      title: '뮤직다방',
-      debugShowCheckedModeBanner: false,
-      routerConfig: router,
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        textScaler: MediaQuery.of(context).textScaler.clamp(
+              minScaleFactor: 1.0,
+              maxScaleFactor: 1.0,
+            ), // 최소 1.0, 최대 1.5배까지만 확대
+        size: MediaQuery.of(context).size,
+        devicePixelRatio: 1.0,
+      ),
+      child: MaterialApp.router(
+        title: '뮤직다방',
+        debugShowCheckedModeBanner: false,
+        routerConfig: router,
 
-      /// 라우팅 설정
-      // routerDelegate: router.routerDelegate,
-      // routeInformationParser: router.routeInformationParser,
-      // routeInformationProvider: router.routeInformationProvider,
-      theme: ThemeData(
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.white,
-          elevation: 0,
-          iconTheme: IconThemeData(color: Colors.black),
-        ),
-        sliderTheme: const SliderThemeData(
-          activeTrackColor: ColorTable.sliderColor,
-          inactiveTrackColor: ColorTable.backGrey,
-          thumbColor: ColorTable.sliderColor,
-          trackHeight: 8.0,
-          thumbShape: RoundSliderThumbShape(
-            enabledThumbRadius: 5.0,
+        /// 라우팅 설정
+        // routerDelegate: router.routerDelegate,
+        // routeInformationParser: router.routeInformationParser,
+        // routeInformationProvider: router.routeInformationProvider,
+        theme: ThemeData(
+          scaffoldBackgroundColor: Colors.white,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.white,
             elevation: 0,
-            pressedElevation: 0,
+            iconTheme: IconThemeData(color: Colors.black),
           ),
-          overlayShape: RoundSliderOverlayShape(
-            overlayRadius: 16.0,
+          sliderTheme: const SliderThemeData(
+            activeTrackColor: ColorTable.sliderColor,
+            inactiveTrackColor: ColorTable.backGrey,
+            thumbColor: ColorTable.sliderColor,
+            trackHeight: 8.0,
+            thumbShape: RoundSliderThumbShape(
+              enabledThumbRadius: 5.0,
+              elevation: 0,
+              pressedElevation: 0,
+            ),
+            overlayShape: RoundSliderOverlayShape(
+              overlayRadius: 16.0,
+            ),
           ),
+          colorScheme:
+              ColorScheme.fromSeed(seedColor: ColorTable.kPrimaryColor),
+          fontFamily: 'Roboto',
+          useMaterial3: true,
+          textTheme: const TextTheme(),
         ),
-        colorScheme: ColorScheme.fromSeed(seedColor: ColorTable.kPrimaryColor),
-        fontFamily: 'Roboto',
-        useMaterial3: true,
-        textTheme: const TextTheme(),
       ),
     );
   }
