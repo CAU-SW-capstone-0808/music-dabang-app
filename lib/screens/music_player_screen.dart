@@ -49,7 +49,13 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     bool showingVideo = false,
     bool showMusicVideoToggle = true,
   }) {
-    final albumWidth = MediaQuery.of(context).size.width * size / 1.25 - 60;
+    final mediaSize = MediaQuery.of(context).size;
+
+    double albumWidth = mediaSize.width * size - 60;
+    if (albumWidth > mediaSize.height * 2) {
+      albumWidth = mediaSize.height * 2;
+    }
+
     late Widget innerWidget;
     if (showingVideo) {
       final flickManager = musicNotifier.flickManager;
@@ -165,7 +171,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
             ),
             borderWidth: 0,
             height: 50,
-            spacing: MediaQuery.of(context).size.width * 0.4,
+            spacing: mediaSize.width * 0.4,
             indicatorSize: const Size.fromWidth(50),
             style: ToggleStyle(
               backgroundColor: Colors.white,
@@ -729,254 +735,268 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
       }
     });
 
-    return SlidingUpPanelWidget(
-      panelController: panelController,
-      animationController: musicPlayerAnimationController,
-      controlHeight: currentPlaying != null ? 95 : 0,
-      // controlHeight: 90,
-      enableOnTap: false,
-      anchor: 1.0,
-      // upperBound: 1.0,
-      onStatusChanged: (status) {
-        // AidolUtils.d(
-        //     'status:${status.name} devise size: ${MediaQuery.of(context).size}');
-        var mpStatus = ref.read(musicPlayerStatusProvider);
-        if (status == SlidingUpPanelStatus.collapsed) {
-          // 전체화면 -> SlidingUpPanel 자동 변경됨 -> expand
-          if (fullScreen) {
-            panelController.expand();
-            if (musicNotifier.flickManager?.flickControlManager?.isFullscreen ??
-                false) {
-              return;
-            } else {
-              EasyThrottle.throttle(
-                'expandAfterFullscreenOff',
-                const Duration(milliseconds: 500),
-                expandPanelAfterFullscreenOff,
-              );
-              return;
-            }
-          }
-          if (mpStatus != MusicDabangPlayerState.collapsed) {
-            // 드래그에 의해 닫힌 경우
-            AidolUtils.d('music_player collapse:drag');
-            ref.read(musicPlayerStatusProvider.notifier).status =
-                MusicDabangPlayerState.collapsed;
-            // 파이어베이스 로깅
-            FirebaseLogger.changeMusicPlayerStatus(
-              musicPlayerStatus: 'collapse',
-              userAction: 'drag',
-            );
-          }
-        } else if (status == SlidingUpPanelStatus.anchored ||
-            status == SlidingUpPanelStatus.expanded) {
-          // 드래그에 의해 확장된 경우
-          if (mpStatus != MusicDabangPlayerState.expanded &&
-              mpStatus != MusicDabangPlayerState.expandedWithPlaylist) {
-            AidolUtils.d('music_player($mpStatus) expand:drag');
-            ref.read(musicPlayerStatusProvider.notifier).status =
-                MusicDabangPlayerState.expanded;
-            // 파이어베이스 로깅
-            FirebaseLogger.changeMusicPlayerStatus(
-              musicPlayerStatus: 'expand',
-              userAction: 'drag',
-            );
-          } else if (mpStatus == MusicDabangPlayerState.expandedWithPlaylist) {
-            ref.read(musicPlayerStatusProvider.notifier).status =
-                MusicDabangPlayerState.expanded;
-          }
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (_, __) {
+        if (fullScreen) {
+          musicNotifier.toggleFullscreen(false);
+          _logEvent('toggle_fullscreen_off_by_back');
         }
       },
-      child: Stack(
-        children: [
-          AnimatedBuilder(
-            animation: musicPlayerAnimationController,
-            builder: (context, child) {
-              final musicPlayerSize = musicPlayerAnimationController.value;
-              final musicPlayerHeight =
-                  musicPlayerSize * MediaQuery.of(context).size.height;
-              bool musicPlayerSizeOver0_25 = musicPlayerSize > 0.25;
-              return Container(
-                color: Colors.white,
-                height: MediaQuery.of(context).size.height,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    if (musicPlayerSizeOver0_25)
-                      Column(
-                        children: [
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 8.0),
-                            child: topTitle(currentPlaying?.title ?? '-'),
-                          ),
-                          const SizedBox(height: 4.0),
-                          artistName(currentPlaying?.artist.name ?? ''),
-                          const SizedBox(height: 8.0),
-                          if (musicPlayerSizeOver0_25)
-                            centerMedia(
-                              size: musicPlayerSize,
-                              imageUrl: currentPlaying?.thumbnailUrl,
-                              showingVideo: isPlayingVideo,
-                              showMusicVideoToggle:
-                                  currentPlaying?.musicContentType !=
-                                          MusicContentType.live &&
-                                      currentPlaying?.videoContentUrl != null,
+      child: SlidingUpPanelWidget(
+        panelController: panelController,
+        animationController: musicPlayerAnimationController,
+        controlHeight: currentPlaying != null ? 95 : 0,
+        // controlHeight: 90,
+        enableOnTap: false,
+        anchor: 1.0,
+        // upperBound: 1.0,
+        onStatusChanged: (status) {
+          // AidolUtils.d(
+          //     'status:${status.name} devise size: ${MediaQuery.of(context).size}');
+          var mpStatus = ref.read(musicPlayerStatusProvider);
+          if (status == SlidingUpPanelStatus.collapsed) {
+            // 전체화면 -> SlidingUpPanel 자동 변경됨 -> expand
+            if (fullScreen) {
+              panelController.expand();
+              if (musicNotifier
+                      .flickManager?.flickControlManager?.isFullscreen ??
+                  false) {
+                return;
+              } else {
+                EasyThrottle.throttle(
+                  'expandAfterFullscreenOff',
+                  const Duration(milliseconds: 500),
+                  expandPanelAfterFullscreenOff,
+                );
+                return;
+              }
+            }
+            if (mpStatus != MusicDabangPlayerState.collapsed) {
+              // 드래그에 의해 닫힌 경우
+              AidolUtils.d('music_player collapse:drag');
+              ref.read(musicPlayerStatusProvider.notifier).status =
+                  MusicDabangPlayerState.collapsed;
+              // 파이어베이스 로깅
+              FirebaseLogger.changeMusicPlayerStatus(
+                musicPlayerStatus: 'collapse',
+                userAction: 'drag',
+              );
+            }
+          } else if (status == SlidingUpPanelStatus.anchored ||
+              status == SlidingUpPanelStatus.expanded) {
+            // 드래그에 의해 확장된 경우
+            if (mpStatus != MusicDabangPlayerState.expanded &&
+                mpStatus != MusicDabangPlayerState.expandedWithPlaylist) {
+              AidolUtils.d('music_player($mpStatus) expand:drag');
+              ref.read(musicPlayerStatusProvider.notifier).status =
+                  MusicDabangPlayerState.expanded;
+              // 파이어베이스 로깅
+              FirebaseLogger.changeMusicPlayerStatus(
+                musicPlayerStatus: 'expand',
+                userAction: 'drag',
+              );
+            } else if (mpStatus ==
+                MusicDabangPlayerState.expandedWithPlaylist) {
+              ref.read(musicPlayerStatusProvider.notifier).status =
+                  MusicDabangPlayerState.expanded;
+            }
+          }
+        },
+        child: Stack(
+          children: [
+            AnimatedBuilder(
+              animation: musicPlayerAnimationController,
+              builder: (context, child) {
+                final musicPlayerSize = musicPlayerAnimationController.value;
+                final musicPlayerHeight =
+                    musicPlayerSize * MediaQuery.of(context).size.height;
+                bool musicPlayerSizeOver0_25 = musicPlayerSize > 0.25;
+                return Container(
+                  color: Colors.white,
+                  height: MediaQuery.of(context).size.height,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (musicPlayerSizeOver0_25)
+                        Column(
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: topTitle(currentPlaying?.title ?? '-'),
                             ),
-                          // Expanded(
-                          //   child: ClipRRect(
-                          //     borderRadius: BorderRadius.circular(24),
-                          //     child: currentPlaying?.thumbnailUrl != null
-                          //         ? CachedImage(currentPlaying!.thumbnailUrl)
-                          //         : Container(color: ColorTable.backGrey),
-                          //   ),
-                          // ),
-                        ],
-                      ),
-                    if (!musicPlayerSizeOver0_25)
-                      StreamBuilder(
-                        stream: musicNotifier.playerStateStream,
-                        builder: (context, playerStateAsync) {
-                          return GestureDetector(
-                            onTap: () async {
-                              setState(
-                                  () => _touchedToChangeMusicPlayer = true);
-                              ref
-                                  .read(musicPlayerStatusProvider.notifier)
-                                  .expand();
-                              panelController.expand();
-                              AidolUtils.d('music_player exapnd:touch');
-                              FirebaseLogger.changeMusicPlayerStatus(
-                                musicPlayerStatus: 'expand',
-                                userAction: 'touch',
-                              );
-                            },
-                            child: StreamBuilder(
-                              stream: musicNotifier.positionStream,
-                              builder: (context, currentPos) {
-                                double progress = 0.0;
-                                if (currentPos.hasData) {
-                                  Duration? maxPos = musicNotifier.maxPosition;
-                                  if (maxPos != null) {
-                                    progress = currentPos.data!.inMilliseconds /
-                                        maxPos.inMilliseconds;
-                                  }
-                                }
-
-                                return PlayingMusicBar(
-                                  isPlaying:
-                                      playerStateAsync.data?.playing ?? false,
-                                  title: currentPlaying?.title ?? '음악 재생 대기 중',
-                                  artist: currentPlaying?.artist.name ?? '',
-                                  height: musicPlayerHeight,
-                                  size: musicPlayerSize,
-                                  onPrevious: () {
-                                    skipPrevious();
-                                  },
-                                  onPlay: togglePlay,
-                                  onNext: skipNext,
-                                  progress: progress,
+                            const SizedBox(height: 4.0),
+                            artistName(currentPlaying?.artist.name ?? ''),
+                            const SizedBox(height: 8.0),
+                            if (musicPlayerSizeOver0_25)
+                              centerMedia(
+                                size: musicPlayerSize,
+                                imageUrl: currentPlaying?.thumbnailUrl,
+                                showingVideo: isPlayingVideo,
+                                showMusicVideoToggle:
+                                    currentPlaying?.musicContentType !=
+                                            MusicContentType.live &&
+                                        currentPlaying?.videoContentUrl != null,
+                              ),
+                            // Expanded(
+                            //   child: ClipRRect(
+                            //     borderRadius: BorderRadius.circular(24),
+                            //     child: currentPlaying?.thumbnailUrl != null
+                            //         ? CachedImage(currentPlaying!.thumbnailUrl)
+                            //         : Container(color: ColorTable.backGrey),
+                            //   ),
+                            // ),
+                          ],
+                        ),
+                      if (!musicPlayerSizeOver0_25)
+                        StreamBuilder(
+                          stream: musicNotifier.playerStateStream,
+                          builder: (context, playerStateAsync) {
+                            return GestureDetector(
+                              onTap: () async {
+                                setState(
+                                    () => _touchedToChangeMusicPlayer = true);
+                                ref
+                                    .read(musicPlayerStatusProvider.notifier)
+                                    .expand();
+                                panelController.expand();
+                                AidolUtils.d('music_player exapnd:touch');
+                                FirebaseLogger.changeMusicPlayerStatus(
+                                  musicPlayerStatus: 'expand',
+                                  userAction: 'touch',
                                 );
                               },
-                            ),
-                          );
-                        },
-                      ),
-                    if (musicPlayerSizeOver0_25)
-                      Expanded(
-                        child: Material(
-                          color: Colors.transparent,
-                          child: Column(
-                            children: <Widget>[
-                              const SizedBox(height: 16),
-                              Expanded(
-                                child: middleButtons(
-                                  currentPlaying,
-                                  isInMyMusicList: isInMyMusicList ?? false,
-                                ),
-                              ),
-                              // seeLyricButton,
-                              // const SizedBox(height: 12.0),
-                              StreamBuilder(
-                                stream: musicNotifier.durationStream,
-                                builder: (context, maxDuration) {
-                                  return StreamBuilder(
-                                    stream: musicNotifier.positionStream,
-                                    builder: (context, curDuration) {
-                                      return progressBar(
-                                        curMilliSec:
-                                            curDuration.data?.inMilliseconds ??
-                                                0,
-                                        maxMilliSec:
-                                            maxDuration.data?.inMilliseconds ??
-                                                0,
-                                      );
+                              child: StreamBuilder(
+                                stream: musicNotifier.positionStream,
+                                builder: (context, currentPos) {
+                                  double progress = 0.0;
+                                  if (currentPos.hasData) {
+                                    Duration? maxPos =
+                                        musicNotifier.maxPosition;
+                                    if (maxPos != null) {
+                                      progress =
+                                          currentPos.data!.inMilliseconds /
+                                              maxPos.inMilliseconds;
+                                    }
+                                  }
+
+                                  return PlayingMusicBar(
+                                    isPlaying:
+                                        playerStateAsync.data?.playing ?? false,
+                                    title:
+                                        currentPlaying?.title ?? '음악 재생 대기 중',
+                                    artist: currentPlaying?.artist.name ?? '',
+                                    height: musicPlayerHeight,
+                                    size: musicPlayerSize,
+                                    onPrevious: () {
+                                      skipPrevious();
                                     },
+                                    onPlay: togglePlay,
+                                    onNext: skipNext,
+                                    progress: progress,
                                   );
                                 },
                               ),
-                              Expanded(
-                                flex: 2,
-                                child: StreamBuilder(
-                                  stream: musicNotifier.playerStateStream,
-                                  builder: (context, playerStateAsync) {
-                                    return bottomButtonGroup(
-                                      isPlaying:
-                                          playerStateAsync.data?.playing ??
-                                              false,
+                            );
+                          },
+                        ),
+                      if (musicPlayerSizeOver0_25)
+                        Expanded(
+                          child: Material(
+                            color: Colors.transparent,
+                            child: Column(
+                              children: <Widget>[
+                                const SizedBox(height: 16),
+                                Expanded(
+                                  child: middleButtons(
+                                    currentPlaying,
+                                    isInMyMusicList: isInMyMusicList ?? false,
+                                  ),
+                                ),
+                                // seeLyricButton,
+                                // const SizedBox(height: 12.0),
+                                StreamBuilder(
+                                  stream: musicNotifier.durationStream,
+                                  builder: (context, maxDuration) {
+                                    return StreamBuilder(
+                                      stream: musicNotifier.positionStream,
+                                      builder: (context, curDuration) {
+                                        return progressBar(
+                                          curMilliSec: curDuration
+                                                  .data?.inMilliseconds ??
+                                              0,
+                                          maxMilliSec: maxDuration
+                                                  .data?.inMilliseconds ??
+                                              0,
+                                        );
+                                      },
                                     );
                                   },
                                 ),
-                              ),
-                              const SizedBox(height: 60),
+                                Expanded(
+                                  flex: 1,
+                                  child: StreamBuilder(
+                                    stream: musicNotifier.playerStateStream,
+                                    builder: (context, playerStateAsync) {
+                                      return bottomButtonGroup(
+                                        isPlaying:
+                                            playerStateAsync.data?.playing ??
+                                                false,
+                                      );
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(height: 60),
 
-                              // const SizedBox(height: 42.0),
-                              // Container(
-                              //   padding: const EdgeInsets.symmetric(
-                              //     vertical: 12.5,
-                              //   ),
-                              //   decoration: const BoxDecoration(
-                              //     color: ColorTable.palePink,
-                              //     borderRadius: BorderRadius.only(
-                              //       topLeft: Radius.circular(24),
-                              //       topRight: Radius.circular(24),
-                              //     ),
-                              //   ),
-                              //   child: Row(
-                              //     mainAxisAlignment:
-                              //         MainAxisAlignment.center,
-                              //     children: [
-                              //       SvgPicture.asset(
-                              //         'assets/icons/playlist_icon.svg',
-                              //         width: 32,
-                              //         height: 32,
-                              //       ),
-                              //       const SizedBox(width: 8.0),
-                              //       const Text(
-                              //         '재생목록',
-                              //         style: TextStyle(
-                              //           fontSize: 18.0,
-                              //           fontWeight: FontWeight.w600,
-                              //           height: 1.25,
-                              //         ),
-                              //       ),
-                              //     ],
-                              //   ),
-                              // ),
-                            ],
+                                // const SizedBox(height: 42.0),
+                                // Container(
+                                //   padding: const EdgeInsets.symmetric(
+                                //     vertical: 12.5,
+                                //   ),
+                                //   decoration: const BoxDecoration(
+                                //     color: ColorTable.palePink,
+                                //     borderRadius: BorderRadius.only(
+                                //       topLeft: Radius.circular(24),
+                                //       topRight: Radius.circular(24),
+                                //     ),
+                                //   ),
+                                //   child: Row(
+                                //     mainAxisAlignment:
+                                //         MainAxisAlignment.center,
+                                //     children: [
+                                //       SvgPicture.asset(
+                                //         'assets/icons/playlist_icon.svg',
+                                //         width: 32,
+                                //         height: 32,
+                                //       ),
+                                //       const SizedBox(width: 8.0),
+                                //       const Text(
+                                //         '재생목록',
+                                //         style: TextStyle(
+                                //           fontSize: 18.0,
+                                //           fontWeight: FontWeight.w600,
+                                //           height: 1.25,
+                                //         ),
+                                //       ),
+                                //     ],
+                                //   ),
+                                // ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
-              );
-            },
-          ),
-          if (mpStatus.full)
-            PlaylistPanel(
-              viewPadding: MediaQuery.of(context).viewPadding,
+                    ],
+                  ),
+                );
+              },
             ),
-        ],
+            if (mpStatus.full)
+              PlaylistPanel(
+                viewPadding: MediaQuery.of(context).viewPadding,
+              ),
+          ],
+        ),
       ),
     );
   }
