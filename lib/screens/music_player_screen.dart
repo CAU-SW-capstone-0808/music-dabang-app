@@ -1,4 +1,5 @@
 import 'package:animated_toggle_switch/animated_toggle_switch.dart';
+import 'package:easy_debounce/easy_throttle.dart';
 import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,6 +33,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
   late AnimationController musicPlayerAnimationController;
   DeviceOrientation _orientation = DeviceOrientation.portraitUp;
   final panelController = SlidingUpPanelController();
+  bool fullScreen = false;
 
   CurrentPlayingMusicStateNotifier get musicNotifier =>
       ref.read(currentPlayingMusicProvider.notifier);
@@ -47,10 +49,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     bool showingVideo = false,
     bool showMusicVideoToggle = true,
   }) {
-    final albumWidth = MediaQuery.of(context).size.width *
-            size /
-            MediaQuery.of(context).textScaler.scale(1) -
-        60;
+    final albumWidth = MediaQuery.of(context).size.width * size / 1.25 - 60;
     late Widget innerWidget;
     if (showingVideo) {
       final flickManager = musicNotifier.flickManager;
@@ -70,25 +69,27 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
           // ],
           flickVideoWithControls: FlickVideoWithControls(
             videoFit: BoxFit.contain,
-            // controls: FlickCustomControls(
-            //   iconSize: 36,
-            //   fontSize: 22,
-            //   onFullScreenToggle: () async {
-            //     musicNotifier.toggleFullscreen(true);
-            //   },
-            // ),
+            controls: FlickCustomControls(
+              iconSize: 36,
+              fontSize: 22,
+              onFullScreenToggle: () async {
+                setState(() {
+                  fullScreen = true;
+                });
+                musicNotifier.toggleFullscreen(true);
+                _logEvent('toggle_fullscreen_on');
+              },
+            ),
           ),
-          flickVideoWithControlsFullscreen: RotatedBox(
-            quarterTurns: 1,
-            child: FlickVideoWithControls(
-              videoFit: BoxFit.contain,
-              controls: FlickCustomControls(
-                iconSize: 36,
-                fontSize: 22,
-                onFullScreenToggle: () async {
-                  musicNotifier.toggleFullscreen(false);
-                },
-              ),
+          flickVideoWithControlsFullscreen: FlickVideoWithControls(
+            videoFit: BoxFit.contain,
+            controls: FlickCustomControls(
+              iconSize: 36,
+              fontSize: 22,
+              onFullScreenToggle: () async {
+                musicNotifier.toggleFullscreen(false);
+                _logEvent('toggle_fullscreen_off');
+              },
             ),
           ),
           flickManager: flickManager!,
@@ -328,7 +329,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
       );
 
   Widget bottomButtonGroup({required bool isPlaying}) => Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // InkWell(
           //   borderRadius: BorderRadius.circular(12),
@@ -354,65 +355,76 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
           //   ),
           // ),
           const Spacer(),
-          withLabel(
-            text: '이전곡',
-            child: InkWell(
-              borderRadius: BorderRadius.circular(24),
-              onTap: skipPrevious,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 18.0,
-                ),
-                child: SvgPicture.asset(
-                  'assets/icons/play_prev_icon.svg',
-                  width: 60,
-                  height: 40,
-                  colorFilter: const ColorFilter.mode(
-                    ColorTable.iconBlack,
-                    BlendMode.srcIn,
+          Expanded(
+            flex: 3,
+            child: withLabel(
+              text: '이전곡',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(24),
+                onTap: skipPrevious,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 18.0,
+                  ),
+                  child: SvgPicture.asset(
+                    'assets/icons/play_prev_icon.svg',
+                    width: 60,
+                    height: 40,
+                    colorFilter: const ColorFilter.mode(
+                      ColorTable.iconBlack,
+                      BlendMode.srcIn,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 16.0),
-          withLabel(
-            text: '재생',
-            child: BouncingWidget(
-              onPressed: togglePlay,
-              child: Container(
-                padding: const EdgeInsets.all(16.0),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: ColorTable.kPrimaryColor,
-                ),
-                child: Icon(
-                  isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                  size: 48.0,
-                  color: Colors.white,
+          Expanded(
+            flex: 2,
+            child: withLabel(
+              text: '재생',
+              child: BouncingWidget(
+                onPressed: togglePlay,
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: ColorTable.kPrimaryColor,
+                    ),
+                    child: Icon(
+                      isPlaying
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
+                      size: 48,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 16.0),
-          withLabel(
-            text: '다음곡',
-            child: InkWell(
-              borderRadius: BorderRadius.circular(24),
-              onTap: skipNext,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 18.0,
-                ),
-                child: SvgPicture.asset(
-                  'assets/icons/play_next_icon.svg',
-                  width: 60,
-                  height: 40,
-                  colorFilter: const ColorFilter.mode(
-                    ColorTable.iconBlack,
-                    BlendMode.srcIn,
+          Expanded(
+            flex: 3,
+            child: withLabel(
+              text: '다음곡',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(24),
+                onTap: skipNext,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 18.0,
+                  ),
+                  child: SvgPicture.asset(
+                    'assets/icons/play_next_icon.svg',
+                    width: 60,
+                    height: 40,
+                    colorFilter: const ColorFilter.mode(
+                      ColorTable.iconBlack,
+                      BlendMode.srcIn,
+                    ),
                   ),
                 ),
               ),
@@ -632,10 +644,12 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
         const SizedBox(height: 4),
         Text(
           text,
+          maxLines: 1,
           style: const TextStyle(
             fontSize: 18.0,
             fontWeight: FontWeight.bold,
             height: 1.25,
+            overflow: TextOverflow.visible,
           ),
         ),
         const SizedBox(height: 8),
@@ -650,6 +664,16 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
     } else {
       return DeviceOrientation.portraitUp;
     }
+  }
+
+  Future<void> expandPanelAfterFullscreenOff() async {
+    await Future.delayed(const Duration(milliseconds: 100));
+    while (panelController.status != SlidingUpPanelStatus.expanded) {
+      panelController.expand();
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+    await Future.delayed(const Duration(seconds: 1));
+    fullScreen = false;
   }
 
   @override
@@ -671,8 +695,8 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
         ref.watch(isInMyMusicListProvider(currentPlaying?.id));
     // bool? isInMyMusicList = false;
 
-    print(
-        'music player build - currentPlaying: $currentPlaying / isPlayingVideo: $isPlayingVideo / mpStatus: $mpStatus / isInMyMusicList: $isInMyMusicList');
+    // print(
+    //     'music player build - currentPlaying: $currentPlaying / isPlayingVideo: $isPlayingVideo / mpStatus: $mpStatus / isInMyMusicList: $isInMyMusicList');
 
     ref.listen(musicPlayerStatusProvider, (prev, next) {
       if (prev != next) {
@@ -714,15 +738,26 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen>
       anchor: 1.0,
       // upperBound: 1.0,
       onStatusChanged: (status) {
-        // print('status: $status');
+        // AidolUtils.d(
+        //     'status:${status.name} devise size: ${MediaQuery.of(context).size}');
         var mpStatus = ref.read(musicPlayerStatusProvider);
         if (status == SlidingUpPanelStatus.collapsed) {
+          // 전체화면 -> SlidingUpPanel 자동 변경됨 -> expand
+          if (fullScreen) {
+            panelController.expand();
+            if (musicNotifier.flickManager?.flickControlManager?.isFullscreen ??
+                false) {
+              return;
+            } else {
+              EasyThrottle.throttle(
+                'expandAfterFullscreenOff',
+                const Duration(milliseconds: 500),
+                expandPanelAfterFullscreenOff,
+              );
+              return;
+            }
+          }
           if (mpStatus != MusicDabangPlayerState.collapsed) {
-            // 전체화면 -> SlidingUpPanel 자동 변경됨 -> expand
-            // if (fullScreen) {
-            //   panelController.expand();
-            //   return;
-            // }
             // 드래그에 의해 닫힌 경우
             AidolUtils.d('music_player collapse:drag');
             ref.read(musicPlayerStatusProvider.notifier).status =

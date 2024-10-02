@@ -27,7 +27,7 @@ void main() async {
 
   // 세로 모드만 허용
   SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
+    // DeviceOrientation.portraitUp,
   ]);
 
   await MyAudioHandler.init();
@@ -44,27 +44,8 @@ void main() async {
   runApp(const ProviderScope(child: MusicDabang()));
 }
 
-class MusicDabang extends ConsumerWidget with WidgetsBindingObserver {
+class MusicDabang extends ConsumerWidget {
   const MusicDabang({super.key});
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-
-    if (state == AppLifecycleState.paused) {
-      // 앱이 백그라운드로 전환될 때
-      print('App went to the background.');
-    } else if (state == AppLifecycleState.resumed) {
-      // 앱이 다시 포그라운드로 전환될 때
-      print('App returned to the foreground.');
-    } else if (state == AppLifecycleState.inactive) {
-      // 앱이 비활성화될 때
-      print('App is inactive.');
-    } else if (state == AppLifecycleState.detached) {
-      // 앱이 완전히 종료되기 전에 호출
-      print('App is detached.');
-    }
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -75,6 +56,7 @@ class MusicDabang extends ConsumerWidget with WidgetsBindingObserver {
         textScaler: MediaQuery.of(context).textScaler.clamp(
               minScaleFactor: 1.0,
               maxScaleFactor: 1.25,
+              // maxScaleFactor: 1.0, // 테스트용
             ), // 최소 1.0, 최대 1.25배까지만 확대
         devicePixelRatio: 1.0,
       ),
