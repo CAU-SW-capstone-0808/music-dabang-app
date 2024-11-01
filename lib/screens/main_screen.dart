@@ -66,6 +66,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     return PopScope(
       canPop: !musicPlayerState.full && canExitByAsk,
       onPopInvokedWithResult: (_, __) {
+        if (ref.read(currentPlayingMusicProvider.notifier).isFullScreen) {
+          return;
+        }
         if (musicPlayerState == MusicDabangPlayerState.expanded) {
           ref.read(musicPlayerStatusProvider.notifier).status =
               MusicDabangPlayerState.collapsed;

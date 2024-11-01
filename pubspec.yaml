@@ -162,3 +162,10 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/music_dabang_icon2.png"
+  adaptive_icon_background: "#FF6131"  # 배경색 지정
+  adaptive_icon_foreground: "assets/images/music_dabang_icon2.png"  # 전경 이미지

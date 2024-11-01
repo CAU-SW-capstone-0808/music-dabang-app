@@ -13,6 +13,7 @@ import 'package:music_dabang/screens/login/phone_login_screen.dart';
 import 'package:music_dabang/screens/main_screen.dart';
 import 'package:music_dabang/screens/search_screen.dart';
 import 'package:music_dabang/screens/splash_screen.dart';
+import 'package:music_dabang/screens/user_age_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) async {
@@ -30,8 +31,14 @@ final routerProvider = Provider<GoRouter>((ref) {
     } else if (user is UserModelNone || user is UserModelError) {
       redirectTo = '/login';
     } else if (user is UserModel) {
-      if (currentPath == '/login' || currentPath == '/splash') {
-        redirectTo = '/';
+      if (user.userAge != null) {
+        if (currentPath == '/login' ||
+            currentPath == '/splash' ||
+            currentPath == '/user-age') {
+          redirectTo = '/';
+        }
+      } else {
+        redirectTo = '/user-age';
       }
     }
 
@@ -57,6 +64,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/splash',
         name: SplashScreen.routeName,
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/user-age',
+        name: UserAgeScreen.routeName,
+        builder: (context, state) => const UserAgeScreen(),
+        pageBuilder: (context, state) => createSlideGoRoute(
+          const UserAgeScreen(),
+          name: UserAgeScreen.routeName,
+        ),
       ),
       GoRoute(
         path: '/',

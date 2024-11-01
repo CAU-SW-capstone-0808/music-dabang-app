@@ -41,4 +41,7 @@ abstract class UserRepository {
   Future<TokenModel> loginWithPhone({
     @Body() required UserLoginModel loginModel,
   });
+
+  @POST("/me/age")
+  Future<UserModel> updateUserAge({@Query("age") required String age});
 }

@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:music_dabang/models/user/user_age.dart';
 
 part 'user_model.g.dart';
 
@@ -23,11 +24,14 @@ class UserModel extends UserModelBase {
   final int id;
   final String nickname;
   final String? profileImageUrl;
+  @JsonKey(defaultValue: null)
+  final UserAge? userAge;
 
   UserModel({
     required this.id,
     required this.nickname,
     required this.profileImageUrl,
+    this.userAge,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>

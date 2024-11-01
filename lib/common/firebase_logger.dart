@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:music_dabang/models/user/user_age.dart';
 import 'package:music_dabang/models/user/user_model.dart';
 
 class FirebaseLogger {
@@ -66,8 +67,16 @@ class FirebaseLogger {
   /// 로그인 성공 기록
   static Future<void> initUser(UserModel user) async {
     await FirebaseAnalytics.instance.setUserId(id: user.id.toString());
+    await setUserAge(user.userAge);
     await FirebaseAnalytics.instance.logLogin(loginMethod: 'kakao');
     await FirebaseAnalytics.instance.logEvent(name: 'init_user');
+  }
+
+  static Future<void> setUserAge(UserAge? userAge) async {
+    await FirebaseAnalytics.instance.setUserProperty(
+      name: 'age',
+      value: userAge?.name ?? "null",
+    );
   }
 
   /// 최근 검색어 사용

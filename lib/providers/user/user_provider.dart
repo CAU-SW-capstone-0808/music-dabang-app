@@ -4,6 +4,7 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:music_dabang/common/firebase_logger.dart';
 import 'package:music_dabang/common/utils.dart';
 import 'package:music_dabang/models/user/token_model.dart';
+import 'package:music_dabang/models/user/user_age.dart';
 import 'package:music_dabang/models/user/user_join_model.dart';
 import 'package:music_dabang/models/user/user_login_model.dart';
 import 'package:music_dabang/models/user/user_model.dart';
@@ -216,6 +217,14 @@ class UserStateNotifier extends StateNotifier<UserModelBase> {
     } catch (e) {
       print(e);
       state = UserModelError('로그아웃에 실패했습니다.');
+    }
+  }
+
+  Future<UserModelBase> updateUserAge(UserAge age) async {
+    try {
+      return state = await userRepository.updateUserAge(age: age.name);
+    } catch (e) {
+      return state = UserModelError("나이 정보 업데이트에 실패했습니다.");
     }
   }
 
