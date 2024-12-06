@@ -218,7 +218,7 @@ class _FandomBoardScreenState extends ConsumerState<FandomBoardScreen>
         ],
       ),
       floatingActionButton: buildWritingButton(
-        onWritingPagePressed: () {}, // 글쓰기 버튼
+        onWritingPagePressed: () {context.goNamed('writing-post');}, // 글쓰기 버튼
       ),
     );
   }
