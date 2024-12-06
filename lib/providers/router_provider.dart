@@ -7,13 +7,18 @@ import 'package:go_router/go_router.dart';
 import 'package:music_dabang/common/firebase_route_observer.dart';
 import 'package:music_dabang/models/user/user_model.dart';
 import 'package:music_dabang/providers/user/user_provider.dart';
+import 'package:music_dabang/screens/fandomscreen/fandom_board_screen.dart';
+import 'package:music_dabang/screens/fandomscreen/fandom_home_screen.dart';
+import 'package:music_dabang/screens/fandomscreen/fandom_select_screen.dart';
+import 'package:music_dabang/screens/fandomscreen/post_detail_screen.dart';
+import 'package:music_dabang/screens/fandomscreen/writing_post_screen.dart';
 import 'package:music_dabang/screens/login/login_home_screen.dart';
 import 'package:music_dabang/screens/login/phone_join_screen.dart';
 import 'package:music_dabang/screens/login/phone_login_screen.dart';
 import 'package:music_dabang/screens/main_screen.dart';
 import 'package:music_dabang/screens/search_screen.dart';
+import 'package:music_dabang/screens/selecting_singer_screen.dart';
 import 'package:music_dabang/screens/splash_screen.dart';
-import 'package:music_dabang/screens/user_age_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) async {
@@ -31,14 +36,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     } else if (user is UserModelNone || user is UserModelError) {
       redirectTo = '/login';
     } else if (user is UserModel) {
-      if (user.userAge != null) {
-        if (currentPath == '/login' ||
-            currentPath == '/splash' ||
-            currentPath == '/user-age') {
-          redirectTo = '/';
-        }
-      } else {
-        redirectTo = '/user-age';
+      if (currentPath == '/login' || currentPath == '/splash') {
+        redirectTo = '/';
       }
     }
 
@@ -66,15 +65,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
-        path: '/user-age',
-        name: UserAgeScreen.routeName,
-        builder: (context, state) => const UserAgeScreen(),
-        pageBuilder: (context, state) => createSlideGoRoute(
-          const UserAgeScreen(),
-          name: UserAgeScreen.routeName,
-        ),
-      ),
-      GoRoute(
         path: '/',
         name: MainScreen.routeName,
         builder: (context, state) => const MainScreen(),
@@ -91,6 +81,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(
+        path: '/selecting-singer',
+        name: SelectingSingerScreen.routeName,
+        builder: (context, state) => const SelectingSingerScreen(),
+      ),
+      GoRoute(
         path: '/login',
         name: LoginHomeScreen.routeName,
         builder: (context, state) => const LoginHomeScreen(),
@@ -104,6 +99,38 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'join',
                 name: PhoneJoinScreen.routeName,
                 builder: (context, state) => const PhoneJoinScreen(),
+              ),
+            ],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/fandom-select',
+        name: FandomSelectScreen.routeName,
+        builder: (context, state) => const FandomSelectScreen(),
+      ),
+      GoRoute(
+        path: '/fandom-home',
+        name: FandomHomeScreen.routeName,
+        builder: (context, state) => const FandomHomeScreen(),
+        routes: [
+          GoRoute(
+            path: 'fandom-board',
+            name: FandomBoardScreen.routeName,
+            builder: (context, state) => const FandomBoardScreen(),
+            routes: [
+              GoRoute(
+                path: 'writing-post',
+                name: WritingPostScreen.routeName,
+                builder: (context, state) => WritingPostScreen(),
+              ),
+              GoRoute(
+                path: 'post-detail',
+                name: PostDetailScreen.routeName,
+                builder: (context, state) {
+                  final post = state.extra as Map<String, dynamic>;
+                  return PostDetailScreen(post: post);
+                },
               ),
             ],
           ),
