@@ -301,6 +301,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     Widget scrollView = CustomScrollView(
       slivers: [
+        const SliverToBoxAdapter(child: SizedBox(height: 8)),
         SliverAppBar(
           title: const LogoTitle(),
           centerTitle: false,
