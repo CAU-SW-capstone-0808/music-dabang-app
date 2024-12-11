@@ -323,7 +323,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
           floating: true,
           snap: true,
-          expandedHeight: 12,
           backgroundColor: Colors.white,
           elevation: 0,
           bottom: PreferredSize(

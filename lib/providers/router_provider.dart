@@ -17,7 +17,6 @@ import 'package:music_dabang/screens/login/phone_join_screen.dart';
 import 'package:music_dabang/screens/login/phone_login_screen.dart';
 import 'package:music_dabang/screens/main_screen.dart';
 import 'package:music_dabang/screens/search_screen.dart';
-import 'package:music_dabang/screens/selecting_singer_screen.dart';
 import 'package:music_dabang/screens/splash_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -78,12 +77,20 @@ final routerProvider = Provider<GoRouter>((ref) {
               name: SearchScreen.routeName,
             ),
           ),
+          GoRoute(
+            path: 'writing-post',
+            name: WritingPostScreen.routeName,
+            builder: (context, state) => WritingPostScreen(),
+          ),
+          GoRoute(
+            path: 'post-detail',
+            name: PostDetailScreen.routeName,
+            builder: (context, state) {
+              final post = state.extra as Map<String, dynamic>;
+              return PostDetailScreen(post: post);
+            },
+          ),
         ],
-      ),
-      GoRoute(
-        path: '/selecting-singer',
-        name: SelectingSingerScreen.routeName,
-        builder: (context, state) => const SelectingSingerScreen(),
       ),
       GoRoute(
         path: '/login',
@@ -113,28 +120,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/fandom-home',
         name: FandomHomeScreen.routeName,
         builder: (context, state) => const FandomHomeScreen(),
-        routes: [
-          GoRoute(
-            path: 'fandom-board',
-            name: FandomBoardScreen.routeName,
-            builder: (context, state) => const FandomBoardScreen(),
-            routes: [
-              GoRoute(
-                path: 'writing-post',
-                name: WritingPostScreen.routeName,
-                builder: (context, state) => WritingPostScreen(),
-              ),
-              GoRoute(
-                path: 'post-detail',
-                name: PostDetailScreen.routeName,
-                builder: (context, state) {
-                  final post = state.extra as Map<String, dynamic>;
-                  return PostDetailScreen(post: post);
-                },
-              ),
-            ],
-          ),
-        ],
+        routes: [],
       ),
     ],
   );

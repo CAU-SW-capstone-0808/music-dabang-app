@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:music_dabang/providers/secure_storage_provider.dart';
+import 'package:synchronized/synchronized.dart';
 
 final secretValueProvider =
     StateNotifierProviderFamily<SecretValueStateNotifier, String?, String>(
@@ -16,6 +17,7 @@ final secretValueProvider =
 class SecretValueStateNotifier extends StateNotifier<String?> {
   final String key;
   final FlutterSecureStorage secureStorage;
+  final _lock = Lock();
   DateTime? _lastFetchTime;
 
   SecretValueStateNotifier({
@@ -26,7 +28,10 @@ class SecretValueStateNotifier extends StateNotifier<String?> {
   Future<String?> fetch() async {
     try {
       _lastFetchTime = DateTime.now();
-      return state = await secureStorage.read(key: key);
+      await _lock.synchronized(() async {
+        state = await secureStorage.read(key: key);
+      });
+      return state;
     } catch (e) {
       debugPrint('Failed to fetch secret key: $key value: $e');
       await clearAll();
@@ -39,14 +44,16 @@ class SecretValueStateNotifier extends StateNotifier<String?> {
     if (_lastFetchTime == null ||
         state == null ||
         DateTime.now().difference(_lastFetchTime!) > duration) {
-      return fetch();
+      return await fetch();
     }
     return state;
   }
 
   Future<void> setValue(String value) async {
     try {
-      await secureStorage.write(key: key, value: value);
+      await _lock.synchronized(() async {
+        await secureStorage.write(key: key, value: value);
+      });
       state = value;
     } catch (e) {
       debugPrint('Failed to set secret key: $key value: $e');
@@ -55,12 +62,16 @@ class SecretValueStateNotifier extends StateNotifier<String?> {
   }
 
   Future<void> clearAll() async {
-    await secureStorage.deleteAll();
+    await _lock.synchronized(() async {
+      await secureStorage.deleteAll();
+    });
     state = null;
   }
 
   Future<void> clear() async {
-    await secureStorage.delete(key: key);
+    await _lock.synchronized(() async {
+      await secureStorage.delete(key: key);
+    });
     state = null;
   }
 }
