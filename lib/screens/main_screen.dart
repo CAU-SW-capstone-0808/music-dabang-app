@@ -11,6 +11,7 @@ import 'package:music_dabang/providers/bottom_nav_provider.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
 import 'package:music_dabang/providers/user/user_provider.dart';
 import 'package:music_dabang/screens/home_screen.dart';
+import 'package:music_dabang/screens/fandomscreen/fandom_select_screen.dart';
 import 'package:music_dabang/screens/music_player_screen.dart';
 import 'package:music_dabang/screens/my_music_list_screen.dart';
 
@@ -66,9 +67,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     return PopScope(
       canPop: !musicPlayerState.full && canExitByAsk,
       onPopInvokedWithResult: (_, __) {
-        if (ref.read(currentPlayingMusicProvider.notifier).isFullScreen) {
-          return;
-        }
         if (musicPlayerState == MusicDabangPlayerState.expanded) {
           ref.read(musicPlayerStatusProvider.notifier).status =
               MusicDabangPlayerState.collapsed;
@@ -100,9 +98,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       userProfileImageUrl: user.profileImageUrl,
                       selectedIndex: navIndex,
                       onTap: (x) {
-                        if (x < 2) {
+                        if (x < 3) {
                           ref.read(bottomNavProvider.notifier).select(x);
-                        } else if (x == 2 && kDebugMode) {
+                        } else if (x == 3 && kDebugMode) {
                           showConfirmDialog(
                             context,
                             title: '로그아웃하시겠습니까?',
@@ -120,7 +118,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         body: Stack(
           children: [
             if (navIndex == 0) const HomeScreen(),
-            if (navIndex == 1) const MyMusicListScreen(),
+            if (navIndex == 1) const FandomSelectScreen(),
+            if (navIndex == 2) const MyMusicListScreen(),
             // Align(
             //   heightFactor: currentPlaying != null ? 1 : 0,
             //   child: Opacity(
