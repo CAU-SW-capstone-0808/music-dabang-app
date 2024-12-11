@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import 'data.dart';
+import 'package:music_dabang/models/post/post_model.dart';
+import 'package:music_dabang/providers/post/post_list_provider.dart';
+import 'package:music_dabang/screens/fandomscreen/post_detail_screen.dart';
 
 class FandomBoardScreen extends ConsumerStatefulWidget {
   static const routeName = 'fandom-board';
@@ -18,6 +19,9 @@ class _FandomBoardScreenState extends ConsumerState<FandomBoardScreen>
   late ScrollController all_posts_scrollController; //모든 게시물 확인 페이지 스크롤 컨트롤러
   late ScrollController popular_post_scrollController; //인기 게시물 확인 페이지 스크롤 컨트롤러
   late TabController tabController; //두 탭을 관리하기 위한 탭 컨트롤러
+
+  String allPostsQuery = ''; // 모든 게시물 검색어
+  String popularPostsQuery = ''; // 인기 게시물 검색어
 
   /// 검색창을 생성하는 위젯
   /// [hintText]: 검색창에 표시될 힌트 텍스트
@@ -49,9 +53,8 @@ class _FandomBoardScreenState extends ConsumerState<FandomBoardScreen>
   /// [onItemTap]: 게시물을 클릭했을 때 호출될 함수
   /// [scrollController]: 스크롤을 제어하기 위한 컨트롤러
   Widget buildPostList({
-    required List<Map<String, dynamic>> posts, //게시물
+    required List<PostModel> posts, //게시물
     bool isLoading = false,
-    required void Function(Map<String, dynamic>) onItemTap,
     required ScrollController scrollController,
   }) {
     if (posts.isEmpty) {
@@ -90,15 +93,22 @@ class _FandomBoardScreenState extends ConsumerState<FandomBoardScreen>
             ),
             child: ListTile(
               title: Text(
-                post['title'] ?? '', // 게시물 제목
+                post.title,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              subtitle: Text('좋아요: ${post['likes']}'), // 좋아요 개수
+              subtitle: Text('좋아요: ${post.likes}'), // 좋아요 개수
               trailing: Text(
-                post['createdTime']?.split('T')[0] ?? '', // 생성 날짜
+                post.createdAt.toString(), // 생성 날짜
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
-              onTap: () => onItemTap(post), // 게시물 클릭 시 해당 포스트로 이동하도록 만든다.
+              onTap: () {
+                context.pushNamed(
+                  PostDetailScreen.routeName,
+                  queryParameters: {
+                    'postId': post.id.toString(),
+                  },
+                );
+              }, // 게시물 클릭 시 해당 포스트로 이동하도록 만든다.
             ),
           );
         },
@@ -114,37 +124,6 @@ class _FandomBoardScreenState extends ConsumerState<FandomBoardScreen>
       label: const Text('글쓰기'),
       icon: const Icon(Icons.edit),
     );
-    // return SizedBox(
-    //   width: 140.0,
-    //   height: 56.0,
-    //   child: FloatingActionButton(
-    //     onPressed: onWritingPagePressed, // 클릭 시 호출
-    //     shape: RoundedRectangleBorder(
-    //       borderRadius: BorderRadius.circular(16.0),
-    //     ),
-    //     backgroundColor: Colors.deepOrange,
-    //     child: const Row(
-    //       mainAxisAlignment: MainAxisAlignment.center,
-    //       children: [
-    //         Icon(
-    //           Icons.edit,
-    //           size: 20,
-    //           color: Colors.white,
-    //         ),
-    //         SizedBox(width: 8),
-    //         Text(
-    //           '글쓰기',
-    //           style: TextStyle(
-    //             fontWeight: FontWeight.bold,
-    //             fontSize: 16,
-    //             fontFamily: 'Roboto',
-    //             color: Colors.white,
-    //           ),
-    //         ),
-    //       ],
-    //     ),
-    //   ),
-    // );
   }
 
   @override
@@ -165,68 +144,92 @@ class _FandomBoardScreenState extends ConsumerState<FandomBoardScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          '게시판',
-          style: TextStyle(
-            fontSize: 32.0,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Roboto',
+    final posts = ref.watch(postListProvider);
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            '게시판',
+            style: TextStyle(
+              fontSize: 32.0,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Roboto',
+            ),
+          ),
+          bottom: TabBar(
+            controller: tabController,
+            tabs: const [
+              Tab(text: '모든 게시물'),
+              Tab(text: '인기 게시물'),
+            ],
           ),
         ),
-        bottom: TabBar(
+        floatingActionButton: buildWritingButton(
+          onWritingPagePressed: () {
+            context.goNamed('writing-post');
+          }, // 글쓰기 버튼
+        ),
+        body: TabBarView(
           controller: tabController,
-          tabs: const [
-            Tab(text: '모든 게시물'),
-            Tab(text: '인기 게시물'),
+          children: [
+            /// 모든 게시물
+            Column(
+              children: [
+                buildSearchBar(
+                  hintText: '모든 게시물 검색...', // 모든 게시물 검색창
+                  onSearchChanged: (query) {
+                    setState(() {
+                      allPostsQuery = query;
+                    });
+                  },
+                ),
+                Expanded(
+                  child: buildPostList(
+                    posts: posts.where((e) {
+                      if (allPostsQuery.isEmpty) {
+                        return true;
+                      } else {
+                        return e.title.contains(allPostsQuery);
+                      }
+                    }).toList(),
+                    scrollController: all_posts_scrollController,
+                  ),
+                ),
+              ],
+            ),
+
+            /// 인기 게시물
+            Column(
+              children: [
+                buildSearchBar(
+                  hintText: '인기 게시물 검색...', // 인기 게시물 검색창
+                  onSearchChanged: (query) {
+                    setState(() {
+                      popularPostsQuery = query;
+                    });
+                  },
+                ),
+                Expanded(
+                  child: buildPostList(
+                    posts: posts.where((e) {
+                      if (popularPostsQuery.isEmpty) {
+                        return true;
+                      } else {
+                        return e.title.contains(popularPostsQuery);
+                      }
+                    }).where((e) {
+                      return e.likes > 10;
+                    }).toList(),
+                    scrollController: popular_post_scrollController,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
-      ),
-      floatingActionButton: buildWritingButton(
-        onWritingPagePressed: () {
-          context.goNamed('writing-post');
-        }, // 글쓰기 버튼
-      ),
-      body: TabBarView(
-        controller: tabController,
-        children: [
-          Column(
-            children: [
-              buildSearchBar(
-                hintText: '모든 게시물 검색...', // 모든 게시물 검색창
-                onSearchChanged: (query) {},
-              ),
-              Expanded(
-                child: buildPostList(
-                  //모든 게시물 데이터
-                  posts: posts,
-                  onItemTap: (post) {
-                    context.pushNamed('post-detail', extra: post);
-                  },
-                  scrollController: all_posts_scrollController,
-                ),
-              ),
-            ],
-          ),
-          Column(
-            children: [
-              buildSearchBar(
-                hintText: '인기 게시물 검색...', // 인기 게시물 검색창
-                onSearchChanged: (query) {},
-              ),
-              Expanded(
-                child: buildPostList(
-                  posts: posts, // 인기 게시물 데이터
-                  onItemTap: (post) {
-                    context.pushNamed('post-detail', extra: post);
-                  },
-                  scrollController: popular_post_scrollController,
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }

@@ -1,37 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:music_dabang/models/post/post_comment_model.dart';
+import 'package:music_dabang/models/post/post_model.dart';
+import 'package:music_dabang/providers/post/post_like_provider.dart';
+import 'package:music_dabang/providers/post/post_list_provider.dart';
 
 class PostDetailScreen extends ConsumerStatefulWidget {
   static const routeName = 'post-detail';
 
-  final Map<String, dynamic> post;
+  final int postId;
 
-  const PostDetailScreen({super.key, required this.post});
+  const PostDetailScreen({
+    super.key,
+    required this.postId,
+  });
 
   @override
   ConsumerState<PostDetailScreen> createState() => _PostDetailScreenState();
 }
 
 class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
-  late bool isLiked;
-  late int likes;
-
   final TextEditingController _commentController = TextEditingController();
   final Map<int, TextEditingController> _replyControllers = {};
   int? currentReplyTp;
 
-  @override
-  void initState() {
-    super.initState();
-    isLiked = widget.post['isLiked'] ?? false;
-    likes = widget.post['likes'] ?? 0;
-  }
-
   ///[post] : 특정 게시물에 대한 제목, 내용, 댓글, 답글 정보를 가진 데이터
   ///[onLikeToggle] : 좋아요 버튼(하트 버튼)을 눌렀을 때 backend 쪽의 좋아요 수에 영향을 주기 위한 함수
   Widget _buildShowMainPost({
-    required Map<String, dynamic> post,
-    required Function() onLikeToggle,
+    required PostModel post,
+    required bool isLiked,
   }) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -43,7 +40,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             children: [
               Expanded(
                 child: Text(
-                  post['title'].isNotEmpty ? post['title'] : '제목이 없습니다',
+                  post.title ?? '',
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -54,9 +51,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            post['createdTime'].isNotEmpty
-                ? '작성 시간: ${post['createdTime']}'
-                : '작성 시간이 없습니다',
+            '작성 시간: ${post.createdAt}',
             style: const TextStyle(fontSize: 14, color: Colors.grey),
           ),
           const SizedBox(height: 16),
@@ -65,14 +60,14 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             children: [
               Expanded(
                 child: Text(
-                  post['content'].isNotEmpty ? post['content'] : '내용이 없습니다',
+                  post.content,
                   style: const TextStyle(
                     fontSize: 18,
                   ),
                 ),
               ),
               Text(
-                '$likes',
+                '${post.likes}',
                 style: const TextStyle(fontSize: 16),
               ),
               IconButton(
@@ -80,16 +75,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   isLiked ? Icons.favorite : Icons.favorite_border,
                   color: isLiked ? Colors.red : Colors.grey,
                 ),
-                onPressed: () => setState(() {
-                  onLikeToggle;
-                  if (isLiked) {
-                    isLiked = false;
-                    likes -= 1;
-                  } else {
-                    isLiked = true;
-                    likes += 1;
-                  }
-                }), // 좋아요 토글 콜백
+                onPressed: () {
+                  ref
+                      .read(postLikedProvider(widget.postId).notifier)
+                      .toggleLike();
+                }, // 좋아요 토글 콜백
               ),
             ],
           ),
@@ -100,10 +90,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   Widget _buildShowComment({
-    required List<Map<String, dynamic>>? comments,
+    required List<PostCommentModel> comments,
     required Function(String) onReplyPressed,
   }) {
-    if (comments == null || comments.isEmpty) {
+    if (comments.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(16.0),
         child: Text(
@@ -122,8 +112,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           itemCount: comments.length,
           itemBuilder: (content, index) {
             final comment = comments[index];
-            final replies =
-                List<Map<String, dynamic>>.from(comment['replies'] ?? []);
+            final replies = comment.replies;
             final isReplying = currentReplyTp == index;
 
             _replyControllers.putIfAbsent(index, () => TextEditingController());
@@ -141,13 +130,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       });
                     },
                     child: Text(
-                      comment['content'] * 10 ?? '내용이 없습니다',
+                      comment.content,
                       style: const TextStyle(fontSize: 16),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '작성 시간: ${comment['createdTime'] ?? '시간 없음'}',
+                    '작성 시간: ${comment.createdAt}',
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                   const SizedBox(height: 8),
@@ -229,7 +218,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     }
   }
 
-  Widget _buildShowReplies({required List<Map<String, dynamic>> replies}) {
+  Widget _buildShowReplies({required List<PostCommentModel> replies}) {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -243,12 +232,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                reply['content'] ?? '답글이 없습니다',
+                reply.content,
                 style: const TextStyle(fontSize: 14, color: Colors.black87),
               ),
               const SizedBox(height: 2),
               Text(
-                '작성 시간: ${reply['createdTime'] ?? '시간 없음'}',
+                '작성 시간: ${reply.createdAt}',
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ],
@@ -312,7 +301,27 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    ref
+        .read(postListProvider.notifier)
+        .fetchOne(widget.postId)
+        .catchError((error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('게시글을 불러오는 중 오류가 발생했습니다: $error'),
+        ),
+      );
+      return error;
+    });
+    ref.read(postLikedProvider(widget.postId).notifier).fetch();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final likedPost = ref.watch(postLikedProvider(widget.postId));
+    final posts = ref.watch(postListProvider);
+    final post = posts.firstWhere((element) => element.id == widget.postId);
     return Scaffold(
       appBar: AppBar(
         title: const Text('게시글'),
@@ -329,13 +338,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         child: Column(
           children: [
             _buildShowMainPost(
-              post: widget.post,
-              onLikeToggle: () {},
+              post: post,
+              isLiked: likedPost,
             ),
             const Divider(),
             _buildShowComment(
-              comments:
-                  List<Map<String, dynamic>>.from(widget.post['comments']),
+              comments: post?.comments ?? [],
               onReplyPressed: (value) {},
             ),
           ],

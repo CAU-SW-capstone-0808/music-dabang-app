@@ -6,6 +6,7 @@ part 'post_comment_model.g.dart';
 @JsonSerializable()
 class PostCommentModel {
   final int id;
+  final String content;
   final UserModel user;
   final int fandomPostId;
   final int? parentId;
@@ -15,6 +16,7 @@ class PostCommentModel {
 
   const PostCommentModel({
     required this.id,
+    required this.content,
     required this.user,
     required this.fandomPostId,
     required this.createdAt,

@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:music_dabang/models/post/post_comment_model.dart';
 import 'package:music_dabang/models/user/user_model.dart';
 
 part 'post_model.g.dart';
@@ -11,6 +12,7 @@ class PostModel {
   final String title;
   final String content;
   final int likes;
+  final List<PostCommentModel> comments;
   final DateTime createdAt;
   final DateTime editedAt;
 
@@ -21,6 +23,7 @@ class PostModel {
     required this.title,
     required this.content,
     required this.likes,
+    required this.comments,
     required this.createdAt,
     required this.editedAt,
   });

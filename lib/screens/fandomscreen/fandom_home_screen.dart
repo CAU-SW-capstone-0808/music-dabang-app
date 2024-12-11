@@ -23,6 +23,7 @@ class FandomHomeScreen extends ConsumerStatefulWidget {
 
 class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
   String artistSearchQuery = '';
+  final artistsScrollController = ScrollController();
 
   /// 상단 인사말
   Widget greeting({required String artistName}) {
@@ -101,7 +102,6 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
   Widget buildPopularPosts({
     required String title,
     required List<PostModel> items,
-    required void Function(Map<String, dynamic> item) onItemTap,
     required void Function()? onViewAllPressed,
   }) {
     return Column(
@@ -152,25 +152,27 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
             /// 인기글 목록
             child: Column(
               children: items.map((p) {
-                return InkWell(
-                  onTap: () {},
-                  child: Container(
-                    child: ListTile(
-                      title: Text(
-                        p.title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      subtitle: Text('좋아요: ${p.likes}'),
-                      trailing: Text(
-                        p.createdAt.toString().split('T')[0],
-                        style:
-                            const TextStyle(fontSize: 14, color: Colors.black),
-                      ),
+                return ListTile(
+                  title: Text(
+                    p.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
+                  subtitle: Text('좋아요: ${p.likes}'),
+                  trailing: Text(
+                    p.createdAt.toString().split('T')[0],
+                    style: const TextStyle(fontSize: 14, color: Colors.black),
+                  ),
+                  onTap: () {
+                    context.goNamed(
+                      'post-detail',
+                      queryParameters: {
+                        'postId': p.id.toString(),
+                      },
+                    );
+                  },
                 );
               }).toList(),
               // children: List.generate(
@@ -275,7 +277,10 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ArtistSelector(searchQuery: artistSearchQuery),
+                ArtistSelector(
+                  scrollController: artistsScrollController,
+                  searchQuery: artistSearchQuery,
+                ),
                 const SizedBox(height: 16),
                 const Text(
                   "좋아하는 가수를 선택해주세요!",
@@ -318,7 +323,7 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
                 child: LogoTitle(),
               ),
               const SizedBox(height: 12),
-              const ArtistSelector(),
+              ArtistSelector(scrollController: artistsScrollController),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
@@ -369,9 +374,6 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
                     buildPopularPosts(
                       title: '인기 게시글',
                       items: posts,
-                      onItemTap: (item) {
-                        context.goNamed('post-detail', extra: item);
-                      }, // 게시글 데이터 전달
                       onViewAllPressed: () {
                         context.goNamed('fandom-board');
                       }, // 모든 게시물 보기 눌렀을 때 그 페이지로 이동

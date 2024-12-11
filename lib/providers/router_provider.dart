@@ -95,8 +95,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'post-detail',
             name: PostDetailScreen.routeName,
             builder: (context, state) {
-              final post = state.extra as Map<String, dynamic>;
-              return PostDetailScreen(post: post);
+              return PostDetailScreen(
+                  postId: int.parse(state.uri.queryParameters['postId']!));
             },
           ),
         ],

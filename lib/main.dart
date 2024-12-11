@@ -70,6 +70,7 @@ class MusicDabang extends ConsumerWidget {
         // routeInformationParser: router.routeInformationParser,
         // routeInformationProvider: router.routeInformationProvider,
         theme: ThemeData(
+          primaryColor: ColorTable.kPrimaryColor,
           scaffoldBackgroundColor: Colors.white,
           appBarTheme: const AppBarTheme(
             backgroundColor: Colors.white,
@@ -91,8 +92,11 @@ class MusicDabang extends ConsumerWidget {
               overlayRadius: 16.0,
             ),
           ),
-          colorScheme:
-              ColorScheme.fromSeed(seedColor: ColorTable.kPrimaryColor),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: ColorTable.kPrimaryColor,
+            primary: ColorTable.kPrimaryColor,
+            secondary: ColorTable.red,
+          ),
           fontFamily: 'Roboto',
           useMaterial3: true,
           textTheme: const TextTheme(),

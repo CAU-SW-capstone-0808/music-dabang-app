@@ -7,10 +7,12 @@ import 'package:music_dabang/providers/music/artists_provider.dart';
 import 'package:music_dabang/providers/post/fandom_provider.dart';
 
 class ArtistSelector extends ConsumerWidget {
+  final ScrollController? scrollController;
   final String searchQuery;
 
   const ArtistSelector({
     super.key,
+    this.scrollController,
     this.searchQuery = '',
   });
 
@@ -30,6 +32,7 @@ class ArtistSelector extends ConsumerWidget {
     double unselectedOpacity = selectedArtistId != null ? 0.5 : 1.0;
 
     return SingleChildScrollView(
+      controller: scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -65,6 +68,11 @@ class ArtistSelector extends ConsumerWidget {
             (e) {
               return BouncingWidget(
                 onPressed: () {
+                  scrollController?.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
                   ref.read(selectedArtistIdProvider.notifier).select(e.id);
                 },
                 child: Padding(
