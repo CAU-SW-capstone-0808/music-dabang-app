@@ -17,7 +17,7 @@ final secretValueProvider =
 class SecretValueStateNotifier extends StateNotifier<String?> {
   final String key;
   final FlutterSecureStorage secureStorage;
-  final _lock = Lock();
+  static final _lock = Lock();
   DateTime? _lastFetchTime;
 
   SecretValueStateNotifier({

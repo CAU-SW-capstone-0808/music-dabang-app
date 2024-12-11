@@ -1,8 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:music_dabang/components/logo_title.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:music_dabang/components/logo_title.dart';
 import 'package:music_dabang/screens/fandomscreen/fandom_select_screen.dart';
+
 import 'data.dart';
 
 class FandomHomeScreen extends ConsumerStatefulWidget {
@@ -22,7 +24,7 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
           artistName,
           style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
         ),
-        const Flexible(
+        const Expanded(
           child: Text(
             " 팬클럽에 오신 것을 환영합니다.",
             style: TextStyle(fontSize: 16.0),
@@ -135,7 +137,8 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
                 return GestureDetector(
                   onTap: () {
                     onItemTap(item);
-                  }, //특정 아이템을 선택 시 post_detail_screen에 post 정보를 전달하고 화면을 전환할 함수 onItemTap.
+                  },
+                  //특정 아이템을 선택 시 post_detail_screen에 post 정보를 전달하고 화면을 전환할 함수 onItemTap.
                   child: ListTile(
                     title: Text(
                       item['title'] ?? '',
@@ -213,67 +216,117 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 12),
-            const LogoTitle(),
-            const SizedBox(height: 4),
-            greeting(artistName: "임영웅"),
-            const SizedBox(height: 8),
-            // 공지사항 섹션
-            buildBlock(
-              title: '공지사항',
-              items: announcements,
-              itemBuilder: (item) => ListTile(
-                title: Text(item['title'] ?? ''),
-                subtitle: Text(item['content'] ?? ''),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 12),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: LogoTitle(),
               ),
-            ),
-
-            const SizedBox(height: 15),
-
-            // 일정 섹션
-            buildBlock(
-              title: '일정',
-              items: schedules,
-              itemBuilder: (item) => ListTile(
-                title: Text(item['event'] ?? ''),
-                trailing: Text(item['date'] ?? ''),
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            // 뉴스 섹션
-            buildBlock(
-              title: '뉴스',
-              items: news,
-              itemBuilder: (item) => ListTile(
-                title: Text(
-                  item['headline'] ?? '',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+              const SizedBox(height: 12),
+              SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (int i = 0; i < 20; i++)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: Column(
+                          children: [
+                            Opacity(
+                              opacity: i == 0 ? 1.0 : 0.5,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(32.0),
+                                child: CachedNetworkImage(
+                                  imageUrl:
+                                      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHcQ6jliLxR8jye7b1nUq5ZFo0qWEtHqW7Rg&s",
+                                  width: 64,
+                                  height: 64,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '임영웅',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: i == 0
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
-                subtitle: Text(item['details'] ?? ''),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 4),
+                    greeting(artistName: "임영웅"),
+                    const SizedBox(height: 8),
+                    // 공지사항 섹션
+                    buildBlock(
+                      title: '공지사항',
+                      items: announcements,
+                      itemBuilder: (item) => ListTile(
+                        title: Text(item['title'] ?? ''),
+                        subtitle: Text(item['content'] ?? ''),
+                      ),
+                    ),
 
-            const SizedBox(height: 15),
+                    const SizedBox(height: 15),
 
-            // 인기 게시글 섹션
-            buildPopularPosts(
-              title: '인기 게시글',
-              items: posts,
-              onItemTap: (item) {
-                context.goNamed('post-detail', extra: item);
-              }, // 게시글 데이터 전달
-              onViewAllPressed: () {
-                context.goNamed('fandom-board');
-              }, // 모든 게시물 보기 눌렀을 때 그 페이지로 이동
-            ),
-            const SizedBox(height: 20),
-          ],
+                    // 일정 섹션
+                    buildBlock(
+                      title: '일정',
+                      items: schedules,
+                      itemBuilder: (item) => ListTile(
+                        title: Text(item['event'] ?? ''),
+                        trailing: Text(item['date'] ?? ''),
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // 뉴스 섹션
+                    buildBlock(
+                      title: '뉴스',
+                      items: news,
+                      itemBuilder: (item) => ListTile(
+                        title: Text(
+                          item['headline'] ?? '',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(item['details'] ?? ''),
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // 인기 게시글 섹션
+                    buildPopularPosts(
+                      title: '인기 게시글',
+                      items: posts,
+                      onItemTap: (item) {
+                        context.goNamed('post-detail', extra: item);
+                      }, // 게시글 데이터 전달
+                      onViewAllPressed: () {
+                        context.goNamed('fandom-board');
+                      }, // 모든 게시물 보기 눌렀을 때 그 페이지로 이동
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
