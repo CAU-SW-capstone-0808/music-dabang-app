@@ -11,6 +11,7 @@ import 'package:music_dabang/providers/bottom_nav_provider.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
 import 'package:music_dabang/providers/user/user_provider.dart';
 import 'package:music_dabang/screens/home_screen.dart';
+import 'package:music_dabang/screens/fandomscreen/fandom_select_screen.dart';
 import 'package:music_dabang/screens/music_player_screen.dart';
 import 'package:music_dabang/screens/my_music_list_screen.dart';
 import 'package:music_dabang/screens/radio/radio_channel_list_screen.dart';
@@ -112,6 +113,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         body: Stack(
           children: [
             if (navIndex == 0) const HomeScreen(),
+            if (navIndex == 1) const FandomSelectScreen(),
             if (navIndex == 2) const RadioChannelListScreen(),
             if (navIndex == 3) const MyMusicListScreen(),
             // Align(
