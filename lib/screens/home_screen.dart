@@ -268,13 +268,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
     var title1 = ph16(
       child: titleLink(
-        title: "임영웅 공연영상",
+        title: "공연영상",
         onPressed: null,
       ),
     );
     var title2 = ph16(
       child: titleLink(
-        title: "임영웅 재생목록",
+        title: "추천 재생목록",
         onPressed: null,
       ),
     );
@@ -343,6 +343,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const CustomSearchBar(
                     autofocus: false,
                     readOnly: true,
+                    hintText: '찾으시는 노래가 있나요?',
                   ),
                   Positioned.fill(
                     child: GestureDetector(

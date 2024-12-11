@@ -1,6 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:music_dabang/common/colors.dart';
+import 'package:music_dabang/components/logo_title.dart';
 import 'package:music_dabang/screens/radio/components/radio_channel_card.dart';
 import 'package:music_dabang/screens/radio/components/radio_live_card.dart';
 
@@ -56,45 +56,52 @@ class _RadioChannelListScreenState extends State<RadioChannelListScreen> {
       ),
     );
     return Scaffold(
-      backgroundColor: Color(0xFFF6F6F6),
+      backgroundColor: const Color(0xFFF6F6F6),
       body: SingleChildScrollView(
         child: SizedBox(
           width: double.infinity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16.0),
-              titleLabel("진행 중인 방송"),
-              const SizedBox(height: 4.0),
-              radioLiveCard,
-              radioLiveCard,
-              radioLiveCard,
-              const SizedBox(height: 16.0),
-              titleLabel("추천 채널"),
-              CarouselSlider(
-                options: CarouselOptions(
-                  height: 280,
-                  viewportFraction: 0.8,
-                  initialPage: 0,
-                  enableInfiniteScroll: true,
-                  reverse: false,
-                  autoPlay: true,
-                  autoPlayInterval: const Duration(seconds: 8),
-                  autoPlayAnimationDuration: const Duration(milliseconds: 800),
-                  autoPlayCurve: Curves.fastOutSlowIn,
-                  enlargeCenterPage: true,
-                  scrollDirection: Axis.horizontal,
-                  enlargeFactor: 0.2,
+          child: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16.0, 12.0, 0, 0),
+                  child: LogoTitle(),
                 ),
-                items: [
-                  radioChannelCard,
-                  radioChannelCard,
-                  radioChannelCard,
-                  radioChannelCard,
-                  radioChannelCard,
-                ],
-              ),
-            ],
+                const SizedBox(height: 16.0),
+                titleLabel("라이브"),
+                const SizedBox(height: 4.0),
+                radioLiveCard,
+                radioLiveCard,
+                radioLiveCard,
+                const SizedBox(height: 16.0),
+                titleLabel("추천 채널"),
+                CarouselSlider(
+                  options: CarouselOptions(
+                    height: 280,
+                    viewportFraction: 0.8,
+                    initialPage: 0,
+                    enableInfiniteScroll: true,
+                    reverse: false,
+                    autoPlay: true,
+                    autoPlayInterval: const Duration(seconds: 8),
+                    autoPlayAnimationDuration:
+                        const Duration(milliseconds: 800),
+                    autoPlayCurve: Curves.fastOutSlowIn,
+                    enlargeCenterPage: true,
+                    scrollDirection: Axis.horizontal,
+                    enlargeFactor: 0.2,
+                  ),
+                  items: [
+                    radioChannelCard,
+                    radioChannelCard,
+                    radioChannelCard,
+                    radioChannelCard,
+                    radioChannelCard,
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

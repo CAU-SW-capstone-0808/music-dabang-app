@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'data.dart';
 import 'package:go_router/go_router.dart';
+
+import 'data.dart';
 
 class FandomBoardScreen extends ConsumerStatefulWidget {
   static const routeName = 'fandom-board';
@@ -108,37 +109,42 @@ class _FandomBoardScreenState extends ConsumerState<FandomBoardScreen>
   /// 글쓰기 버튼을 생성하는 위젯
   /// [onWritingPagePressed]: 글쓰기 버튼 클릭 시 호출될 함수, writing_post_screen으로 이동할 것.
   Widget buildWritingButton({required Function() onWritingPagePressed}) {
-    return SizedBox(
-      width: 140.0,
-      height: 56.0,
-      child: FloatingActionButton(
-        onPressed: onWritingPagePressed, // 클릭 시 호출
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        backgroundColor: Colors.deepOrange,
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.edit,
-              size: 20,
-              color: Colors.white,
-            ),
-            SizedBox(width: 8),
-            Text(
-              '글쓰기',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                fontFamily: 'Roboto',
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return FloatingActionButton.extended(
+      onPressed: onWritingPagePressed, // 클릭 시 호출
+      label: const Text('글쓰기'),
+      icon: const Icon(Icons.edit),
     );
+    // return SizedBox(
+    //   width: 140.0,
+    //   height: 56.0,
+    //   child: FloatingActionButton(
+    //     onPressed: onWritingPagePressed, // 클릭 시 호출
+    //     shape: RoundedRectangleBorder(
+    //       borderRadius: BorderRadius.circular(16.0),
+    //     ),
+    //     backgroundColor: Colors.deepOrange,
+    //     child: const Row(
+    //       mainAxisAlignment: MainAxisAlignment.center,
+    //       children: [
+    //         Icon(
+    //           Icons.edit,
+    //           size: 20,
+    //           color: Colors.white,
+    //         ),
+    //         SizedBox(width: 8),
+    //         Text(
+    //           '글쓰기',
+    //           style: TextStyle(
+    //             fontWeight: FontWeight.bold,
+    //             fontSize: 16,
+    //             fontFamily: 'Roboto',
+    //             color: Colors.white,
+    //           ),
+    //         ),
+    //       ],
+    //     ),
+    //   ),
+    // );
   }
 
   @override
@@ -177,6 +183,11 @@ class _FandomBoardScreenState extends ConsumerState<FandomBoardScreen>
           ],
         ),
       ),
+      floatingActionButton: buildWritingButton(
+        onWritingPagePressed: () {
+          context.goNamed('writing-post');
+        }, // 글쓰기 버튼
+      ),
       body: TabBarView(
         controller: tabController,
         children: [
@@ -191,7 +202,7 @@ class _FandomBoardScreenState extends ConsumerState<FandomBoardScreen>
                   //모든 게시물 데이터
                   posts: posts,
                   onItemTap: (post) {
-                    context.goNamed('post-detail', extra: post);
+                    context.pushNamed('post-detail', extra: post);
                   },
                   scrollController: all_posts_scrollController,
                 ),
@@ -208,7 +219,7 @@ class _FandomBoardScreenState extends ConsumerState<FandomBoardScreen>
                 child: buildPostList(
                   posts: posts, // 인기 게시물 데이터
                   onItemTap: (post) {
-                    context.goNamed('post-detail', extra: post);
+                    context.pushNamed('post-detail', extra: post);
                   },
                   scrollController: popular_post_scrollController,
                 ),
@@ -216,9 +227,6 @@ class _FandomBoardScreenState extends ConsumerState<FandomBoardScreen>
             ],
           ),
         ],
-      ),
-      floatingActionButton: buildWritingButton(
-        onWritingPagePressed: () {context.goNamed('writing-post');}, // 글쓰기 버튼
       ),
     );
   }

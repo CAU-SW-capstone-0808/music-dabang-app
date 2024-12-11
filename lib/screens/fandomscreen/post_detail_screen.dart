@@ -133,24 +133,17 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          comment['content'] ?? '내용이 없습니다',
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            currentReplyTp =
-                                isReplying ? null : index; // Toggle reply form
-                          });
-                        },
-                        icon: const Icon(Icons.reply),
-                      ),
-                    ],
+                  InkWell(
+                    onTap: () {
+                      setState(() {
+                        currentReplyTp =
+                            isReplying ? null : index; // Toggle reply form
+                      });
+                    },
+                    child: Text(
+                      comment['content'] * 10 ?? '내용이 없습니다',
+                      style: const TextStyle(fontSize: 16),
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -299,9 +292,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(
-                  height:
-                      16), //댓글 추가 버튼이 눌리면 onCommentPressed 함수가 작동하고, 텍스트 필드를 비우며, 원래 화면으로 돌아간다.
+              const SizedBox(height: 16),
+              //댓글 추가 버튼이 눌리면 onCommentPressed 함수가 작동하고, 텍스트 필드를 비우며, 원래 화면으로 돌아간다.
               ElevatedButton(
                 onPressed: () {
                   // Placeholder for adding comment logic
@@ -325,30 +317,29 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       appBar: AppBar(
         title: const Text('게시글'),
       ),
-      body: Column(
-        children: [
-          _buildShowMainPost(
-            post: widget.post,
-            onLikeToggle: () {},
-          ),
-          const Divider(),
-          _buildShowComment(
-            comments: List<Map<String, dynamic>>.from(widget.post['comments']),
-            onReplyPressed: (value) {},
-          ),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: FloatingActionButton(
-                onPressed: () {
-                  _showAddCommentOverlay(context, (value) {});
-                },
-                child: const Icon(Icons.add_comment),
-              ),
+      floatingActionButton: FloatingActionButton.extended(
+        isExtended: true,
+        onPressed: () {
+          _showAddCommentOverlay(context, (value) {});
+        },
+        label: const Text('댓글 추가'),
+        icon: const Icon(Icons.add_comment),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            _buildShowMainPost(
+              post: widget.post,
+              onLikeToggle: () {},
             ),
-          ),
-        ],
+            const Divider(),
+            _buildShowComment(
+              comments:
+                  List<Map<String, dynamic>>.from(widget.post['comments']),
+              onReplyPressed: (value) {},
+            ),
+          ],
+        ),
       ),
     );
   }

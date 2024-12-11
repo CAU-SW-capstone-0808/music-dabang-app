@@ -78,9 +78,18 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
-            path: 'writing-post',
-            name: WritingPostScreen.routeName,
-            builder: (context, state) => WritingPostScreen(),
+            path: 'fandom-board',
+            name: FandomBoardScreen.routeName,
+            builder: (context, state) {
+              return const FandomBoardScreen();
+            },
+            routes: [
+              GoRoute(
+                path: 'writing-post',
+                name: WritingPostScreen.routeName,
+                builder: (context, state) => const WritingPostScreen(),
+              ),
+            ],
           ),
           GoRoute(
             path: 'post-detail',

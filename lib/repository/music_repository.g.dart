@@ -19,6 +19,31 @@ class _MusicRepository implements MusicRepository {
   String? baseUrl;
 
   @override
+  Future<List<ArtistModel>> getArtists() async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final Map<String, dynamic>? _data = null;
+    final _result = await _dio
+        .fetch<List<dynamic>>(_setStreamType<List<ArtistModel>>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              '/artists',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    var value = _result.data!
+        .map((dynamic i) => ArtistModel.fromJson(i as Map<String, dynamic>))
+        .toList();
+    return value;
+  }
+
+  @override
   Future<PageResponseModel> getMainPlaylists({required queries}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};

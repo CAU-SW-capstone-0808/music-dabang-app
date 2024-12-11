@@ -10,6 +10,7 @@ class CustomSearchBar extends StatelessWidget {
   final bool autofocus;
   final bool readOnly;
   final bool showClearButton;
+  final String? hintText;
 
   const CustomSearchBar({
     super.key,
@@ -21,6 +22,7 @@ class CustomSearchBar extends StatelessWidget {
     this.autofocus = false,
     this.readOnly = false,
     this.showClearButton = false,
+    this.hintText,
   });
 
   @override
@@ -42,7 +44,7 @@ class CustomSearchBar extends StatelessWidget {
             color: Color(0xFF121212), // 글자색 설정
           ),
           decoration: InputDecoration(
-            hintText: readOnly ? '찾으시는 노래가 있나요?' : null,
+            hintText: hintText,
             hintStyle: TextStyle(
               fontSize: 22,
               height: 1.25,
@@ -71,8 +73,8 @@ class CustomSearchBar extends StatelessWidget {
               ),
             ),
             filled: true,
-            fillColor:
-                readOnly ? const Color(0xFFEFEFEF) : Colors.white, // 필드 배경색
+            fillColor: readOnly ? const Color(0xFFEFEFEF) : Colors.white,
+            // 필드 배경색
             contentPadding:
                 const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
             enabledBorder: OutlineInputBorder(

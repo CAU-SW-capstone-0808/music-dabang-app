@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_dabang/common/consts.dart';
 import 'package:music_dabang/models/common/page_response_model.dart';
+import 'package:music_dabang/models/music/artist_model.dart';
 import 'package:music_dabang/models/music/playlist_item_model.dart';
 import 'package:music_dabang/providers/dio_provider.dart';
 import 'package:retrofit/retrofit.dart';
@@ -16,6 +17,9 @@ final musicRepositoryProvider = Provider<MusicRepository>((ref) {
 @RestApi()
 abstract class MusicRepository {
   factory MusicRepository(Dio dio, {String baseUrl}) = _MusicRepository;
+
+  @GET('/artists')
+  Future<List<ArtistModel>> getArtists();
 
   /// 시스템 메인에 보이는 플레이리스트를 가져옵니다.
   @GET('/playlists/main')

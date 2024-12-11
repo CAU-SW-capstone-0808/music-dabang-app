@@ -6,10 +6,14 @@ part 'artist_model.g.dart';
 class ArtistModel {
   final int id;
   final String name;
+  final String description;
+  final String profileImageUrl;
 
   ArtistModel({
     required this.id,
     required this.name,
+    required this.description,
+    required this.profileImageUrl,
   });
 
   factory ArtistModel.fromJson(Map<String, dynamic> json) =>

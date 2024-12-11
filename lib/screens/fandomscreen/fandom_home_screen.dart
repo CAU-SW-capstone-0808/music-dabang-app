@@ -1,10 +1,15 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:music_dabang/common/colors.dart';
+import 'package:music_dabang/components/custom_search_bar.dart';
 import 'package:music_dabang/components/logo_title.dart';
-import 'package:music_dabang/screens/fandomscreen/fandom_select_screen.dart';
+import 'package:music_dabang/models/post/post_model.dart';
+import 'package:music_dabang/providers/music/artists_provider.dart';
+import 'package:music_dabang/providers/post/fandom_provider.dart';
+import 'package:music_dabang/providers/post/post_list_provider.dart';
 
+import 'components/artist_selector.dart';
 import 'data.dart';
 
 class FandomHomeScreen extends ConsumerStatefulWidget {
@@ -17,6 +22,9 @@ class FandomHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
+  String artistSearchQuery = '';
+
+  /// 상단 인사말
   Widget greeting({required String artistName}) {
     return Row(
       children: [
@@ -32,7 +40,10 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
         ),
         TextButton(
           onPressed: () {
-            context.pushNamed(FandomSelectScreen.routeName);
+            setState(() {
+              artistSearchQuery = '';
+            });
+            ref.read(selectedArtistIdProvider.notifier).clear();
           },
           child: const Text(
             "변경",
@@ -89,18 +100,17 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
   ///[onViewAllPressed] : 모든 게시물 보기 텍스트 버튼을 눌렀을 시 게시판 페이지로 이동하도록 만드는 함수
   Widget buildPopularPosts({
     required String title,
-    required List<Map<String, dynamic>> items,
+    required List<PostModel> items,
     required void Function(Map<String, dynamic> item) onItemTap,
     required void Function()? onViewAllPressed,
   }) {
-    //인기 게시글 생성 위젯
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            //제목
+            /// 제목
             Text(
               title,
               style: const TextStyle(
@@ -108,7 +118,8 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            //모든 게시글 보기 버튼(onViewAllPressed 함수를 넣었을 때 작동하도록)
+
+            /// 모든 게시글 보기 버튼(onViewAllPressed 함수를 넣었을 때 작동하도록)
             TextButton(
               onPressed: onViewAllPressed,
               child: const Text(
@@ -118,56 +129,92 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
             ),
           ],
         ),
-        const SizedBox(
-          height: 10, //칸 띄어 넣기
-        ),
-        Container(
-          //회색 둥근 박스 생성
-          padding: const EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          child: Column(
-            //인기글 목록 삽입
-            children: List.generate(items.length * 2 - 1, (index) {
-              if (index.isEven) {
-                //인기글(좋아요 정보 포함)과 회색 선을 번갈아 가며 넣기
-                final item = items[index ~/ 2];
-                return GestureDetector(
-                  onTap: () {
-                    onItemTap(item);
-                  },
-                  //특정 아이템을 선택 시 post_detail_screen에 post 정보를 전달하고 화면을 전환할 함수 onItemTap.
-                  child: ListTile(
-                    title: Text(
-                      item['title'] ?? '',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+        const SizedBox(height: 12),
+        if (items.isEmpty)
+          const Center(
+            child: Text(
+              '게시글이 없습니다.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black,
+              ),
+            ),
+          )
+        else
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+
+            /// 인기글 목록
+            child: Column(
+              children: items.map((p) {
+                return InkWell(
+                  onTap: () {},
+                  child: Container(
+                    child: ListTile(
+                      title: Text(
+                        p.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      subtitle: Text('좋아요: ${p.likes}'),
+                      trailing: Text(
+                        p.createdAt.toString().split('T')[0],
+                        style:
+                            const TextStyle(fontSize: 14, color: Colors.black),
                       ),
                     ),
-                    subtitle: Text('좋아요: ${item['likes']}'),
-                    trailing: Text(
-                      item['createdTime']?.split('T')[0] ?? '',
-                      style: const TextStyle(fontSize: 14, color: Colors.black),
-                    ),
                   ),
                 );
-              } else {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4.0),
-                  child: Divider(
-                    color: Colors.grey,
-                    thickness: 1,
-                    indent: 10,
-                    endIndent: 10,
-                  ),
-                );
-              }
-            }),
+              }).toList(),
+              // children: List.generate(
+              //   items.length * 2 - 1,
+              //   (index) {
+              //     if (index.isEven) {
+              //       //인기글(좋아요 정보 포함)과 회색 선을 번갈아 가며 넣기
+              //       final item = items[index ~/ 2];
+              //       return GestureDetector(
+              //         onTap: () {
+              //           // onItemTap(item);
+              //         },
+              //         //특정 아이템을 선택 시 post_detail_screen에 post 정보를 전달하고 화면을 전환할 함수 onItemTap.
+              //         child: ListTile(
+              //           title: Text(
+              //             item['title'] ?? '',
+              //             style: const TextStyle(
+              //               fontWeight: FontWeight.bold,
+              //               fontSize: 16,
+              //             ),
+              //           ),
+              //           subtitle: Text('좋아요: ${item['likes']}'),
+              //           trailing: Text(
+              //             item['createdTime']?.split('T')[0] ?? '',
+              //             style:
+              //                 const TextStyle(fontSize: 14, color: Colors.black),
+              //           ),
+              //         ),
+              //       );
+              //     } else {
+              //       return const Padding(
+              //         padding: EdgeInsets.symmetric(vertical: 4.0),
+              //         child: Divider(
+              //           color: Colors.grey,
+              //           thickness: 1,
+              //           indent: 10,
+              //           endIndent: 10,
+              //         ),
+              //       );
+              //     }
+              //   },
+              // ),
+            ),
           ),
-        ),
       ],
     );
   }
@@ -214,6 +261,51 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final artists = ref.watch(artistsProvider);
+    final selectedArtistId = ref.watch(selectedArtistIdProvider);
+    final posts = ref.watch(postListProvider);
+
+    // 미선택 시 화면
+    if (selectedArtistId == null) {
+      return GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Scaffold(
+          body: SizedBox(
+            width: double.infinity,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ArtistSelector(searchQuery: artistSearchQuery),
+                const SizedBox(height: 16),
+                const Text(
+                  "좋아하는 가수를 선택해주세요!",
+                  style: TextStyle(
+                    fontSize: 22.0,
+                    color: ColorTable.textGrey,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: 300,
+                  child: CustomSearchBar(
+                    hintText: "가수 이름 검색",
+                    onChanged: (value) {
+                      setState(() {
+                        artistSearchQuery = value;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final selectedArtist =
+        artists.firstWhere((artist) => artist.id == selectedArtistId);
+
     return Scaffold(
       body: SingleChildScrollView(
         child: SafeArea(
@@ -226,50 +318,13 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
                 child: LogoTitle(),
               ),
               const SizedBox(height: 12),
-              SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    for (int i = 0; i < 20; i++)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: Column(
-                          children: [
-                            Opacity(
-                              opacity: i == 0 ? 1.0 : 0.5,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(32.0),
-                                child: CachedNetworkImage(
-                                  imageUrl:
-                                      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHcQ6jliLxR8jye7b1nUq5ZFo0qWEtHqW7Rg&s",
-                                  width: 64,
-                                  height: 64,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '임영웅',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: i == 0
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+              const ArtistSelector(),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
                   children: [
                     const SizedBox(height: 4),
-                    greeting(artistName: "임영웅"),
+                    greeting(artistName: selectedArtist.name),
                     const SizedBox(height: 8),
                     // 공지사항 섹션
                     buildBlock(
