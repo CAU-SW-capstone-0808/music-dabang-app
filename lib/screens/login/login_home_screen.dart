@@ -36,12 +36,18 @@ class LoginHomeScreen extends ConsumerWidget {
                 child: BouncingWidget(
                   onPressed: () async {
                     await ref.read(userProvider.notifier).loginWithKakao();
+                    if (kIsWeb) {
+                      context.go('/');
+                    }
                     FirebaseLogger.loginWithKakao();
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
+                    ),
+                    constraints: const BoxConstraints(
+                      maxWidth: 600,
                     ),
                     decoration: BoxDecoration(
                       color: ColorTable.kakaoYellow,
@@ -74,8 +80,8 @@ class LoginHomeScreen extends ConsumerWidget {
               if (kIsWeb)
                 TextButton(
                   onPressed: () {
-                    context.goNamed(PhoneLoginScreen.routeName);
-                    FirebaseLogger.loginTryWithPhone();
+                    // context.goNamed(PhoneLoginScreen.routeName);
+                    // FirebaseLogger.loginTryWithPhone();
                   },
                   child: const Text("또는 휴대폰 번호로 로그인"),
                 ),

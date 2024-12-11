@@ -22,7 +22,7 @@ void main() async {
   );
   KakaoSdk.init(
     nativeAppKey: '77e0c7bca12daad215f23b6a143c962b',
-    javaScriptAppKey: '7c9a44473ebe4bec739fe0dea137871f',
+    javaScriptAppKey: 'e303c6bfa13d52b537b42c99b6c80a79',
   );
 
   // 세로 모드만 허용

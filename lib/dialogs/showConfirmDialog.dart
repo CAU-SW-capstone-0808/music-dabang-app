@@ -25,6 +25,7 @@ Future<bool?> showConfirmDialog(
         topRight: Radius.circular(16.0),
       ),
     ),
+    backgroundColor: Colors.white,
     builder: (context) => Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(

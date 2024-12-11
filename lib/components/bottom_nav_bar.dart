@@ -19,28 +19,36 @@ class BottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       currentIndex: selectedIndex,
-      items: <BottomNavigationBarItem>[
-        const BottomNavigationBarItem(
+      items: const <BottomNavigationBarItem>[
+        BottomNavigationBarItem(
           icon: Icon(Icons.home_filled),
           label: '홈',
         ),
-        const BottomNavigationBarItem(
+        BottomNavigationBarItem(
+          icon: Icon(Icons.people_rounded),
+          label: '팬클럽',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.radio_rounded),
+          label: '라디오',
+        ),
+        BottomNavigationBarItem(
           icon: Icon(Icons.folder_open),
           label: '내음악',
         ),
-        BottomNavigationBarItem(
-          icon: ClipRRect(
-            borderRadius: BorderRadius.circular(100),
-            child: userProfileImageUrl != null
-                ? SizedBox(
-                    width: 32,
-                    height: 32,
-                    child: Image.network(userProfileImageUrl!),
-                  )
-                : const Icon(Icons.person),
-          ),
-          label: userName,
-        ),
+        // BottomNavigationBarItem(
+        //   icon: ClipRRect(
+        //     borderRadius: BorderRadius.circular(100),
+        //     child: userProfileImageUrl != null
+        //         ? SizedBox(
+        //             width: 32,
+        //             height: 32,
+        //             child: Image.network(userProfileImageUrl!),
+        //           )
+        //         : const Icon(Icons.person),
+        //   ),
+        //   label: userName,
+        // ),
       ],
       selectedItemColor: ColorTable.kPrimaryColor,
       unselectedItemColor: ColorTable.bottomNavBlack,

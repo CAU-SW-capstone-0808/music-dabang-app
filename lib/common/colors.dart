@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 abstract class ColorTable {
@@ -58,4 +59,25 @@ abstract class ColorTable {
     stops: [0.0, 0.22, 0.75, 1.0],
     transform: GradientRotation(40 * pi / 180),
   );
+
+  static final boxShadow = [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.24),
+      offset: Offset.zero,
+      blurRadius: 4,
+    ),
+    BoxShadow(
+      color: Colors.black.withOpacity(0.12),
+      offset: const Offset(0, 1),
+      blurRadius: 8,
+    ),
+  ];
+
+  static final boxShadow2 = [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.16),
+      offset: Offset.zero,
+      blurRadius: 4,
+    ),
+  ];
 }

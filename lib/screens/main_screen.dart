@@ -13,6 +13,7 @@ import 'package:music_dabang/providers/user/user_provider.dart';
 import 'package:music_dabang/screens/home_screen.dart';
 import 'package:music_dabang/screens/music_player_screen.dart';
 import 'package:music_dabang/screens/my_music_list_screen.dart';
+import 'package:music_dabang/screens/radio/radio_channel_list_screen.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   static const routeName = 'main';
@@ -100,16 +101,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       userProfileImageUrl: user.profileImageUrl,
                       selectedIndex: navIndex,
                       onTap: (x) {
-                        if (x < 2) {
-                          ref.read(bottomNavProvider.notifier).select(x);
-                        } else if (x == 2 && kDebugMode) {
-                          showConfirmDialog(
-                            context,
-                            title: '로그아웃하시겠습니까?',
-                            onConfirm: () =>
-                                ref.read(userProvider.notifier).logout(),
-                          );
-                        }
+                        ref.read(bottomNavProvider.notifier).select(x);
                       },
                     ),
                   ),
@@ -120,7 +112,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         body: Stack(
           children: [
             if (navIndex == 0) const HomeScreen(),
-            if (navIndex == 1) const MyMusicListScreen(),
+            if (navIndex == 2) const RadioChannelListScreen(),
+            if (navIndex == 3) const MyMusicListScreen(),
             // Align(
             //   heightFactor: currentPlaying != null ? 1 : 0,
             //   child: Opacity(

@@ -10,6 +10,7 @@ import 'package:music_dabang/components/arrow_button.dart';
 import 'package:music_dabang/components/custom_search_bar.dart';
 import 'package:music_dabang/components/image_card.dart';
 import 'package:music_dabang/components/logo_title.dart';
+import 'package:music_dabang/dialogs/showConfirmDialog.dart';
 import 'package:music_dabang/models/user/user_model.dart';
 import 'package:music_dabang/providers/music/music_player_provider.dart';
 import 'package:music_dabang/providers/music/playlist_items_provider.dart';
@@ -302,9 +303,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       slivers: [
         SliverAppBar(
           title: const LogoTitle(),
+          centerTitle: false,
+          actions: [
+            IconButton(
+              onPressed: () {
+                showConfirmDialog(
+                  context,
+                  title: '로그아웃하시겠습니까?',
+                  onConfirm: () => ref.read(userProvider.notifier).logout(),
+                );
+              },
+              icon: ClipRRect(
+                borderRadius: BorderRadius.circular(100),
+                child: user.profileImageUrl != null
+                    ? SizedBox(child: Image.network(user.profileImageUrl!))
+                    : const Icon(Icons.person),
+              ),
+            ),
+          ],
           floating: true,
           snap: true,
-          expandedHeight: 0,
+          expandedHeight: 12,
           backgroundColor: Colors.white,
           elevation: 0,
           bottom: PreferredSize(
