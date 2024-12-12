@@ -10,6 +10,7 @@ class RadioLiveCard extends StatelessWidget {
   final int listenerCount; // 청취자 수
   final String status; // 방송 상태
   final int elapsedMinutes; // 방송 진행 시간
+  final void Function() onPressed;
 
   const RadioLiveCard({
     super.key,
@@ -19,6 +20,7 @@ class RadioLiveCard extends StatelessWidget {
     required this.listenerCount,
     required this.status,
     required this.elapsedMinutes,
+    required this.onPressed,
   });
 
   Widget get listeners {
@@ -50,9 +52,9 @@ class RadioLiveCard extends StatelessWidget {
     } else {
       int hours = elapsedMinutes ~/ 60;
       int minutes = elapsedMinutes % 60;
-      // labelContent =
-      //     "${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}";
-      labelContent = "$hours시간 전";
+      labelContent =
+          "${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}";
+      labelContent = "$hours시간 $minutes 전";
     }
     return Text(
       labelContent,
@@ -66,7 +68,7 @@ class RadioLiveCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BouncingWidget(
-      onPressed: () {},
+      onPressed: onPressed,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         decoration: BoxDecoration(

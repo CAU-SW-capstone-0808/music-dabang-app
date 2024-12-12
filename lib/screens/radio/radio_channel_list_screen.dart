@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:music_dabang/components/logo_title.dart';
 import 'package:music_dabang/models/radio/radio_channel_model.dart';
 import 'package:music_dabang/providers/radio/radio_channels_provider.dart';
 import 'package:music_dabang/providers/radio/radio_live_broadcasts_provider.dart';
 import 'package:music_dabang/screens/radio/components/radio_channel_card.dart';
 import 'package:music_dabang/screens/radio/components/radio_live_card.dart';
+import 'package:music_dabang/screens/radio/radio_broadcast_live_screen.dart';
 
 class RadioChannelListScreen extends ConsumerStatefulWidget {
   static const routeName = 'radio-channel-list';
@@ -57,6 +59,7 @@ class _RadioChannelListScreenState
   Widget build(BuildContext context) {
     final liveBroadcasts = ref.watch(radioLiveBroadcastsProvider);
     final radioChannels = ref.watch(radioChannelsProvider);
+    final now = DateTime.now();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F6),
@@ -76,7 +79,6 @@ class _RadioChannelListScreenState
                 const SizedBox(height: 4.0),
                 ...liveBroadcasts.map(
                   (e) {
-                    final now = DateTime.now();
                     RadioChannelModel? channel = radioChannels.firstWhere(
                       (element) => element.id == e.channelId,
                       orElse: () => const RadioChannelModel(
@@ -100,6 +102,14 @@ class _RadioChannelListScreenState
                         listenerCount: e.listenerCount,
                         status: e.status.name,
                         elapsedMinutes: now.difference(e.startedAt).inMinutes,
+                        onPressed: () {
+                          context.goNamed(
+                            RadioBroadcastLiveScreen.routeName,
+                            queryParameters: {
+                              'broadcastId': e.id.toString(),
+                            },
+                          );
+                        },
                       ),
                     );
                   },
@@ -132,6 +142,19 @@ class _RadioChannelListScreenState
                             description: e.description,
                             onLive: e.onLive,
                             subscriberCount: e.subscribersNumber,
+                            onPressed: () {
+                              for (final broadcast in liveBroadcasts) {
+                                if (broadcast.channelId == e.id) {
+                                  context.goNamed(
+                                    RadioBroadcastLiveScreen.routeName,
+                                    queryParameters: {
+                                      'broadcastId': broadcast.id.toString(),
+                                    },
+                                  );
+                                  return;
+                                }
+                              }
+                            },
                           ),
                         ),
                       )

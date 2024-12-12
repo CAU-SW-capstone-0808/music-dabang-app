@@ -16,6 +16,7 @@ import 'package:music_dabang/screens/login/login_home_screen.dart';
 import 'package:music_dabang/screens/login/phone_join_screen.dart';
 import 'package:music_dabang/screens/login/phone_login_screen.dart';
 import 'package:music_dabang/screens/main_screen.dart';
+import 'package:music_dabang/screens/radio/radio_broadcast_live_screen.dart';
 import 'package:music_dabang/screens/search_screen.dart';
 import 'package:music_dabang/screens/splash_screen.dart';
 
@@ -97,6 +98,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               return PostDetailScreen(
                   postId: int.parse(state.uri.queryParameters['postId']!));
+            },
+          ),
+          GoRoute(
+            path: 'radio-broadcast-live',
+            name: RadioBroadcastLiveScreen.routeName,
+            builder: (context, state) {
+              return RadioBroadcastLiveScreen(
+                broadcastId:
+                    int.parse(state.uri.queryParameters['broadcastId']!),
+              );
             },
           ),
         ],

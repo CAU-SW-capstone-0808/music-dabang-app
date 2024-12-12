@@ -9,6 +9,7 @@ class RadioChannelCard extends StatelessWidget {
   final String description;
   final bool onLive;
   final int subscriberCount;
+  final void Function() onPressed;
 
   const RadioChannelCard({
     super.key,
@@ -17,6 +18,7 @@ class RadioChannelCard extends StatelessWidget {
     required this.description,
     required this.onLive,
     required this.subscriberCount,
+    required this.onPressed,
   });
 
   String get subscriberCountText {
@@ -62,7 +64,7 @@ class RadioChannelCard extends StatelessWidget {
                 color: ColorTable.kPrimaryColor,
               ),
               child: const Text(
-                "라이브 중",
+                "라이브",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
@@ -84,7 +86,7 @@ class RadioChannelCard extends StatelessWidget {
     return Column(
       children: [
         BouncingWidget(
-          onPressed: () {},
+          onPressed: onPressed,
           child: Container(
             padding: const EdgeInsets.all(16.0),
             width: double.infinity,
