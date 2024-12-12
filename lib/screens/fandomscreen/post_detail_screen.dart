@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:music_dabang/common/datetime_utils.dart';
 import 'package:music_dabang/models/post/post_comment_model.dart';
 import 'package:music_dabang/models/post/post_model.dart';
 import 'package:music_dabang/providers/post/post_like_provider.dart';
@@ -31,7 +32,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     required bool isLiked,
   }) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -44,25 +45,6 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '작성 시간: ${post.createdAt}',
-            style: const TextStyle(fontSize: 14, color: Colors.grey),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  post.content,
-                  style: const TextStyle(
-                    fontSize: 18,
                   ),
                 ),
               ),
@@ -80,6 +62,25 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       .read(postLikedProvider(widget.postId).notifier)
                       .toggleLike();
                 }, // 좋아요 토글 콜백
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '작성 시간: ${dateTimeKor(post.createdAt)}',
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  post.content,
+                  style: const TextStyle(
+                    fontSize: 18,
+                  ),
+                ),
               ),
             ],
           ),

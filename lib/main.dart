@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:music_dabang/common/colors.dart';
 import 'package:music_dabang/common/my_audio_handler.dart';
@@ -11,6 +12,7 @@ import 'package:music_dabang/firebase_options.dart';
 import 'package:music_dabang/providers/router_provider.dart';
 
 void main() async {
+  await initializeDateFormatting('ko_KR', null);
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -64,6 +66,7 @@ class MusicDabang extends ConsumerWidget {
         title: '뮤직다방',
         debugShowCheckedModeBanner: false,
         routerConfig: router,
+        locale: const Locale('ko', 'KR'),
 
         /// 라우팅 설정
         // routerDelegate: router.routerDelegate,

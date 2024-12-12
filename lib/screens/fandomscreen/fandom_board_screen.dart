@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:music_dabang/common/datetime_utils.dart';
 import 'package:music_dabang/models/post/post_model.dart';
 import 'package:music_dabang/providers/post/post_list_provider.dart';
 import 'package:music_dabang/screens/fandomscreen/post_detail_screen.dart';
@@ -98,7 +99,7 @@ class _FandomBoardScreenState extends ConsumerState<FandomBoardScreen>
               ),
               subtitle: Text('좋아요: ${post.likes}'), // 좋아요 개수
               trailing: Text(
-                post.createdAt.toString(), // 생성 날짜
+                elapsedTime(post.createdAt), // 생성 날짜
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
               onTap: () {
@@ -154,7 +155,7 @@ class _FandomBoardScreenState extends ConsumerState<FandomBoardScreen>
           title: const Text(
             '게시판',
             style: TextStyle(
-              fontSize: 32.0,
+              fontSize: 24.0,
               fontWeight: FontWeight.w600,
               fontFamily: 'Roboto',
             ),

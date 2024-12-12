@@ -4,14 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:music_dabang/common/colors.dart';
+import 'package:music_dabang/common/dialog.dart';
+import 'package:music_dabang/common/utils.dart';
+import 'package:music_dabang/models/user/user_model.dart';
 import 'package:music_dabang/providers/radio/radio_live_broadcast_provider.dart';
+import 'package:music_dabang/providers/user/user_provider.dart';
+import 'package:music_dabang/screens/radio/components/live_chatting_list.dart';
+import 'package:music_dabang/screens/radio/components/live_music_list.dart';
 
 class RadioBroadcastLiveScreen extends ConsumerStatefulWidget {
   static const routeName = 'radio-broadcast-live';
 
   final int broadcastId;
+  final int channelId;
 
-  const RadioBroadcastLiveScreen({super.key, required this.broadcastId});
+  const RadioBroadcastLiveScreen({
+    super.key,
+    required this.broadcastId,
+    required this.channelId,
+  });
 
   @override
   ConsumerState<RadioBroadcastLiveScreen> createState() =>
@@ -20,6 +31,8 @@ class RadioBroadcastLiveScreen extends ConsumerStatefulWidget {
 
 class _RadioBroadcastLiveScreenState
     extends ConsumerState<RadioBroadcastLiveScreen> {
+  final chatController = TextEditingController();
+
   RadioLiveBroadcastProvider get _radioLiveBroadcastProvider =>
       ref.read(radioLiveBroadcastProvider(widget.broadcastId).notifier);
 
@@ -69,6 +82,9 @@ class _RadioBroadcastLiveScreenState
       );
 
   Widget listeners(int listenerCount) {
+    if (listenerCount < 0) {
+      return Container();
+    }
     return Row(
       children: [
         const Icon(
@@ -91,13 +107,24 @@ class _RadioBroadcastLiveScreenState
   Widget timeLabel(int elapsedMinutes) {
     int hours = elapsedMinutes ~/ 60;
     int minutes = elapsedMinutes % 60;
-    String labelContent = "$hours시간 $minutes분 ";
-    return Text(
-      labelContent,
-      style: const TextStyle(
-        fontSize: 16.0,
-        color: Colors.black,
-      ),
+    String labelContent = "";
+    if (hours > 0) {
+      labelContent += "$hours시간 ";
+    }
+    labelContent =
+        "${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}";
+    return Row(
+      children: <Widget>[
+        Text(
+          labelContent,
+          style: const TextStyle(
+            fontSize: 16.0,
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(width: 4.0),
+        const Icon(Icons.access_time_rounded, size: 18.0),
+      ],
     );
   }
 
@@ -148,6 +175,15 @@ class _RadioBroadcastLiveScreenState
     await _radioLiveBroadcastProvider.init();
   }
 
+  void sendChat() {
+    String message = chatController.value.text;
+    if (message.isEmpty) {
+      return;
+    }
+    _radioLiveBroadcastProvider.addChat(message);
+    chatController.clear();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -163,204 +199,128 @@ class _RadioBroadcastLiveScreenState
     final liveBroadcast = liveState.broadcast;
     final liveChannel = liveState.channel;
 
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        _radioLiveBroadcastProvider.disconnect();
       },
-      child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          leading: liveChannel != null
-              ? Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: CachedNetworkImage(
-                      imageUrl: liveChannel.channelImageUrl,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                )
-              : null,
-          title: Text(liveBroadcast != null ? liveBroadcast.title : '라디오 방송'),
-          centerTitle: true,
-          actions: [
-            IconButton(
-              onPressed: () {
-                context.go('/');
-              },
-              icon: const Icon(CupertinoIcons.xmark),
-            )
-          ],
-        ),
-        body: SizedBox(
-          width: double.infinity,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Row(
-                children: [
-                  const SizedBox(width: 8.0),
-                  listeners(100),
-                  const Spacer(),
-                  timeLabel(100),
-                  const SizedBox(width: 8.0),
-                ],
-              ),
-              const SizedBox(height: 8.0),
-              Stack(
-                children: [
-                  SizedBox(
-                    height: 200,
-                    child: ListView.builder(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: liveStatus == RadioLiveStatus.connected
-                            ? MediaQuery.of(context).size.width / 4 + 22
-                            : 0,
+      child: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            leading: liveChannel != null
+                ? Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: CachedNetworkImage(
+                        imageUrl: liveChannel.channelImageUrl,
+                        fit: BoxFit.cover,
                       ),
-                      itemExtent: 164,
-                      scrollDirection: Axis.horizontal,
-                      itemCount: 1,
-                      itemBuilder: (context, index) {
-                        if (liveStatus != RadioLiveStatus.connected) {
-                          return Container();
-                        }
-                        return Column(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16.0),
-                                boxShadow: ColorTable.boxShadow,
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(16.0),
-                                child: CachedNetworkImage(
-                                  imageUrl:
-                                      'https://image.genie.co.kr/Y/IMAGE/IMG_ALBUM/082/638/032/82638032_1651479062721_1_600x600.JPG',
-                                  width: 120,
-                                  height: 120,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 4.0),
-                            Text(
-                              'Polaroid',
-                              maxLines: 2,
-                              style: TextStyle(
-                                fontSize: 16.0,
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const Text(
-                              '임영웅',
-                              style: TextStyle(fontSize: 16.0),
-                            ),
-                          ],
-                        );
-                      },
                     ),
-                  ),
-                  if (liveStatus.isLoading)
-                    Positioned.fill(child: loadingPage)
-                  else if (liveStatus == RadioLiveStatus.error)
-                    Positioned.fill(child: errorPage),
-                ],
-              ),
-              const Divider(height: 0),
-              Expanded(
-                child: Stack(
+                  )
+                : null,
+            title: Text(liveBroadcast != null ? liveBroadcast.title : '라디오 방송'),
+            centerTitle: true,
+            actions: [
+              IconButton(
+                onPressed: () {
+                  context.go('/');
+                },
+                icon: const Icon(CupertinoIcons.xmark),
+              )
+            ],
+          ),
+          body: SizedBox(
+            width: double.infinity,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
                   children: [
-                    ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      itemCount: 100,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12.0),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Column(
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(16.0),
-                                    child: CachedNetworkImage(
-                                      imageUrl:
-                                          'https://pds.joongang.co.kr/news/component/htmlphoto_mmdata/202412/10/826b1850-b665-4e10-ac17-7aa5b37f2bd8.jpg',
-                                      width: 32,
-                                      height: 32,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  Text(
-                                    "임영웅",
-                                    style: TextStyle(fontSize: 12.0),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(width: 8.0),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12.0,
-                                  vertical: 8.0,
-                                ),
-                                constraints: BoxConstraints(
-                                  maxWidth:
-                                      MediaQuery.of(context).size.width * 0.6,
-                                ),
-                                decoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.only(
-                                    topRight: Radius.circular(12.0),
-                                    bottomLeft: Radius.circular(12.0),
-                                    bottomRight: Radius.circular(12.0),
-                                  ),
-                                  color: Colors.white,
-                                  border: Border.all(
-                                    color: ColorTable.stroke,
-                                    width: 1.0,
-                                  ),
-                                ),
-                                child: Text(
-                                  "어머 노래가 너무 좋아요! " * 1,
-                                  style: const TextStyle(fontSize: 14.0),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: sendStoryButton(onPressed: () {}),
-                    ),
+                    const SizedBox(width: 8.0),
+                    listeners(liveBroadcast?.listenerCount ?? -1),
+                    const Spacer(),
+                    timeLabel(liveBroadcast?.elapsedMinutes ?? 0),
+                    const SizedBox(width: 8.0),
                   ],
                 ),
-              ),
-              const Divider(height: 0, thickness: 1),
-              TextField(
-                maxLines: 1,
-                decoration: InputDecoration(
-                  hintText: '채팅 입력...',
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.all(16.0),
-                  filled: true,
-                  fillColor: Colors.white,
-                  suffixIcon: IconButton(
-                    onPressed: () {},
-                    icon: Transform.rotate(
-                      angle: -3.14 / 5,
-                      child: const Icon(
-                        Icons.send_rounded,
-                        color: ColorTable.kPrimaryColor,
+                const SizedBox(height: 8.0),
+                Stack(
+                  children: [
+                    SizedBox(
+                      height: 200,
+                      child: LiveMusicList(broadcastId: widget.broadcastId),
+                    ),
+                    if (liveStatus.isLoading)
+                      Positioned.fill(child: loadingPage)
+                    else if (liveStatus == RadioLiveStatus.error)
+                      Positioned.fill(child: errorPage),
+                  ],
+                ),
+                const Divider(height: 0),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      LiveChattingList(
+                        broadcastId: widget.broadcastId,
+                        channelId: widget.channelId,
+                      ),
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: sendStoryButton(onPressed: () {
+                          final me = ref.read(userProvider);
+                          if (me is! UserModel) {
+                            AidolUtils.showErrorToast(message: '로그인 후 이용해주세요.');
+                            return;
+                          }
+                          showPromptDialog(
+                            context: context,
+                            infoText: '사연 보내기',
+                            onConfirm: (value) {
+                              if (value.isEmpty) {
+                                return;
+                              }
+                              _radioLiveBroadcastProvider.addStory(
+                                content: value,
+                                userName: me.nickname,
+                              );
+                            },
+                          );
+                        }),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 0, thickness: 1),
+                TextField(
+                  controller: chatController,
+                  maxLines: 1,
+                  onSubmitted: (_) => sendChat(),
+                  decoration: InputDecoration(
+                    hintText: '채팅 입력...',
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.all(16.0),
+                    filled: true,
+                    fillColor: Colors.white,
+                    suffixIcon: IconButton(
+                      onPressed: sendChat,
+                      icon: Transform.rotate(
+                        angle: -3.14 / 5,
+                        child: const Icon(
+                          Icons.send_rounded,
+                          color: ColorTable.kPrimaryColor,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

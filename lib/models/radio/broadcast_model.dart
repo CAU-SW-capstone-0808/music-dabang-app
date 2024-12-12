@@ -50,4 +50,26 @@ class BroadcastLiveModel {
       _$BroadcastLiveModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$BroadcastLiveModelToJson(this);
+
+  int get elapsedMinutes {
+    return DateTime.now().difference(startedAt).inMinutes;
+  }
+
+  BroadcastLiveModel copyWith({
+    int? id,
+    String? title,
+    int? channelId,
+    int? listenerCount,
+    BroadcastStatus? status,
+    DateTime? startedAt,
+  }) {
+    return BroadcastLiveModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      channelId: channelId ?? this.channelId,
+      listenerCount: listenerCount ?? this.listenerCount,
+      status: status ?? this.status,
+      startedAt: startedAt ?? this.startedAt,
+    );
+  }
 }

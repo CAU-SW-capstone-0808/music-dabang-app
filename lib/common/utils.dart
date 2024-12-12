@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
 
 abstract class AidolUtils {
   static String numberK(int number) {
@@ -81,5 +82,14 @@ abstract class AidolUtils {
     }
 
     return -1; // 발화 시작점이 없으면 -1 반환
+  }
+
+  static String timeKorean(DateTime t) {
+    // "오전 06:00" 형식으로 표시
+    if (t.hour < 12) {
+      return "오전 ${DateFormat('hh:mm', 'ko_KR').format(t)}";
+    } else {
+      return "오후 ${DateFormat('hh:mm', 'ko_KR').format(t)}";
+    }
   }
 }

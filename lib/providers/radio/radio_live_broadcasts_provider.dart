@@ -18,7 +18,13 @@ class RadioLiveBroadcastsProvider
     fetch();
   }
 
-  Future<List<BroadcastLiveModel>> fetch({int? channelId}) async {
+  Future<List<BroadcastLiveModel>> fetch({
+    int? channelId,
+    bool refresh = false,
+  }) async {
+    if (refresh) {
+      state = [];
+    }
     return state =
         await radioRepository.getLiveBroadcasts(channelId: channelId);
   }

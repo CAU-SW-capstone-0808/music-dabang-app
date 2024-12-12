@@ -107,6 +107,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               return RadioBroadcastLiveScreen(
                 broadcastId:
                     int.parse(state.uri.queryParameters['broadcastId']!),
+                channelId: int.parse(state.uri.queryParameters['channelId']!),
               );
             },
           ),

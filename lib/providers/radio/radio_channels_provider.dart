@@ -18,7 +18,10 @@ class RadioChannelsProvider extends StateNotifier<List<RadioChannelModel>> {
     fetch();
   }
 
-  Future<List<RadioChannelModel>> fetch() async {
+  Future<List<RadioChannelModel>> fetch({bool refresh = false}) async {
+    if (refresh) {
+      state = [];
+    }
     return state = await radioRepository.getChannels();
   }
 }

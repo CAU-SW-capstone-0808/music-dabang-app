@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:music_dabang/components/logo_title.dart';
 import 'package:music_dabang/models/radio/radio_channel_model.dart';
+import 'package:music_dabang/providers/music/music_player_provider.dart';
 import 'package:music_dabang/providers/radio/radio_channels_provider.dart';
 import 'package:music_dabang/providers/radio/radio_live_broadcasts_provider.dart';
 import 'package:music_dabang/screens/radio/components/radio_channel_card.dart';
@@ -39,9 +40,9 @@ class _RadioChannelListScreenState
     );
   }
 
-  Future<void> init() async {
-    ref.read(radioLiveBroadcastsProvider.notifier).fetch();
-    ref.read(radioChannelsProvider.notifier).fetch();
+  Future<void> init({bool refresh = false}) async {
+    ref.read(radioLiveBroadcastsProvider.notifier).fetch(refresh: refresh);
+    ref.read(radioChannelsProvider.notifier).fetch(refresh: refresh);
   }
 
   @override
@@ -59,108 +60,119 @@ class _RadioChannelListScreenState
   Widget build(BuildContext context) {
     final liveBroadcasts = ref.watch(radioLiveBroadcastsProvider);
     final radioChannels = ref.watch(radioChannelsProvider);
+    final currentPlayingMusic = ref.watch(currentPlayingMusicProvider);
     final now = DateTime.now();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F6),
-      body: SingleChildScrollView(
-        child: SizedBox(
-          width: double.infinity,
-          child: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16.0, 12.0, 0, 0),
-                  child: LogoTitle(),
-                ),
-                const SizedBox(height: 16.0),
-                titleLabel("라이브"),
-                const SizedBox(height: 4.0),
-                ...liveBroadcasts.map(
-                  (e) {
-                    RadioChannelModel? channel = radioChannels.firstWhere(
-                      (element) => element.id == e.channelId,
-                      orElse: () => const RadioChannelModel(
-                        id: 0,
-                        name: '',
-                        channelImageUrl: '',
-                        description: '',
-                        onLive: false,
-                        subscribersNumber: 0,
-                      ),
-                    );
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 6.0,
-                      ),
-                      child: RadioLiveCard(
-                        title: e.title,
-                        channelTitle: channel.name,
-                        channelImage: channel.channelImageUrl,
-                        listenerCount: e.listenerCount,
-                        status: e.status.name,
-                        elapsedMinutes: now.difference(e.startedAt).inMinutes,
-                        onPressed: () {
-                          context.goNamed(
-                            RadioBroadcastLiveScreen.routeName,
-                            queryParameters: {
-                              'broadcastId': e.id.toString(),
-                            },
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16.0),
-                titleLabel("추천 채널"),
-                CarouselSlider(
-                  options: CarouselOptions(
-                    height: 280,
-                    viewportFraction: 0.8,
-                    initialPage: 0,
-                    enableInfiniteScroll: true,
-                    reverse: false,
-                    autoPlay: true,
-                    autoPlayInterval: const Duration(seconds: 8),
-                    autoPlayAnimationDuration:
-                        const Duration(milliseconds: 800),
-                    autoPlayCurve: Curves.fastOutSlowIn,
-                    enlargeCenterPage: true,
-                    scrollDirection: Axis.horizontal,
-                    enlargeFactor: 0.2,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await init(refresh: true);
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            width: double.infinity,
+            child: SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16.0, 12.0, 0, 0),
+                    child: LogoTitle(),
                   ),
-                  items: radioChannels
-                      .map(
-                        (e) => Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: RadioChannelCard(
-                            channelTitle: e.name,
-                            channelImageUrl: e.channelImageUrl,
-                            description: e.description,
-                            onLive: e.onLive,
-                            subscriberCount: e.subscribersNumber,
-                            onPressed: () {
-                              for (final broadcast in liveBroadcasts) {
-                                if (broadcast.channelId == e.id) {
-                                  context.goNamed(
-                                    RadioBroadcastLiveScreen.routeName,
-                                    queryParameters: {
-                                      'broadcastId': broadcast.id.toString(),
-                                    },
-                                  );
-                                  return;
-                                }
-                              }
-                            },
-                          ),
+                  const SizedBox(height: 16.0),
+                  titleLabel("라이브"),
+                  const SizedBox(height: 4.0),
+                  ...liveBroadcasts.map(
+                    (e) {
+                      RadioChannelModel? channel = radioChannels.firstWhere(
+                        (element) => element.id == e.channelId,
+                        orElse: () => const RadioChannelModel(
+                          id: 0,
+                          name: '',
+                          channelImageUrl: '',
+                          description: '',
+                          onLive: false,
+                          subscribersNumber: 0,
                         ),
-                      )
-                      .toList(),
-                ),
-              ],
+                      );
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 6.0,
+                        ),
+                        child: RadioLiveCard(
+                          title: e.title,
+                          channelTitle: channel.name,
+                          channelImage: channel.channelImageUrl,
+                          listenerCount: e.listenerCount,
+                          status: e.status.name,
+                          elapsedMinutes: now.difference(e.startedAt).inMinutes,
+                          onPressed: () {
+                            context.goNamed(
+                              RadioBroadcastLiveScreen.routeName,
+                              queryParameters: {
+                                'broadcastId': e.id.toString(),
+                                'channelId': e.channelId.toString(),
+                              },
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16.0),
+                  titleLabel("추천 채널"),
+                  CarouselSlider(
+                    options: CarouselOptions(
+                      height: 280,
+                      viewportFraction: 0.8,
+                      initialPage: 0,
+                      enableInfiniteScroll: true,
+                      reverse: false,
+                      autoPlay: true,
+                      autoPlayInterval: const Duration(seconds: 8),
+                      autoPlayAnimationDuration:
+                          const Duration(milliseconds: 800),
+                      autoPlayCurve: Curves.fastOutSlowIn,
+                      enlargeCenterPage: true,
+                      scrollDirection: Axis.horizontal,
+                      enlargeFactor: 0.2,
+                    ),
+                    items: radioChannels
+                        .map(
+                          (e) => Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: RadioChannelCard(
+                              channelTitle: e.name,
+                              channelImageUrl: e.channelImageUrl,
+                              description: e.description,
+                              onLive: e.onLive,
+                              subscriberCount: e.subscribersNumber,
+                              onPressed: () {
+                                for (final broadcast in liveBroadcasts) {
+                                  if (broadcast.channelId == e.id) {
+                                    context.goNamed(
+                                      RadioBroadcastLiveScreen.routeName,
+                                      queryParameters: {
+                                        'broadcastId': broadcast.id.toString(),
+                                        'channelId':
+                                            broadcast.channelId.toString(),
+                                      },
+                                    );
+                                    return;
+                                  }
+                                }
+                              },
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                  if (currentPlayingMusic != null) const SizedBox(height: 60),
+                ],
+              ),
             ),
           ),
         ),

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:music_dabang/common/colors.dart';
+import 'package:music_dabang/common/datetime_utils.dart';
 import 'package:music_dabang/components/custom_search_bar.dart';
 import 'package:music_dabang/components/logo_title.dart';
 import 'package:music_dabang/models/post/post_model.dart';
 import 'package:music_dabang/providers/music/artists_provider.dart';
+import 'package:music_dabang/providers/music/music_player_provider.dart';
 import 'package:music_dabang/providers/post/fandom_provider.dart';
 import 'package:music_dabang/providers/post/post_list_provider.dart';
 
@@ -162,7 +164,7 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
                   ),
                   subtitle: Text('좋아요: ${p.likes}'),
                   trailing: Text(
-                    p.createdAt.toString().split('T')[0],
+                    elapsedTime(p.createdAt),
                     style: const TextStyle(fontSize: 14, color: Colors.black),
                   ),
                   onTap: () {
@@ -266,6 +268,7 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
     final artists = ref.watch(artistsProvider);
     final selectedArtistId = ref.watch(selectedArtistIdProvider);
     final posts = ref.watch(postListProvider);
+    final currentPlayingMusic = ref.watch(currentPlayingMusicProvider);
 
     // 미선택 시 화면
     if (selectedArtistId == null) {
@@ -378,7 +381,8 @@ class _FandomHomeScreenState extends ConsumerState<FandomHomeScreen> {
                         context.goNamed('fandom-board');
                       }, // 모든 게시물 보기 눌렀을 때 그 페이지로 이동
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 32.0),
+                    if (currentPlayingMusic != null) const SizedBox(height: 60),
                   ],
                 ),
               ),
