@@ -94,14 +94,17 @@ class RadioLiveCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: CachedNetworkImage(
-                        imageUrl: channelImage,
-                        width: 32,
-                        height: 32,
-                      ),
-                    ),
+                    if (channelImage.isNotEmpty)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: CachedNetworkImage(
+                          imageUrl: channelImage,
+                          width: 32,
+                          height: 32,
+                        ),
+                      )
+                    else
+                      const SizedBox(width: 32, height: 32),
                     const SizedBox(width: 8.0),
                     Text(channelTitle),
                   ],

@@ -1,19 +1,29 @@
+import 'dart:async';
+
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_dabang/components/logo_title.dart';
+import 'package:music_dabang/models/radio/radio_channel_model.dart';
+import 'package:music_dabang/providers/radio/radio_channels_provider.dart';
+import 'package:music_dabang/providers/radio/radio_live_broadcasts_provider.dart';
 import 'package:music_dabang/screens/radio/components/radio_channel_card.dart';
 import 'package:music_dabang/screens/radio/components/radio_live_card.dart';
 
-class RadioChannelListScreen extends StatefulWidget {
+class RadioChannelListScreen extends ConsumerStatefulWidget {
   static const routeName = 'radio-channel-list';
 
   const RadioChannelListScreen({super.key});
 
   @override
-  State<RadioChannelListScreen> createState() => _RadioChannelListScreenState();
+  ConsumerState<RadioChannelListScreen> createState() =>
+      _RadioChannelListScreenState();
 }
 
-class _RadioChannelListScreenState extends State<RadioChannelListScreen> {
+class _RadioChannelListScreenState
+    extends ConsumerState<RadioChannelListScreen> {
+  late Timer _timer; // per 10 seconds timer
+
   Widget titleLabel(String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -27,34 +37,27 @@ class _RadioChannelListScreenState extends State<RadioChannelListScreen> {
     );
   }
 
+  Future<void> init() async {
+    ref.read(radioLiveBroadcastsProvider.notifier).fetch();
+    ref.read(radioChannelsProvider.notifier).fetch();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    init();
+
+    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      ref.read(radioLiveBroadcastsProvider.notifier).fetch();
+      ref.read(radioChannelsProvider.notifier).fetch();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    Widget radioChannelCard = Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: RadioChannelCard(
-        channelTitle: "희망 믿음 소망",
-        channelImageUrl:
-            "https://thumbs.dreamstime.com/b/black-radio-logo-radio-icon-white-black-radio-logo-radio-icon-131472109.jpg",
-        description: "채널 희망 믿음 소망은 각박한 현대 사회에서 어쩌구 저쩌구",
-        onLive: true,
-        subscriberCount: 1200,
-      ),
-    );
-    Widget radioLiveCard = Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16.0,
-        vertical: 6.0,
-      ),
-      child: RadioLiveCard(
-        title: "정오의 희망곡",
-        channelTitle: "희망 믿음 소망",
-        channelImage:
-            "https://thumbs.dreamstime.com/b/black-radio-logo-radio-icon-white-black-radio-logo-radio-icon-131472109.jpg",
-        listenerCount: 10,
-        status: "status",
-        elapsedMinutes: 100,
-      ),
-    );
+    final liveBroadcasts = ref.watch(radioLiveBroadcastsProvider);
+    final radioChannels = ref.watch(radioChannelsProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F6),
       body: SingleChildScrollView(
@@ -71,9 +74,36 @@ class _RadioChannelListScreenState extends State<RadioChannelListScreen> {
                 const SizedBox(height: 16.0),
                 titleLabel("라이브"),
                 const SizedBox(height: 4.0),
-                radioLiveCard,
-                radioLiveCard,
-                radioLiveCard,
+                ...liveBroadcasts.map(
+                  (e) {
+                    final now = DateTime.now();
+                    RadioChannelModel? channel = radioChannels.firstWhere(
+                      (element) => element.id == e.channelId,
+                      orElse: () => const RadioChannelModel(
+                        id: 0,
+                        name: '',
+                        channelImageUrl: '',
+                        description: '',
+                        onLive: false,
+                        subscribersNumber: 0,
+                      ),
+                    );
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 6.0,
+                      ),
+                      child: RadioLiveCard(
+                        title: e.title,
+                        channelTitle: channel.name,
+                        channelImage: channel.channelImageUrl,
+                        listenerCount: e.listenerCount,
+                        status: e.status.name,
+                        elapsedMinutes: now.difference(e.startedAt).inMinutes,
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(height: 16.0),
                 titleLabel("추천 채널"),
                 CarouselSlider(
@@ -92,13 +122,20 @@ class _RadioChannelListScreenState extends State<RadioChannelListScreen> {
                     scrollDirection: Axis.horizontal,
                     enlargeFactor: 0.2,
                   ),
-                  items: [
-                    radioChannelCard,
-                    radioChannelCard,
-                    radioChannelCard,
-                    radioChannelCard,
-                    radioChannelCard,
-                  ],
+                  items: radioChannels
+                      .map(
+                        (e) => Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: RadioChannelCard(
+                            channelTitle: e.name,
+                            channelImageUrl: e.channelImageUrl,
+                            description: e.description,
+                            onLive: e.onLive,
+                            subscriberCount: e.subscribersNumber,
+                          ),
+                        ),
+                      )
+                      .toList(),
                 ),
               ],
             ),
@@ -106,5 +143,11 @@ class _RadioChannelListScreenState extends State<RadioChannelListScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
   }
 }
