@@ -7,6 +7,7 @@ import 'package:music_dabang/common/colors.dart';
 import 'package:music_dabang/common/dialog.dart';
 import 'package:music_dabang/common/utils.dart';
 import 'package:music_dabang/models/user/user_model.dart';
+import 'package:music_dabang/providers/music/music_player_provider.dart';
 import 'package:music_dabang/providers/radio/radio_live_broadcast_provider.dart';
 import 'package:music_dabang/providers/user/user_provider.dart';
 import 'package:music_dabang/screens/radio/components/live_chatting_list.dart';
@@ -193,6 +194,7 @@ class _RadioBroadcastLiveScreenState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       init();
     });
+    ref.read(currentPlayingMusicProvider.notifier).pauseAudio();
   }
 
   @override
