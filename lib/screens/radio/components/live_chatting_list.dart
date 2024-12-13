@@ -157,13 +157,13 @@ class _LiveChattingListState extends ConsumerState<LiveChattingList> {
                         maxWidth: MediaQuery.of(context).size.width * 0.6,
                       ),
                       decoration: BoxDecoration(
+                        color: isMe ? ColorTable.kPrimaryColor : Colors.white,
                         borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(isMe ? 12.0 : 0),
                           topRight: const Radius.circular(12.0),
                           bottomRight: Radius.circular(isMe ? 0 : 12.0),
                           bottomLeft: const Radius.circular(12.0),
                         ),
-                        color: Colors.white,
                         border: Border.all(
                           color: ColorTable.stroke,
                           width: 1.0,
@@ -171,7 +171,10 @@ class _LiveChattingListState extends ConsumerState<LiveChattingList> {
                       ),
                       child: Text(
                         chat.message,
-                        style: const TextStyle(fontSize: 14.0),
+                        style: TextStyle(
+                          fontSize: 14.0,
+                          color: isMe ? Colors.white : Colors.black,
+                        ),
                       ),
                     ),
                   ],

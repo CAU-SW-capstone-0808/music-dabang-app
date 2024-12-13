@@ -115,6 +115,11 @@ class _RadioBroadcastLiveScreenState
         "${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}";
     return Row(
       children: <Widget>[
+        const Icon(
+          Icons.access_time_rounded,
+          size: 18.0,
+        ),
+        const SizedBox(width: 4.0),
         Text(
           labelContent,
           style: const TextStyle(
@@ -122,8 +127,6 @@ class _RadioBroadcastLiveScreenState
             color: Colors.black,
           ),
         ),
-        const SizedBox(width: 4.0),
-        const Icon(Icons.access_time_rounded, size: 18.0),
       ],
     );
   }
@@ -199,6 +202,8 @@ class _RadioBroadcastLiveScreenState
     final liveBroadcast = liveState.broadcast;
     final liveChannel = liveState.channel;
 
+    Widget musicList = LiveMusicList(broadcastId: widget.broadcastId);
+
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (didPop, result) {
@@ -246,20 +251,22 @@ class _RadioBroadcastLiveScreenState
                     listeners(liveBroadcast?.listenerCount ?? -1),
                     const Spacer(),
                     timeLabel(liveBroadcast?.elapsedMinutes ?? 0),
-                    const SizedBox(width: 8.0),
+                    const SizedBox(width: 16.0),
                   ],
                 ),
                 const SizedBox(height: 8.0),
                 Stack(
                   children: [
-                    SizedBox(
-                      height: 200,
-                      child: LiveMusicList(broadcastId: widget.broadcastId),
-                    ),
+                    const SizedBox(width: double.infinity, height: 200),
                     if (liveStatus.isLoading)
                       Positioned.fill(child: loadingPage)
                     else if (liveStatus == RadioLiveStatus.error)
-                      Positioned.fill(child: errorPage),
+                      Positioned.fill(child: errorPage)
+                    else
+                      SizedBox(
+                        height: 200,
+                        child: musicList,
+                      ),
                   ],
                 ),
                 const Divider(height: 0),

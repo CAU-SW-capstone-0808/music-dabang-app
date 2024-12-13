@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:music_dabang/common/colors.dart';
+import 'package:music_dabang/common/datetime_utils.dart';
 import 'package:music_dabang/components/bouncing_widget.dart';
 
 class RadioLiveCard extends StatelessWidget {
@@ -9,7 +10,7 @@ class RadioLiveCard extends StatelessWidget {
   final String channelImage; // 채널 이미지
   final int listenerCount; // 청취자 수
   final String status; // 방송 상태
-  final int elapsedMinutes; // 방송 진행 시간
+  final DateTime startedAt;
   final void Function() onPressed;
 
   const RadioLiveCard({
@@ -19,7 +20,7 @@ class RadioLiveCard extends StatelessWidget {
     required this.channelImage,
     required this.listenerCount,
     required this.status,
-    required this.elapsedMinutes,
+    required this.startedAt,
     required this.onPressed,
   });
 
@@ -44,20 +45,8 @@ class RadioLiveCard extends StatelessWidget {
   }
 
   Widget get timeLabel {
-    String labelContent = "";
-    if (elapsedMinutes < 5) {
-      labelContent = "방금 전";
-    } else if (elapsedMinutes < 60) {
-      labelContent = "$elapsedMinutes분 전";
-    } else {
-      int hours = elapsedMinutes ~/ 60;
-      int minutes = elapsedMinutes % 60;
-      labelContent =
-          "${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}";
-      labelContent = "$hours시간 $minutes 전";
-    }
     return Text(
-      labelContent,
+      elapsedTime(startedAt),
       style: const TextStyle(
         fontSize: 14.0,
         color: ColorTable.textGrey,

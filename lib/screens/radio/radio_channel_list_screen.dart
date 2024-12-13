@@ -108,7 +108,7 @@ class _RadioChannelListScreenState
                           channelImage: channel.channelImageUrl,
                           listenerCount: e.listenerCount,
                           status: e.status.name,
-                          elapsedMinutes: now.difference(e.startedAt).inMinutes,
+                          startedAt: e.startedAt,
                           onPressed: () {
                             context.goNamed(
                               RadioBroadcastLiveScreen.routeName,

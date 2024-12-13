@@ -159,8 +159,14 @@ class RadioLiveBroadcastProvider extends StateNotifier<RadioLiveState> {
     });
 
     socket!.on('init_response', (data) {
-      final initModel = RadioInitResponseModel.fromJson(data);
       print('socketio init_response: $data');
+      if (data['status'] != 'success') {
+        print('init_response error: ${data['message']}');
+        status = RadioLiveStatus.error;
+        return;
+      }
+
+      final initModel = RadioInitResponseModel.fromJson(data);
       if (initModel.status == 'success') {
         state = state.copyWith(
           status: RadioLiveStatus.connected,
