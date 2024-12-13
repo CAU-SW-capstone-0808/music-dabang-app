@@ -322,7 +322,7 @@ class RadioLiveBroadcastProvider extends StateNotifier<RadioLiveState> {
       await audioPlayer.setUrl(music.contentUrl);
       await audioPlayer.play();
     } else {
-      if (diff.inMilliseconds < 3000) {
+      if (diff.inMilliseconds < 30000) {
         if (audioPlayer.playerState.playing) {
           await audioPlayer.stop();
         }
