@@ -7,6 +7,7 @@ import 'package:music_dabang/models/radio/radio_channel_model.dart';
 import 'package:music_dabang/models/user/user_model.dart';
 import 'package:music_dabang/providers/radio/radio_channels_provider.dart';
 import 'package:music_dabang/providers/radio/radio_live_broadcast_chats_provider.dart';
+import 'package:music_dabang/providers/user/other_user_provider.dart';
 import 'package:music_dabang/providers/user/user_provider.dart';
 
 class LiveChattingList extends ConsumerStatefulWidget {
@@ -67,12 +68,16 @@ class _LiveChattingListState extends ConsumerState<LiveChattingList> {
         if (me is UserModel) {
           isMe = chat.userId == me.id.toString();
         }
+        UserModel? otherUser;
+        if (!isMe && !isChannel) {
+          otherUser = ref.watch(otherUserProvider(chat.userId));
+        }
         // set userName
         String userName = "";
         if (isChannel) {
           userName = channel?.name ?? '';
         } else {
-          userName = isMe ? '나' : "익명";
+          userName = isMe ? '나' : (otherUser?.nickname ?? '');
         }
         // set imageUrl
         String imageUrl = "";
@@ -81,7 +86,7 @@ class _LiveChattingListState extends ConsumerState<LiveChattingList> {
         } else {
           imageUrl = (isMe && me is UserModel)
               ? (me.profileImageUrl ?? '')
-              : 'https://pds.joongang.co.kr/news/component/htmlphoto_mmdata/202412/10/826b1850-b665-4e10-ac17-7aa5b37f2bd8.jpg';
+              : (otherUser?.profileImageUrl ?? '');
         }
 
         return Padding(
@@ -177,5 +182,14 @@ class _LiveChattingListState extends ConsumerState<LiveChattingList> {
         );
       },
     );
+  }
+}
+
+class UserProfileImage extends ConsumerWidget {
+  const UserProfileImage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return const Placeholder();
   }
 }

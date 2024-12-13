@@ -23,6 +23,9 @@ abstract class UserRepository {
   @GET('/me')
   Future<UserModel> getMe();
 
+  @GET("/{userId}")
+  Future<UserModel> getOther({@Path("userId") required String userId});
+
   @POST('/oauth/kakao')
   Future<TokenModel> loginWithKakao({
     @Header('X-OAUTH-TOKEN') required String accessToken,
