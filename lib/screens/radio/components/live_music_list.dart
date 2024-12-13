@@ -38,7 +38,7 @@ class _LiveMusicListState extends ConsumerState<LiveMusicList> {
       controller: scrollController,
       reverse: true,
       padding: EdgeInsets.symmetric(
-        horizontal: MediaQuery.of(context).size.width / 4 + 22,
+        horizontal: MediaQuery.of(context).size.width / 2 - 82,
       ),
       itemExtent: 164,
       scrollDirection: Axis.horizontal,
