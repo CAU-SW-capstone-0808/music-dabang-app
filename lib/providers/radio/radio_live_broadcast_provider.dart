@@ -286,7 +286,7 @@ class RadioLiveBroadcastProvider extends StateNotifier<RadioLiveState> {
     RadioTTSModel tts, {
     bool directPlay = true,
   }) async {
-    audioPlayer.setVolume(2.0);
+    audioPlayer.setVolume(1.0);
     final diff = DateTime.now().difference(tts.timestamp);
     print("playTTS diff: $diff");
     if (directPlay) {
@@ -312,7 +312,7 @@ class RadioLiveBroadcastProvider extends StateNotifier<RadioLiveState> {
     bool directPlay = true,
   }) async {
     ref.read(willPlayMusicProvider(broadcastId).notifier).music = null;
-    audioPlayer.setVolume(1.0);
+    audioPlayer.setVolume(0.5);
     final diff = DateTime.now().difference(music.timestamp);
     print("playMusic diff: $diff");
     if (directPlay) {
